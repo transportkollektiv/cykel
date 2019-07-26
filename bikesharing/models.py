@@ -29,6 +29,11 @@ lock_type_choices = (
 	('EL', 'Electronic Lock'),
 )
 
+station_status_choices = (
+	('DI', 'Disabled'),
+	('AC', 'Active'),
+)
+
 class Bike(models.Model):
 	bike_number = models.CharField(max_length=8)
 	current_position = geomodels.PointField(default=None, null=True, blank=True)
@@ -36,6 +41,7 @@ class Bike(models.Model):
 	state = models.CharField(max_length=2, choices=bike_state_status_choices, default='US')
 	bike_type = models.CharField(max_length=2, choices=bike_type_choices, default='BI')
 	lock = models.ForeignKey('Lock', on_delete=models.PROTECT, null=True, blank=True)
+	current_station = models.ForeignKey('Station', on_delete=models.PROTECT, blank=True, null=True, default=None)
 	
 	def __str__(self):
 		return self.bike_number
@@ -56,4 +62,12 @@ class Lock(models.Model):
 
 	def __str__(self):
 		return str(self.lock_id)
-		
+
+class Station(models.Model):
+	status = models.CharField(max_length=2, choices=station_status_choices, default='DI')
+	station_name = models.CharField(max_length=255)
+	location = geomodels.PointField(default=None, null=True)
+	max_bikes = models.IntegerField(default=10)
+
+	def __str__(self):
+		return str(self.station_name)

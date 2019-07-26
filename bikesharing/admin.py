@@ -6,6 +6,7 @@ from django.contrib.gis.admin import OSMGeoAdmin
 from .models import Bike
 from .models import Rent
 from .models import Lock
+from .models import Station
 
 #admin.site.register(Bike, OSMGeoAdmin)
 #admin.site.register(Rent, OSMGeoAdmin)
@@ -23,3 +24,4 @@ class RentAdmin(OSMGeoAdmin, admin.ModelAdmin):
 	search_fields = ('bike__bike_number', 'user__username', 'user__email', 'user__first_name', 'user__last_name',)
 
 admin.site.register(Lock, OSMGeoAdmin)
+admin.site.register(Station, OSMGeoAdmin)
