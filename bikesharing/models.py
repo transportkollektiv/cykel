@@ -15,22 +15,27 @@ bike_state_status_choices = (
 	('US', 'Usable'),
 	('BR', 'Broken'),
 	('IR', 'In Repair'),
-	('SA', 'Sensor Alert')
 )
 
 bike_type_choices = (
-	('FR', 'Fahrrad'),
-	('LR', 'Lastenrad'),
+	('BI', 'Bike'),
+	('CB', 'Cargo Bike'),
 	('EB', 'E-Bike'),
+	('ES', 'E-Scooter'),
+)
+
+lock_type_choices = (
+	('CL', 'Combination lock'),
+	('EL', 'Electronic Lock'),
 )
 
 class Bike(models.Model):
 	bike_number = models.CharField(max_length=8)
-	current_position = geomodels.PointField(default=None, null=True)
+	current_position = geomodels.PointField(default=None, null=True, blank=True)
 	availability_status = models.CharField(max_length=2, choices=bike_availability_status_choices, default='DI')
 	state = models.CharField(max_length=2, choices=bike_state_status_choices, default='US')
-	bike_type = models.CharField(max_length=2, choices=bike_type_choices, default='FR')
-	lock = models.ForeignKey('Lock', on_delete=models.PROTECT, null=True)
+	bike_type = models.CharField(max_length=2, choices=bike_type_choices, default='BI')
+	lock = models.ForeignKey('Lock', on_delete=models.PROTECT, null=True, blank=True)
 	
 	def __str__(self):
 		return self.bike_number
@@ -44,9 +49,11 @@ class Rent(models.Model):
 	user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
 
 class Lock(models.Model):
-	mac_address = MACAddressField(null=True)
-	unlock_key = models.BinaryField(editable=True)
+	lock_id = models.CharField(editable=True, max_length=255)
+	lock_type = models.CharField(max_length=2, choices=lock_type_choices, default='CL')
+	mac_address = MACAddressField(null=True, blank=True)
+	unlock_key = models.CharField(editable=True, max_length=255, blank=True)
 
 	def __str__(self):
-		return str(self.mac_address)
+		return str(self.lock_id)
 		
