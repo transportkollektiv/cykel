@@ -17,14 +17,19 @@ from django.contrib import admin
 from django.urls import include, path
 from django.conf.urls import url, include
 from rest_framework import routers, serializers, viewsets
+from rest_framework.urlpatterns import format_suffix_patterns
 
 from .views import BikeViewSet
+from .views import StationViewSet
 
 # Routers provide an easy way of automatically determining the URL conf.
 router = routers.DefaultRouter()
 router.register(r'bikes', BikeViewSet)
+router.register(r'stations', StationViewSet)
+router.register(r'gbfs/gbfs', BikeViewSet)
 
 urlpatterns = [
     url(r'^', include(router.urls)),
     url(r'^api/', include('rest_framework.urls', namespace='rest_framework'))
 ]
+#urlpatterns = format_suffix_patterns(urlpatterns, allowed=['json']) 
