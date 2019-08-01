@@ -26,3 +26,9 @@ class StationSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Station
         fields = ('station_name','location', 'max_bikes', 'status')
+
+class GbfsFreeBikeStatusSerialzer(serializers.HyperlinkedModelSerializer):
+	class Meta:
+		model = Station
+		bike_id = StationSerializer(source='bike_number')
+		fields = ('bike_id', 'current_position',)
