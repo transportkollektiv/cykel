@@ -76,7 +76,10 @@ class GbfsFreeBikeStatusViewSet(mixins.ListModelMixin, generics.GenericAPIView):
     def get(self, request, *args, **kwargs):
         bikes = Bike.objects.all()
         serializer = GbfsFreeBikeStatusSerialzer(bikes, many=True)
-        data = getGbfsWithData(serializer.data)
+        bike_data = {
+            'bikes': serializer.data
+        }
+        data = getGbfsWithData(bike_data)
         return JsonResponse(data, safe=False)
 
 
@@ -91,7 +94,10 @@ class GbfsStationInformationViewSet(mixins.ListModelMixin, generics.GenericAPIVi
     def get(self, request, *args, **kwargs):
         stations = Station.objects.all()
         serializer = GbfsStationInformationSerialzer(stations, many=True)
-        data = getGbfsWithData(serializer.data)
+        station_data = {
+            'stations': serializer.data
+        }
+        data = getGbfsWithData(station_data)
         return JsonResponse(data, safe=False)
 
 
