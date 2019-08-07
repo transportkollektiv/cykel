@@ -23,7 +23,6 @@ from .views import BikeViewSet
 from .views import StationViewSet
 from .views import gbfs
 from .views import gbfsSystemInformation
-from .views import gbfsFreeBikeStatus
 from .views import GbfsFreeBikeStatusViewSet
 from .views import GbfsStationInformationViewSet
 

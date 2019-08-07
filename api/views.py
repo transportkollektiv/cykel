@@ -58,16 +58,6 @@ def gbfsSystemInformation(request):
             "timezone": "TBD"
         }
         return JsonResponse(getGbfsWithData(data), safe=False)
-
-def gbfsFreeBikeStatus(request):
-    if request.method == 'GET':
-        bikes = Bike.objects.all()
-
-        bikes = [x for x in bikes]
-        data = {
-            "bikes": bikes
-        }
-        return JsonResponse(getGbfsWithData(data), safe=False)
         
 class GbfsFreeBikeStatusViewSet(mixins.ListModelMixin, generics.GenericAPIView):
     queryset = Bike.objects.all()
@@ -82,10 +72,6 @@ class GbfsFreeBikeStatusViewSet(mixins.ListModelMixin, generics.GenericAPIView):
         data = getGbfsWithData(bike_data)
         return JsonResponse(data, safe=False)
 
-
-        """res = self.list(request, *args, **kwargs)
-        print(res)
-        return res"""
 
 class GbfsStationInformationViewSet(mixins.ListModelMixin, generics.GenericAPIView):
     queryset = Station.objects.all()
