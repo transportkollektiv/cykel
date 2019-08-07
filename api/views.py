@@ -7,6 +7,7 @@ from django.http import HttpResponse, JsonResponse
 from .serializers import BikeSerializer
 from .serializers import StationSerializer
 from .serializers import GbfsFreeBikeStatusSerialzer
+from .serializers import GbfsStationInformationSerialzer
 
 from bikesharing.models import Bike
 from bikesharing.models import Station
@@ -82,6 +83,16 @@ class GbfsFreeBikeStatusViewSet(mixins.ListModelMixin, generics.GenericAPIView):
         """res = self.list(request, *args, **kwargs)
         print(res)
         return res"""
+
+class GbfsStationInformationViewSet(mixins.ListModelMixin, generics.GenericAPIView):
+    queryset = Station.objects.all()
+    serializer_class = GbfsFreeBikeStatusSerialzer
+
+    def get(self, request, *args, **kwargs):
+        stations = Station.objects.all()
+        serializer = GbfsStationInformationSerialzer(stations, many=True)
+        data = getGbfsWithData(serializer.data)
+        return JsonResponse(data, safe=False)
 
 
 def getGbfsRoot(request):

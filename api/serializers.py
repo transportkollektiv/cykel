@@ -32,17 +32,31 @@ class GbfsFreeBikeStatusSerialzer(serializers.HyperlinkedModelSerializer):
 
 	class Meta:
 		model = Bike
-		fields = ('bike_id', 'current_position', )
+		fields = ('bike_id', )
 
 	def to_representation(self, instance):
-		print (dir(instance.current_position))
-		print(instance.current_position.x)
-		#print (vars(instance.current_position.x))
-		ret = super().to_representation(instance)
-		ret['is_reserved'] = False #Default to False TODO: maybe configuration later
-		ret['is_disabled'] = False #Default to False TODO: maybe configuration later
-		ret['additional_field'] = "lololol"
+		representation = super().to_representation(instance)
+		representation['is_reserved'] = False #Default to False TODO: maybe configuration later
+		representation['is_disabled'] = False #Default to False TODO: maybe configuration later
 		if (instance.current_position.x and instance.current_position.y):
-			ret['lat'] = instance.current_position.y
-			ret['lon'] = instance.current_position.x
-		return ret
+			representation['lat'] = instance.current_position.y
+			representation['lon'] = instance.current_position.x
+		return representation
+
+class GbfsStationInformationSerialzer(serializers.HyperlinkedModelSerializer):
+	name = serializers.CharField(source='station_name', read_only=True)
+	capacity = serializers.IntegerField(source='max_bikes', read_only=True)
+	id = serializers.CharField(read_only=True)
+
+	class Meta:
+		model = Station
+		fields = ('name', 'capacity', 'id', )
+	def to_representation(self, instance):
+		print (dir(instance))
+		representation = super().to_representation(instance)
+		#representation['is_reserved'] = False #Default to False TODO: maybe configuration later
+		#representation['is_disabled'] = False #Default to False TODO: maybe configuration later
+		if (instance.location.x and instance.location.y):
+			representation['lat'] = instance.location.y
+			representation['lon'] = instance.location.x
+		return representation

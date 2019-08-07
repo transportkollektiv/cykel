@@ -25,6 +25,7 @@ from .views import gbfs
 from .views import gbfsSystemInformation
 from .views import gbfsFreeBikeStatus
 from .views import GbfsFreeBikeStatusViewSet
+from .views import GbfsStationInformationViewSet
 
 # Routers provide an easy way of automatically determining the URL conf.
 router = routers.DefaultRouter()
@@ -38,5 +39,6 @@ urlpatterns = [
     path('gbfs.json', gbfs),
     path('system_information.json', gbfsSystemInformation),
     path('free_bike_status.json', GbfsFreeBikeStatusViewSet.as_view()),
+    path('station_information.json', GbfsStationInformationViewSet.as_view()),
 ]
 #urlpatterns = format_suffix_patterns(urlpatterns, allowed=['json']) 
