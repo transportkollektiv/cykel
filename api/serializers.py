@@ -29,7 +29,20 @@ class StationSerializer(serializers.HyperlinkedModelSerializer):
 
 class GbfsFreeBikeStatusSerialzer(serializers.HyperlinkedModelSerializer):
 	bike_id = serializers.CharField(source='bike_number', read_only=True)
-	
+
 	class Meta:
 		model = Bike
-		fields = ('bike_id', 'current_position',)
+		fields = ('bike_id', 'current_position', )
+
+	def to_representation(self, instance):
+		print (dir(instance.current_position))
+		print(instance.current_position.x)
+		#print (vars(instance.current_position.x))
+		ret = super().to_representation(instance)
+		ret['is_reserved'] = False #Default to False TODO: maybe configuration later
+		ret['is_disabled'] = False #Default to False TODO: maybe configuration later
+		ret['additional_field'] = "lololol"
+		if (instance.current_position.x and instance.current_position.y):
+			ret['lat'] = instance.current_position.y
+			ret['lon'] = instance.current_position.x
+		return ret
