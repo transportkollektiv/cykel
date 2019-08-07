@@ -8,6 +8,7 @@ from .serializers import BikeSerializer
 from .serializers import StationSerializer
 from .serializers import GbfsFreeBikeStatusSerialzer
 from .serializers import GbfsStationInformationSerialzer
+from .serializers import GbfsStationStatusSerialzer
 
 from bikesharing.models import Bike
 from bikesharing.models import Station
@@ -75,11 +76,24 @@ class GbfsFreeBikeStatusViewSet(mixins.ListModelMixin, generics.GenericAPIView):
 
 class GbfsStationInformationViewSet(mixins.ListModelMixin, generics.GenericAPIView):
     queryset = Station.objects.all()
-    serializer_class = GbfsFreeBikeStatusSerialzer
+    serializer_class = GbfsStationInformationSerialzer
 
     def get(self, request, *args, **kwargs):
         stations = Station.objects.all()
         serializer = GbfsStationInformationSerialzer(stations, many=True)
+        station_data = {
+            'stations': serializer.data
+        }
+        data = getGbfsWithData(station_data)
+        return JsonResponse(data, safe=False)
+
+class GbfsStationStatusViewSet(mixins.ListModelMixin, generics.GenericAPIView):
+    queryset = Station.objects.all()
+    serializer_class = GbfsStationStatusSerialzer
+
+    def get(self, request, *args, **kwargs):
+        stations = Station.objects.all()
+        serializer = GbfsStationStatusSerialzer(stations, many=True)
         station_data = {
             'stations': serializer.data
         }

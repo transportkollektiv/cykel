@@ -46,17 +46,32 @@ class GbfsFreeBikeStatusSerialzer(serializers.HyperlinkedModelSerializer):
 class GbfsStationInformationSerialzer(serializers.HyperlinkedModelSerializer):
 	name = serializers.CharField(source='station_name', read_only=True)
 	capacity = serializers.IntegerField(source='max_bikes', read_only=True)
-	id = serializers.CharField(read_only=True)
+	station_id = serializers.CharField(source='id', read_only=True)
 
 	class Meta:
 		model = Station
-		fields = ('name', 'capacity', 'id', )
+		fields = ('name', 'capacity', 'station_id', )
 	def to_representation(self, instance):
-		print (dir(instance))
 		representation = super().to_representation(instance)
-		#representation['is_reserved'] = False #Default to False TODO: maybe configuration later
-		#representation['is_disabled'] = False #Default to False TODO: maybe configuration later
 		if (instance.location.x and instance.location.y):
 			representation['lat'] = instance.location.y
 			representation['lon'] = instance.location.x
+		return representation
+
+class GbfsStationStatusSerialzer(serializers.HyperlinkedModelSerializer):
+	station_id = serializers.CharField(source='id', read_only=True)
+
+	class Meta:
+		model = Station
+		fields = ('station_id', )
+	def to_representation(self, instance):
+		print (dir(instance))
+		representation = super().to_representation(instance)
+		print (dir(instance.bike_set))
+		representation['num_bikes_available'] = instance.bike_set.all().count()
+		representation['num_docks_available'] = instance.max_bikes - representation['num_bikes_available']
+		status = (instance.status == "AC") or False
+		representation['is_installed'] = status
+		representation['is_renting'] = status
+		representation['is_returning'] = status
 		return representation
