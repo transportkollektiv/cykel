@@ -22,4 +22,5 @@ urlpatterns = [
     path('bikesharing/', include('bikesharing.urls')),
     path('admin/', admin.site.urls),
     path('api/', include('api.urls')),
+    path('gbfs/', include('gbfs.urls')),
 ]
