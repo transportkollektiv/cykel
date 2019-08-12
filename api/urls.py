@@ -21,13 +21,15 @@ from rest_framework.urlpatterns import format_suffix_patterns
 
 from .views import BikeViewSet
 from .views import StationViewSet
+from .views import updatebikelocation
 
 # Routers provide an easy way of automatically determining the URL conf.
 router = routers.DefaultRouter()
-router.register(r'bikes', BikeViewSet)
-router.register(r'stations', StationViewSet)
+#router.register(r'bikes', BikeViewSet)
+#router.register(r'stations', StationViewSet)
 
 urlpatterns = [
     url(r'^', include(router.urls)),
     url(r'^api/', include('rest_framework.urls', namespace='rest_framework_api')),
+    path('bike/updatelocation', updatebikelocation),
 ]
