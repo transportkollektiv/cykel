@@ -31,11 +31,9 @@ router = routers.DefaultRouter()
 urlpatterns = [
     url(r'^', include(router.urls)),
     url(r'^gbfs/', include('rest_framework.urls', namespace='rest_framework')),
-    #path('gbfs', gbfs),
     path('gbfs.json', gbfs),
     path('system_information.json', gbfsSystemInformation),
     path('free_bike_status.json', GbfsFreeBikeStatusViewSet.as_view()),
     path('station_information.json', GbfsStationInformationViewSet.as_view()),
     path('station_status.json', GbfsStationStatusViewSet.as_view()),
 ]
-#urlpatterns = format_suffix_patterns(urlpatterns, allowed=['json']) 

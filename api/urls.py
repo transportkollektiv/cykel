@@ -21,11 +21,6 @@ from rest_framework.urlpatterns import format_suffix_patterns
 
 from .views import BikeViewSet
 from .views import StationViewSet
-from .views import gbfs
-from .views import gbfsSystemInformation
-from .views import GbfsFreeBikeStatusViewSet
-from .views import GbfsStationInformationViewSet
-from .views import GbfsStationStatusViewSet
 
 # Routers provide an easy way of automatically determining the URL conf.
 router = routers.DefaultRouter()
@@ -35,11 +30,4 @@ router.register(r'stations', StationViewSet)
 urlpatterns = [
     url(r'^', include(router.urls)),
     url(r'^api/', include('rest_framework.urls', namespace='rest_framework')),
-    #path('gbfs', gbfs),
-    path('gbfs.json', gbfs),
-    path('system_information.json', gbfsSystemInformation),
-    path('free_bike_status.json', GbfsFreeBikeStatusViewSet.as_view()),
-    path('station_information.json', GbfsStationInformationViewSet.as_view()),
-    path('station_status.json', GbfsStationStatusViewSet.as_view()),
 ]
-#urlpatterns = format_suffix_patterns(urlpatterns, allowed=['json']) 
