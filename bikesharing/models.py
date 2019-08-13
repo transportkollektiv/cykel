@@ -48,12 +48,12 @@ class Bike(models.Model):
 
 class Rent(models.Model):
 	rent_start = models.DateTimeField()
-	rent_end = models.DateTimeField()
+	rent_end = models.DateTimeField(default=None, null=True, blank=True)
 	start_position = geomodels.PointField(default=None, null=True)
-	start_station = models.ForeignKey('Station', on_delete=models.PROTECT, null=True, blank=True, related_name='%(class)s_start_station')
+	start_station = models.ForeignKey('Station', default=None, on_delete=models.PROTECT, null=True, blank=True, related_name='%(class)s_start_station')
 	end_position = geomodels.PointField(default=None, null=True)
-	end_station = models.ForeignKey('Station', on_delete=models.PROTECT, null=True, blank=True, related_name='%(class)s_end_station')
-	bike = models.ForeignKey('Bike', on_delete=models.PROTECT)
+	end_station = models.ForeignKey('Station', default=None, on_delete=models.PROTECT, null=True, blank=True, related_name='%(class)s_end_station')
+	bike = models.ForeignKey('Bike', default=None, on_delete=models.PROTECT)
 	user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
 
 class Lock(models.Model):
