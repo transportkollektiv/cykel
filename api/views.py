@@ -94,6 +94,7 @@ def start_rent(request):
                 rent.save()
             #TODO station position and bike position if no lat lng over APIt
                 
+            #TODO return Lock code (or Open Lock?)
             return JsonResponse({"success": True})
         except Bike.DoesNotExist:
             return JsonResponse({"error": "bike does not exist"})

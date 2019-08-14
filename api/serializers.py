@@ -13,7 +13,7 @@ from bikesharing.models import Rent
 class LockSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Lock
-        fields = ('mac_address',)
+        fields = ('mac_address', 'unlock_key', 'lock_type')
 
 # Serializers define the API representation.
 class BikeSerializer(serializers.HyperlinkedModelSerializer):
@@ -21,7 +21,7 @@ class BikeSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Bike
-        fields = ('bike_number', 'lock', 'current_position',)
+        fields = ('bike_number', 'lock',)
 
 class StationSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
@@ -32,4 +32,4 @@ class RentSerializer(serializers.HyperlinkedModelSerializer):
     bike = BikeSerializer()
     class Meta:
         model = Rent
-        fields = ('bike', 'rent_start',)
+        fields = ('id', 'bike', 'rent_start',)
