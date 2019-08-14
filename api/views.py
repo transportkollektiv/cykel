@@ -93,9 +93,14 @@ def start_rent(request):
                 rent.start_position = Point(float(lng), float(lat), srid=4326)
                 rent.save()
             #TODO station position and bike position if no lat lng over APIt
-                
+            
+            res = {"success": True}
             #TODO return Lock code (or Open Lock?)
-            return JsonResponse({"success": True})
+            if (bike.lock):
+                if (bike.lock.lock_type == "CL" and bike.lock.unlock_key):
+                    res["unlock_key"] = bike.lock.unlock_key
+
+            return JsonResponse(res)
         except Bike.DoesNotExist:
             return JsonResponse({"error": "bike does not exist"})
 
@@ -120,9 +125,11 @@ def finish_rent(request):
                 rent.end_position = Point(float(lng), float(lat), srid=4326)
             rent.save()
 
+            # set Bike status back to available
             rent.bike.availability_status = 'AV'
             rent.bike.save()
-            JsonResponse({"success": True})
+
+            return JsonResponse({"success": True})
         except Rent.DoesNotExist:
             return JsonResponse({"error": "rent does not exist"})
 
