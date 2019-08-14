@@ -21,6 +21,7 @@ from rest_framework.urlpatterns import format_suffix_patterns
 
 from .views import BikeViewSet
 from .views import StationViewSet
+from .views import CurrentRentViewSet
 from .views import updatebikelocation
 from .views import start_rent
 
@@ -34,4 +35,5 @@ urlpatterns = [
     url(r'^api/', include('rest_framework.urls', namespace='rest_framework_api')),
     path('bike/updatelocation', updatebikelocation),
     path('rent/start', start_rent),
+    path('rent/current', CurrentRentViewSet.as_view({'get': 'list'})),
 ]

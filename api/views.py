@@ -12,6 +12,7 @@ from django.contrib.gis.geos import Point
 
 from .serializers import BikeSerializer
 from .serializers import StationSerializer
+from .serializers import RentSerializer
 
 from bikesharing.models import Bike
 from bikesharing.models import Station
@@ -26,6 +27,17 @@ class BikeViewSet(viewsets.ModelViewSet):
 class StationViewSet(viewsets.ModelViewSet):
     queryset = Station.objects.all()
     serializer_class = StationSerializer
+
+"""
+Returns current running Rents of the requesting user
+"""
+@permission_classes([IsAuthenticated])
+class CurrentRentViewSet(viewsets.ModelViewSet, mixins.ListModelMixin, generics.GenericAPIView):
+    serializer_class = RentSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        return Rent.objects.filter(user=user, rent_end=None)
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -80,8 +92,20 @@ def start_rent(request):
             if (lat and lng):
                 rent.start_position = Point(float(lng), float(lat), srid=4326)
                 rent.save()
-            #TODO station position and bike position if no lat lng over API
+            #TODO station position and bike position if no lat lng over APIt
                 
             return JsonResponse({"success": True})
         except Bike.DoesNotExist:
             return JsonResponse({"error": "bike does not exist"})
+
+@authentication_classes([authentication.BasicAuthentication])
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def finish_rent(request):
+    #TODO: Auth für ttn service
+    if request.method == 'POST':
+        try:
+            bike_number = request.data.get("bike_number")
+        except:
+            pass
+
