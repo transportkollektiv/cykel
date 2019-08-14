@@ -106,7 +106,23 @@ def finish_rent(request):
     #TODO: Auth für ttn service
     if request.method == 'POST':
         try:
-            bike_number = request.data.get("bike_number")
-        except:
-            pass
+            lat = request.data.get("lat")
+            lng = request.data.get("lng")
+            rent_id = request.data.get("rent_id")
+            rent = Rent.objects.get(id=rent_id)
+            if (rent.user != request.user):
+                return JsonResponse({"error": "rent belongs to another user"})
+            if (rent.rent_end!=None):
+                return JsonResponse({"error": "rent was already finished"})
+
+            rent.rent_end = datetime.datetime.now()
+            if (lat and lng):
+                rent.end_position = Point(float(lng), float(lat), srid=4326)
+            rent.save()
+
+            rent.bike.availability_status = 'AV'
+            rent.bike.save()
+            JsonResponse({"success": True})
+        except Rent.DoesNotExist:
+            return JsonResponse({"error": "rent does not exist"})
 
