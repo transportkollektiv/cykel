@@ -8,6 +8,8 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import authentication
 from django.http import HttpResponse, JsonResponse
 
+from django.contrib.gis.geos import Point
+
 from .serializers import BikeSerializer
 from .serializers import StationSerializer
 
@@ -74,9 +76,12 @@ def start_rent(request):
             bike.availability_status = 'IU'
             bike.save()
 
-            print(dir(request.user))
             rent = Rent.objects.create(rent_start=datetime.datetime.now(), user=request.user, bike=bike)
-            print(dir(rent))
-            return JsonResponse({"error": "lol"})
+            if (lat and lng):
+                rent.start_position = Point(float(lng), float(lat), srid=4326)
+                rent.save()
+            #TODO station position and bike position if no lat lng over API
+                
+            return JsonResponse({"success": True})
         except Bike.DoesNotExist:
             return JsonResponse({"error": "bike does not exist"})
