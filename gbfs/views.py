@@ -3,6 +3,8 @@ import time
 from django.shortcuts import render
 from rest_framework import routers, serializers, viewsets, mixins, generics
 from django.http import HttpResponse, JsonResponse
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
+from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from .serializers import GbfsFreeBikeStatusSerialzer
 from .serializers import GbfsStationInformationSerialzer
@@ -50,7 +52,8 @@ def gbfsSystemInformation(request):
             "timezone": "TBD"
         }
         return JsonResponse(getGbfsWithData(data), safe=False)
-        
+
+@permission_classes([AllowAny])        
 class GbfsFreeBikeStatusViewSet(mixins.ListModelMixin, generics.GenericAPIView):
     queryset = Bike.objects.all()
     serializer_class = GbfsFreeBikeStatusSerialzer
@@ -65,6 +68,7 @@ class GbfsFreeBikeStatusViewSet(mixins.ListModelMixin, generics.GenericAPIView):
         return JsonResponse(data, safe=False)
 
 
+@permission_classes([AllowAny])
 class GbfsStationInformationViewSet(mixins.ListModelMixin, generics.GenericAPIView):
     queryset = Station.objects.all()
     serializer_class = GbfsStationInformationSerialzer
@@ -78,6 +82,7 @@ class GbfsStationInformationViewSet(mixins.ListModelMixin, generics.GenericAPIVi
         data = getGbfsWithData(station_data)
         return JsonResponse(data, safe=False)
 
+@permission_classes([AllowAny])
 class GbfsStationStatusViewSet(mixins.ListModelMixin, generics.GenericAPIView):
     queryset = Station.objects.all()
     serializer_class = GbfsStationStatusSerialzer
