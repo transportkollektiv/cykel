@@ -21,12 +21,18 @@ from rest_framework import routers, serializers, viewsets
 
 
 from allauth.socialaccount.providers.github.views import GitHubOAuth2Adapter
+from allauth.socialaccount.providers.stackexchange.views import StackExchangeOAuth2Adapter
 from allauth.socialaccount.providers.oauth2.client import OAuth2Client
 from rest_auth.registration.views import SocialLoginView
 
 class GithubLogin(SocialLoginView):
     adapter_class = GitHubOAuth2Adapter
-    callback_url = "http://localhost:8000/githubauthcallback" #TODO aus dem env holen
+    callback_url = "http://localhost:8080/?authservice=github" #TODO aus dem env holen
+    client_class = OAuth2Client
+
+class StackexchangeLogin(SocialLoginView):
+    adapter_class = StackExchangeOAuth2Adapter
+    callback_url = "http://localhost:8080/?authservice=stackexchange" #TODO aus dem env holen
     client_class = OAuth2Client
 
 
@@ -38,5 +44,6 @@ urlpatterns = [
     url(r'^rest-auth/', include('rest_auth.urls')),
     url(r'^rest-auth/', include('rest_auth.urls')),
     url(r'^rest-auth/registration/', include('rest_auth.registration.urls')),
-    url(r'^rest-auth/github/$', GithubLogin.as_view(), name='github_login')
+    url(r'^rest-auth/github/$', GithubLogin.as_view(), name='github_login'),
+    url(r'^rest-auth/stackexchange/$', StackexchangeLogin.as_view(), name='stackexchange_login')
 ]
