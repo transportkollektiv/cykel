@@ -15,6 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
+from django.conf.urls import url
 from rest_framework import routers, serializers, viewsets
 
 
@@ -23,4 +24,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('api.urls')),
     path('gbfs/', include('gbfs.urls')),
+    url(r'^rest-auth/', include('rest_auth.urls')),
 ]
