@@ -19,10 +19,24 @@ from django.conf.urls import url
 from rest_framework import routers, serializers, viewsets
 
 
+
+from allauth.socialaccount.providers.github.views import GitHubOAuth2Adapter
+from allauth.socialaccount.providers.oauth2.client import OAuth2Client
+from rest_auth.registration.views import SocialLoginView
+
+class GithubLogin(SocialLoginView):
+    adapter_class = GitHubOAuth2Adapter
+    callback_url = "http://localhost:8000/githubauthcallback" #TODO aus dem env holen
+    client_class = OAuth2Client
+
+
 urlpatterns = [
     path('bikesharing/', include('bikesharing.urls')),
     path('admin/', admin.site.urls),
     path('api/', include('api.urls')),
     path('gbfs/', include('gbfs.urls')),
     url(r'^rest-auth/', include('rest_auth.urls')),
+    url(r'^rest-auth/', include('rest_auth.urls')),
+    url(r'^rest-auth/registration/', include('rest_auth.registration.urls')),
+    url(r'^rest-auth/github/$', GithubLogin.as_view(), name='github_login')
 ]

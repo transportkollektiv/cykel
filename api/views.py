@@ -31,6 +31,7 @@ class StationViewSet(viewsets.ModelViewSet):
 """
 Returns current running Rents of the requesting user
 """
+@authentication_classes([authentication.BasicAuthentication, authentication.TokenAuthentication])
 @permission_classes([IsAuthenticated])
 class CurrentRentViewSet(viewsets.ModelViewSet, mixins.ListModelMixin, generics.GenericAPIView):
     serializer_class = RentSerializer
@@ -65,7 +66,7 @@ def updatebikelocation(request):
         except Bike.DoesNotExist:
             return JsonResponse({"error": "bike does not exist"})
 
-@authentication_classes([authentication.BasicAuthentication])
+@authentication_classes([authentication.BasicAuthentication, authentication.TokenAuthentication])
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def start_rent(request):
@@ -104,7 +105,7 @@ def start_rent(request):
         except Bike.DoesNotExist:
             return JsonResponse({"error": "bike does not exist"})
 
-@authentication_classes([authentication.BasicAuthentication])
+@authentication_classes([authentication.BasicAuthentication, authentication.TokenAuthentication])
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def finish_rent(request):
