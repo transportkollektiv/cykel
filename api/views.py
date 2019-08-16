@@ -78,8 +78,8 @@ def start_rent(request):
             lng = request.data.get("lng")
             if not (bike_number):
                 return JsonResponse({"error": "bike_number missing"})
-            if (not lat or not lng) and (not station):
-                return JsonResponse({"error": "lat and lng or station required"})
+            #if (not lat or not lng) and (not station):
+            #    return JsonResponse({"error": "lat and lng or station required"})
 
             #check bike availability and set status to "in use"
             bike = Bike.objects.get(bike_number=bike_number)
@@ -123,6 +123,9 @@ def finish_rent(request):
             rent.rent_end = datetime.datetime.now()
             if (lat and lng):
                 rent.end_position = Point(float(lng), float(lat), srid=4326)
+                rent.bike.current_position = Point(float(lng), float(lat), srid=4326)
+            else:
+                rent.end_position = rent.bike.current_position
             rent.save()
 
             # set Bike status back to available
