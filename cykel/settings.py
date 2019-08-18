@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.twitter',
     'allauth.socialaccount.providers.github',
     'allauth.socialaccount.providers.stackexchange',
+    'allauth.socialaccount.providers.slack',
 
 
     'gbfs',

@@ -22,6 +22,7 @@ from rest_framework import routers, serializers, viewsets
 
 from allauth.socialaccount.providers.github.views import GitHubOAuth2Adapter
 from allauth.socialaccount.providers.stackexchange.views import StackExchangeOAuth2Adapter
+from allauth.socialaccount.providers.slack.views import SlackOAuth2Adapter
 from allauth.socialaccount.providers.oauth2.client import OAuth2Client
 from rest_auth.registration.views import SocialLoginView
 
@@ -35,6 +36,11 @@ class StackexchangeLogin(SocialLoginView):
     callback_url = "http://localhost:8080/?authservice=stackexchange" #TODO aus dem env holen
     client_class = OAuth2Client
 
+class SlackLogin(SocialLoginView):
+    adapter_class = SlackOAuth2Adapter
+    callback_url = "http://localhost:8080/?authservice=slack" #TODO aus dem env holen
+    client_class = OAuth2Client
+
 
 urlpatterns = [
     path('bikesharing/', include('bikesharing.urls')),
@@ -45,5 +51,6 @@ urlpatterns = [
     url(r'^rest-auth/', include('rest_auth.urls')),
     url(r'^rest-auth/registration/', include('rest_auth.registration.urls')),
     url(r'^rest-auth/github/$', GithubLogin.as_view(), name='github_login'),
-    url(r'^rest-auth/stackexchange/$', StackexchangeLogin.as_view(), name='stackexchange_login')
+    url(r'^rest-auth/stackexchange/$', StackexchangeLogin.as_view(), name='stackexchange_login'),
+    url(r'^rest-auth/slack/$', SlackLogin.as_view(), name='slack_login'),
 ]
