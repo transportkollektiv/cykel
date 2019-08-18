@@ -55,11 +55,11 @@ def gbfsSystemInformation(request):
 
 @permission_classes([AllowAny])        
 class GbfsFreeBikeStatusViewSet(mixins.ListModelMixin, generics.GenericAPIView):
-    queryset = Bike.objects.all()
+    queryset = Bike.objects.filter(availability_status='AV')
     serializer_class = GbfsFreeBikeStatusSerialzer
 
     def get(self, request, *args, **kwargs):
-        bikes = Bike.objects.all()
+        bikes = Bike.objects.filter(availability_status='AV')
         serializer = GbfsFreeBikeStatusSerialzer(bikes, many=True)
         bike_data = {
             'bikes': serializer.data
