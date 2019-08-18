@@ -134,10 +134,6 @@ USE_TZ = True
 
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 STATIC_ROOT = os.path.abspath(os.path.join(PROJECT_ROOT, "..", "public"))
-# Additional locations of static files
-STATICFILES_DIRS = (
-    os.path.join(PROJECT_ROOT, "static"),
-)
 
 STATIC_URL = '/static/'
 
