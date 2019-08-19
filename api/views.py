@@ -57,8 +57,7 @@ def updatebikelocation(request):
                 return JsonResponse({"error": "lng missing"})
 
             bike = Bike.objects.get(bike_number=bike_number)
-            bike.current_position.x = lng
-            bike.current_position.y = lat
+            bike.current_position = Point(float(lng), float(lat), srid=4326)
             print(dir(bike))
             bike.save()
             
