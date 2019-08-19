@@ -43,7 +43,7 @@ class GbfsStationStatusSerialzer(serializers.HyperlinkedModelSerializer):
 		fields = ('station_id', )
 	def to_representation(self, instance):
 		representation = super().to_representation(instance)
-		representation['num_bikes_available'] = instance.bike_set.all().count()
+		representation['num_bikes_available'] = instance.bike_set.filter(availability_status='AV').count()
 		representation['num_docks_available'] = instance.max_bikes - representation['num_bikes_available']
 		status = (instance.status == "AC") or False
 		representation['is_installed'] = status
