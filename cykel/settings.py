@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 
 import os
 import environ
+import dj_database_url
+
 env = environ.Env(
     # set casting, default value
     DEBUG=(bool, False)
@@ -106,11 +108,17 @@ WSGI_APPLICATION = 'cykel.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
 
-DEFAULT_SQLITE_DB_PATH = os.path.join(BASE_DIR, 'db.sqlite3')
 
 # Use DATABASE_URL env with default:
 DATABASES = {
-    'default': env.db('DATABASE_URL', default='spatialite:///' + DEFAULT_SQLITE_DB_PATH)
+    'default': {
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
+        'NAME': 'postgres',
+        'USER': 'postgres',
+        'PASSWORD': 'somesecurePass0rd@Camp',
+        'HOST': 'db',
+        'PORT': '5432',
+    }
 }
 
 
@@ -154,8 +162,6 @@ PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 STATIC_ROOT = os.path.abspath(os.path.join(PROJECT_ROOT, "..", "public"))
 
 STATIC_URL = '/static/'
-
-SPATIALITE_LIBRARY_PATH = '/usr/local/lib/mod_spatialite.dylib'
 
 # Rest Framework
 REST_FRAMEWORK = {

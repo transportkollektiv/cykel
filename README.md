@@ -63,3 +63,12 @@ For updating the current bike location we provide the `/api/bike/updatelocation`
 
 One project which can use this together with TheThingsNetwork is the [`cykel-ttn`](https://github.com/stadtulm/cykel-ttn) adapter. Read the readme in the repository on how to use it - for authentication you need to add a new api key at `/admin/rest_framework_api_key/apikey/`.
 
+
+## Alternative: using Docker Compose
+
+```
+docker-compose pull
+docker-compose up -d --build
+docker-compose exec web python manage.py migrate
+docker-compose exec web python manage.py createsuperuser
+```
