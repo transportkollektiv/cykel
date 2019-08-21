@@ -91,7 +91,9 @@ def start_rent(request):
             rent = Rent.objects.create(rent_start=datetime.datetime.now(), user=request.user, bike=bike)
             if (lat and lng):
                 rent.start_position = Point(float(lng), float(lat), srid=4326)
-                rent.save()
+            else:
+                rent.start_position = bike.current_position
+            rent.save()
             #TODO station position and bike position if no lat lng over APIt
             
             res = {"success": True}
