@@ -46,6 +46,7 @@ class Bike(models.Model):
 	current_station = models.ForeignKey('Station', on_delete=models.PROTECT, blank=True, null=True, default=None)
 	last_reported = models.DateTimeField(default=None, null=True, blank=True)
 	internal_note = models.TextField(default=None, null=True, blank=True)
+	battery_voltage = models.FloatField(default=None, null=True, blank=True) #TODO Move to lock
 	
 	def __str__(self):
 		return self.bike_number

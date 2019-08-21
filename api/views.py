@@ -49,6 +49,7 @@ def updatebikelocation(request):
             bike_number = request.data.get("bike_number")
             lat = request.data.get("lat")
             lng = request.data.get("lng")
+            battery_voltage = request.data.get("battery_voltage")
             if not (bike_number):
                 return JsonResponse({"error": "bike_number missing"})
             if not (lat):
@@ -59,6 +60,8 @@ def updatebikelocation(request):
             bike = Bike.objects.get(bike_number=bike_number)
             bike.current_position = Point(float(lng), float(lat), srid=4326)
             bike.last_reported = datetime.datetime.now()
+            if battery_voltage:
+                bike.battery_voltage = battery_voltage
             bike.save()
             
             return JsonResponse({"success": True})
