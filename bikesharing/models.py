@@ -22,6 +22,7 @@ bike_type_choices = (
 	('CB', 'Cargo Bike'),
 	('EB', 'E-Bike'),
 	('ES', 'E-Scooter'),
+	('WH', 'Wheelchair'),
 )
 
 lock_type_choices = (
