@@ -15,6 +15,7 @@ bike_state_status_choices = (
 	('US', 'Usable'),
 	('BR', 'Broken'),
 	('IR', 'In Repair'),
+	('MI', 'Missing'),
 )
 
 bike_type_choices = (
