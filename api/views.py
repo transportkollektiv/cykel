@@ -58,7 +58,7 @@ def updatebikelocation(request):
 
             bike = Bike.objects.get(bike_number=bike_number)
             bike.current_position = Point(float(lng), float(lat), srid=4326)
-            print(dir(bike))
+            bike.last_reported = datetime.datetime.now()
             bike.save()
             
             return JsonResponse({"success": True})

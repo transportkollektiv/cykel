@@ -44,6 +44,8 @@ class Bike(models.Model):
 	bike_type = models.CharField(max_length=2, choices=bike_type_choices, default='BI')
 	lock = models.ForeignKey('Lock', on_delete=models.PROTECT, null=True, blank=True)
 	current_station = models.ForeignKey('Station', on_delete=models.PROTECT, blank=True, null=True, default=None)
+	last_reported = models.DateTimeField(default=None, null=True, blank=True)
+	internal_note = models.TextField(default=None, null=True, blank=True)
 	
 	def __str__(self):
 		return self.bike_number
