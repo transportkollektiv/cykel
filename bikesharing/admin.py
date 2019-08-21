@@ -13,7 +13,7 @@ from .models import Station
 
 @admin.register(Bike)
 class BikeAdmin(OSMGeoAdmin, admin.ModelAdmin):
-	list_display = ('bike_number', 'bike_type', 'availability_status', 'state')
+	list_display = ('bike_number', 'bike_type', 'availability_status', 'state', 'last_reported', 'battery_voltage')
 	list_filter = ('bike_type', 'availability_status', 'state')
 	search_fields = ('bike_number',)
 
