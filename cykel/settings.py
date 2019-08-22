@@ -12,7 +12,6 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 
 import os
 import environ
-import dj_database_url
 
 env = environ.Env(
     # set casting, default value
@@ -93,14 +92,7 @@ WSGI_APPLICATION = 'cykel.wsgi.application'
 
 # Use DATABASE_URL env with default:
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': 'postgres',
-        'USER': 'postgres',
-        'PASSWORD': 'somesecurePass0rd@Camp',
-        'HOST': 'db',
-        'PORT': '5432',
-    }
+    'default': env.db('DATABASE_URL', default='postgis://postgres:somesecurePass0rd@db:5432/postgres')
 }
 
 
