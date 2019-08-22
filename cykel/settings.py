@@ -63,6 +63,7 @@ INSTALLED_APPS = [
 
     'gbfs',
     'corsheaders',
+    'leaflet',
 ]
 
 SITE_ID = 1
