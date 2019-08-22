@@ -86,6 +86,13 @@ def start_rent(request):
 
             #check bike availability and set status to "in use"
             bike = Bike.objects.get(bike_number=bike_number)
+            if (bike.state == 'MI'):
+                errortext = "We miss this bike. Please bring it to the bike tent at the Open Village"
+                if (bike.lock):
+                    if (bike.lock.lock_type == "CL" and bike.lock.unlock_key):
+                        errortext = "We miss this bike. Please bring it to the bike tent at the Open Village. Unlock key is " + bike.lock.unlock_key
+                        
+                return JsonResponse({"error": errortext})
             if (bike.availability_status != 'AV'):
                 return JsonResponse({"error": "bike is not available"})
             bike.availability_status = 'IU'
