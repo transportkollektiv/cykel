@@ -1,7 +1,19 @@
-from django.shortcuts import render
+from django.conf import settings
+from django.shortcuts import redirect
 from django.http import HttpResponse
 
-# Create your views here.
+from rest_framework.authtoken.models import Token
+
 
 def index(request):
-	return HttpResponse("Share all the bikes \o/")
+    return HttpResponse("Share all the bikes \o/")
+
+
+def redirect_to_ui(request):
+    if request.user.is_authenticated:
+        token = Token.objects.get_or_create(user=request.user)
+        return redirect('{url}?token={token}'.format(
+            url=settings.UI_URL, token=token.key
+        ))
+
+    return redirect(settings.UI_URL)
