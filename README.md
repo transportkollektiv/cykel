@@ -24,6 +24,17 @@ Install the required packages using `pip install -r requirements.txt`. It is rec
 
 Then run `manage.py migrate` to create the database tables.
 
+### Database configuration for PostgreSQL/PostGIS
+
+You need to enable the following extensions in the cykel database after installing PostGIS:
+
+```
+CREATE EXTENSION postgis;
+CREATE EXTENSION postgis_topology;
+```
+
+The DB migration will fail otherwise.
+
 ## Running the local server
 
 Run `manage.py runserver`.
