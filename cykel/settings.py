@@ -168,10 +168,21 @@ REST_FRAMEWORK = {
     ]
 }
 
-CORS_ORIGIN_ALLOW_ALL = True
-"""CORS_ORIGIN_WHITELIST = [
-    "http://localhost:8080"
-]"""
+AUTHENTICATION_BACKENDS = (
+    # Needed to login by username in Django admin, regardless of `allauth`
+    'django.contrib.auth.backends.ModelBackend',
 
-ACCOUNT_EMAIL_VERIFICATION = 'none'
+    # `allauth` specific authentication methods, such as login by e-mail
+    'allauth.account.auth_backends.AuthenticationBackend',
+)
+
+
+CORS_ORIGIN_WHITELIST = env.list('CORS_ORIGIN_WHITELIST', default=[])
+CORS_ALLOW_CREDENTIALS = True
+CSRF_COOKIE_SAMESITE = None
+SESSION_COOKIE_SAMESITE = None
+LOGIN_REDIRECT_URL = '/bikesharing/redirect/'
+UI_URL = env('UI_SITE_URL')
+
+ACCOUNT_EMAIL_VERIFICATION = None
 
