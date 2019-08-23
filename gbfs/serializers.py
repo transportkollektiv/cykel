@@ -18,6 +18,8 @@ class GbfsFreeBikeStatusSerialzer(serializers.HyperlinkedModelSerializer):
 		if (instance.current_position.x and instance.current_position.y):
 			representation['lat'] = instance.current_position.y
 			representation['lon'] = instance.current_position.x
+		if(instance.photo):
+			representation['photo'] = str(instance.photo)
 		return representation
 
 class GbfsStationInformationSerialzer(serializers.HyperlinkedModelSerializer):

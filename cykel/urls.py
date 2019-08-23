@@ -13,9 +13,12 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path
 from django.conf.urls import url
+from django.conf.urls.static import static
+
 from rest_framework import routers, serializers, viewsets
 
 
@@ -53,4 +56,4 @@ urlpatterns = [
     url(r'^rest-auth/github/$', GithubLogin.as_view(), name='github_login'),
     url(r'^rest-auth/stackexchange/$', StackexchangeLogin.as_view(), name='stackexchange_login'),
     url(r'^rest-auth/slack/$', SlackLogin.as_view(), name='slack_login'),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
