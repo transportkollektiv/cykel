@@ -15,7 +15,7 @@ class GbfsFreeBikeStatusSerialzer(serializers.HyperlinkedModelSerializer):
 		representation = super().to_representation(instance)
 		representation['is_reserved'] = False #Default to False TODO: maybe configuration later
 		representation['is_disabled'] = False #Default to False TODO: maybe configuration later
-		if (instance.current_position.x and instance.current_position.y):
+		if instance.current_position is not None and instance.current_position.x and instance.current_position.y:
 			representation['lat'] = instance.current_position.y
 			representation['lon'] = instance.current_position.x
 		return representation
@@ -30,7 +30,7 @@ class GbfsStationInformationSerialzer(serializers.HyperlinkedModelSerializer):
 		fields = ('name', 'capacity', 'station_id', )
 	def to_representation(self, instance):
 		representation = super().to_representation(instance)
-		if (instance.location.x and instance.location.y):
+		if instance.location is not None and instance.location.x and instance.location.y:
 			representation['lat'] = instance.location.y
 			representation['lon'] = instance.location.x
 		return representation
