@@ -50,7 +50,15 @@ class Bike(models.Model):
 	photo = models.FileField(upload_to='uploads/', default=None, null=True, blank=True) #TODO Thumbnail
 	
 	def __str__(self):
-		return self.bike_number
+		return str(self.bike_number)
+
+	def __repr__(self):
+		return "#{bike_number} ({state}) @ {position} ({last_reported})".format(
+			bike_number=self.bike_number,
+			state=self.state,
+			position=self.current_position,
+			last_reported=self.last_reported,
+			)
 
 class Rent(models.Model):
 	rent_start = models.DateTimeField()
@@ -61,6 +69,18 @@ class Rent(models.Model):
 	end_station = models.ForeignKey('Station', default=None, on_delete=models.PROTECT, null=True, blank=True, related_name='%(class)s_end_station')
 	bike = models.ForeignKey('Bike', default=None, on_delete=models.PROTECT)
 	user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+
+	def __repr__(self):
+		return "Bike {bike} for User '{user}'\n  rented {rent_start} from {start_position}/{start_station}\n  return {rent_end} at {end_position}/{end_station}".format(
+			bike=self.bike,
+			user=self.user,
+			start_position=self.start_position,
+			start_station=self.start_station,
+			rent_start=self.rent_start,
+			end_position=self.end_position,
+			end_station=self.end_station,
+			rent_end=self.rent_end
+			)
 
 class Lock(models.Model):
 	lock_id = models.CharField(editable=True, max_length=255)
@@ -78,4 +98,11 @@ class Station(models.Model):
 	max_bikes = models.IntegerField(default=10)
 
 	def __str__(self):
-		return str(self.station_name)
+		return self.station_name
+
+	def __repr__(self):
+		return "Station '{station_name}', max. {max_bikes} bikes ({location})".format(
+			station_name=self.station_name,
+			max_bikes=self.max_bikes,
+			location=self.location
+			)
