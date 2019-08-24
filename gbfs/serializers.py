@@ -4,7 +4,7 @@ from bikesharing.models import Bike
 from bikesharing.models import Lock
 from bikesharing.models import Station
 
-class GbfsFreeBikeStatusSerialzer(serializers.HyperlinkedModelSerializer):
+class GbfsFreeBikeStatusSerializer(serializers.HyperlinkedModelSerializer):
 	bike_id = serializers.CharField(source='bike_number', read_only=True)
 
 	class Meta:
@@ -20,7 +20,7 @@ class GbfsFreeBikeStatusSerialzer(serializers.HyperlinkedModelSerializer):
 			representation['lon'] = instance.current_position.x
 		return representation
 
-class GbfsStationInformationSerialzer(serializers.HyperlinkedModelSerializer):
+class GbfsStationInformationSerializer(serializers.HyperlinkedModelSerializer):
 	name = serializers.CharField(source='station_name', read_only=True)
 	capacity = serializers.IntegerField(source='max_bikes', read_only=True)
 	station_id = serializers.CharField(source='id', read_only=True)
@@ -35,7 +35,7 @@ class GbfsStationInformationSerialzer(serializers.HyperlinkedModelSerializer):
 			representation['lon'] = instance.location.x
 		return representation
 
-class GbfsStationStatusSerialzer(serializers.HyperlinkedModelSerializer):
+class GbfsStationStatusSerializer(serializers.HyperlinkedModelSerializer):
 	station_id = serializers.CharField(source='id', read_only=True)
 
 	class Meta:

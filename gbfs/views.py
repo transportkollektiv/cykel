@@ -6,9 +6,9 @@ from django.http import HttpResponse, JsonResponse
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
-from .serializers import GbfsFreeBikeStatusSerialzer
-from .serializers import GbfsStationInformationSerialzer
-from .serializers import GbfsStationStatusSerialzer
+from .serializers import GbfsFreeBikeStatusSerializer
+from .serializers import GbfsStationInformationSerializer
+from .serializers import GbfsStationStatusSerializer
 
 from bikesharing.models import Bike
 from bikesharing.models import Station
@@ -56,11 +56,11 @@ def gbfsSystemInformation(request):
 @permission_classes([AllowAny])        
 class GbfsFreeBikeStatusViewSet(mixins.ListModelMixin, generics.GenericAPIView):
     queryset = Bike.objects.filter(availability_status='AV')
-    serializer_class = GbfsFreeBikeStatusSerialzer
+    serializer_class = GbfsFreeBikeStatusSerializer
 
     def get(self, request, *args, **kwargs):
         bikes = Bike.objects.filter(availability_status='AV')
-        serializer = GbfsFreeBikeStatusSerialzer(bikes, many=True)
+        serializer = GbfsFreeBikeStatusSerializer(bikes, many=True)
         bike_data = {
             'bikes': serializer.data
         }
@@ -71,11 +71,11 @@ class GbfsFreeBikeStatusViewSet(mixins.ListModelMixin, generics.GenericAPIView):
 @permission_classes([AllowAny])
 class GbfsStationInformationViewSet(mixins.ListModelMixin, generics.GenericAPIView):
     queryset = Station.objects.all()
-    serializer_class = GbfsStationInformationSerialzer
+    serializer_class = GbfsStationInformationSerializer
 
     def get(self, request, *args, **kwargs):
         stations = Station.objects.all()
-        serializer = GbfsStationInformationSerialzer(stations, many=True)
+        serializer = GbfsStationInformationSerializer(stations, many=True)
         station_data = {
             'stations': serializer.data
         }
@@ -85,11 +85,11 @@ class GbfsStationInformationViewSet(mixins.ListModelMixin, generics.GenericAPIVi
 @permission_classes([AllowAny])
 class GbfsStationStatusViewSet(mixins.ListModelMixin, generics.GenericAPIView):
     queryset = Station.objects.all()
-    serializer_class = GbfsStationStatusSerialzer
+    serializer_class = GbfsStationStatusSerializer
 
     def get(self, request, *args, **kwargs):
         stations = Station.objects.all()
-        serializer = GbfsStationStatusSerialzer(stations, many=True)
+        serializer = GbfsStationStatusSerializer(stations, many=True)
         station_data = {
             'stations': serializer.data
         }
