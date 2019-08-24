@@ -89,7 +89,18 @@ class Lock(models.Model):
 	unlock_key = models.CharField(editable=True, max_length=255, blank=True)
 
 	def __str__(self):
-		return str(self.lock_id)
+		return "#{lock_id} ({lock_type})".format(
+			lock_id=self.lock_id,
+			lock_type=self.lock_type
+			)
+
+	def __repr__(self):
+		return "#{lock_id} ({lock_type}) mac_address={mac_address} unlock_key={unlock_key}".format(
+			lock_id=self.lock_id,
+			lock_type=self.lock_type,
+			mac_address=self.mac_address,
+			unlock_key=self.unlock_key,
+			)
 
 class Station(models.Model):
 	status = models.CharField(max_length=2, choices=station_status_choices, default='DI')
