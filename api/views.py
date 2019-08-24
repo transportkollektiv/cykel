@@ -2,6 +2,7 @@ import time
 import datetime
 
 from django.shortcuts import render
+from django.contrib.gis.measure import D
 from rest_framework import routers, serializers, viewsets, mixins, generics
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -139,6 +140,11 @@ def finish_rent(request):
             else:
                 rent.end_position = rent.bike.current_position
             rent.save()
+
+            # attach bike to station is location is closer than 10 meters
+            station_closer_than_10m = Station.objects.filter(location__distance_lte=(rent.end_position, D(m=10))).first()
+            if station_closer_than_10m:
+                rent.bike.current_station = station_closer_than_10m
 
             # set Bike status back to available
             rent.bike.availability_status = 'AV'
