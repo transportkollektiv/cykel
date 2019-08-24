@@ -1,4 +1,7 @@
 import time
+import pytz
+
+from datetime import datetime, timedelta
 
 from django.shortcuts import render
 from rest_framework import routers, serializers, viewsets, mixins, generics
@@ -55,7 +58,10 @@ def gbfsSystemInformation(request):
 
 @permission_classes([AllowAny])        
 class GbfsFreeBikeStatusViewSet(mixins.ListModelMixin, generics.GenericAPIView):
-    queryset = Bike.objects.filter(availability_status='AV')
+    queryset = Bike.objects.filter(
+        availability_status='AV',
+        last_reported__gte=datetime.now(pytz.utc) - timedelta(hours=1)
+        )
     serializer_class = GbfsFreeBikeStatusSerializer
 
     def get(self, request, *args, **kwargs):
