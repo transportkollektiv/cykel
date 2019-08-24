@@ -47,6 +47,7 @@ class Bike(models.Model):
 	last_reported = models.DateTimeField(default=None, null=True, blank=True)
 	internal_note = models.TextField(default=None, null=True, blank=True)
 	battery_voltage = models.FloatField(default=None, null=True, blank=True) #TODO Move to lock
+	photo = models.FileField(upload_to='uploads/', default=None, null=True, blank=True) #TODO Thumbnail
 	
 	def __str__(self):
 		return self.bike_number

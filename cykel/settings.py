@@ -186,3 +186,5 @@ UI_URL = env('UI_SITE_URL')
 
 ACCOUNT_EMAIL_VERIFICATION = None
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
