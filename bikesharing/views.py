@@ -13,7 +13,7 @@ def redirect_to_ui(request):
     if request.user.is_authenticated:
         token = Token.objects.get_or_create(user=request.user)
         return redirect('{url}?token={token}'.format(
-            url=settings.UI_URL, token=token.key
+            url=settings.UI_URL, token=token[0].key
         ))
 
     return redirect(settings.UI_URL)
