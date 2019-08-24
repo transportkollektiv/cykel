@@ -31,6 +31,7 @@ class StationViewSet(viewsets.ModelViewSet):
 """
 Returns current running Rents of the requesting user
 """
+@authentication_classes([authentication.BasicAuthentication, authentication.TokenAuthentication])
 @permission_classes([IsAuthenticated])
 class CurrentRentViewSet(viewsets.ModelViewSet, mixins.ListModelMixin, generics.GenericAPIView):
     serializer_class = RentSerializer
@@ -48,6 +49,7 @@ def updatebikelocation(request):
             bike_number = request.data.get("bike_number")
             lat = request.data.get("lat")
             lng = request.data.get("lng")
+            battery_voltage = request.data.get("battery_voltage")
             if not (bike_number):
                 return JsonResponse({"error": "bike_number missing"})
             if not (lat):
@@ -56,16 +58,17 @@ def updatebikelocation(request):
                 return JsonResponse({"error": "lng missing"})
 
             bike = Bike.objects.get(bike_number=bike_number)
-            bike.current_position.x = lng
-            bike.current_position.y = lat
-            print(dir(bike))
+            bike.current_position = Point(float(lng), float(lat), srid=4326)
+            bike.last_reported = datetime.datetime.now()
+            if battery_voltage:
+                bike.battery_voltage = battery_voltage
             bike.save()
             
             return JsonResponse({"success": True})
         except Bike.DoesNotExist:
             return JsonResponse({"error": "bike does not exist"})
 
-@authentication_classes([authentication.BasicAuthentication])
+@authentication_classes([authentication.BasicAuthentication, authentication.TokenAuthentication])
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def start_rent(request):
@@ -83,6 +86,13 @@ def start_rent(request):
 
             #check bike availability and set status to "in use"
             bike = Bike.objects.get(bike_number=bike_number)
+            if (bike.state == 'MI'):
+                errortext = "We miss this bike. Please bring it to the bike tent at the Open Village"
+                if (bike.lock):
+                    if (bike.lock.lock_type == "CL" and bike.lock.unlock_key):
+                        errortext = "We miss this bike. Please bring it to the bike tent at the Open Village. Unlock key is " + bike.lock.unlock_key
+                        
+                return JsonResponse({"error": errortext})
             if (bike.availability_status != 'AV'):
                 return JsonResponse({"error": "bike is not available"})
             bike.availability_status = 'IU'
@@ -91,7 +101,9 @@ def start_rent(request):
             rent = Rent.objects.create(rent_start=datetime.datetime.now(), user=request.user, bike=bike)
             if (lat and lng):
                 rent.start_position = Point(float(lng), float(lat), srid=4326)
-                rent.save()
+            else:
+                rent.start_position = bike.current_position
+            rent.save()
             #TODO station position and bike position if no lat lng over APIt
             
             res = {"success": True}
@@ -104,7 +116,7 @@ def start_rent(request):
         except Bike.DoesNotExist:
             return JsonResponse({"error": "bike does not exist"})
 
-@authentication_classes([authentication.BasicAuthentication])
+@authentication_classes([authentication.BasicAuthentication, authentication.TokenAuthentication])
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def finish_rent(request):

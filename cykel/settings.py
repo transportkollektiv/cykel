@@ -48,9 +48,26 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.gis',
     'rest_framework',
+    'rest_framework.authtoken',
+    'rest_auth',
+    'django.contrib.sites',
+    'allauth',
+    'allauth.account',
+    'rest_auth.registration',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.twitter',
+    'allauth.socialaccount.providers.github',
+    'allauth.socialaccount.providers.stackexchange',
+    'fragdenstaat_auth',
+    'allauth.socialaccount.providers.slack',
+
+
     'gbfs',
     'corsheaders',
+    'leaflet',
 ]
+
+SITE_ID = 1
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -145,10 +162,29 @@ REST_FRAMEWORK = {
     # or allow read-only access for unauthenticated users.
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
     ]
 }
 
-CORS_ORIGIN_ALLOW_ALL = True
-"""CORS_ORIGIN_WHITELIST = [
-    "http://localhost:8080"
-]"""
+AUTHENTICATION_BACKENDS = (
+    # Needed to login by username in Django admin, regardless of `allauth`
+    'django.contrib.auth.backends.ModelBackend',
+
+    # `allauth` specific authentication methods, such as login by e-mail
+    'allauth.account.auth_backends.AuthenticationBackend',
+)
+
+
+CORS_ORIGIN_WHITELIST = env.list('CORS_ORIGIN_WHITELIST', default=[])
+CORS_ALLOW_CREDENTIALS = True
+CSRF_COOKIE_SAMESITE = None
+SESSION_COOKIE_SAMESITE = None
+LOGIN_REDIRECT_URL = '/bikesharing/redirect/'
+UI_URL = env('UI_SITE_URL')
+
+ACCOUNT_EMAIL_VERIFICATION = None
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
