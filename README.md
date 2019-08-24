@@ -18,6 +18,10 @@ DEBUG=1
 DATABASE_URL=spatialite:///cykel.sqlite
 # it is recommended to use a DNS alias for localhost, instead of "localhost", for CORS reasons
 ALLOWED_HOSTS=lvh.me,localhost
+# set the full URL to the frontend
+UI_SITE_URL=http://lvh.me:1234/
+# CORS origins to whitelist, i.e. the frontend URL (with scheme, without path)
+CORS_ORIGIN_WHITELIST=http://lvh.me:1234
 ```
 
 Install the required packages using `pip install -r requirements.txt`. It is recommended to use a virtualenv with your choice of tool, e.g. `pipenv`, in which case you can run `pipenv install` (and `pipenv shell` or prefix `pipenv run` to run commands).
