@@ -50,7 +50,15 @@ class Bike(models.Model):
 	photo = models.FileField(upload_to='uploads/', default=None, null=True, blank=True) #TODO Thumbnail
 	
 	def __str__(self):
-		return self.bike_number
+		return str(self.bike_number)
+
+	def __repr__(self):
+		return "#{bike_number} ({state}) @ {position} ({last_reported})".format(
+			bike_number=self.bike_number,
+			state=self.state,
+			position=self.current_position,
+			last_reported=self.last_reported,
+			)
 
 class Rent(models.Model):
 	rent_start = models.DateTimeField()
@@ -62,6 +70,18 @@ class Rent(models.Model):
 	bike = models.ForeignKey('Bike', default=None, on_delete=models.PROTECT)
 	user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
 
+	def __repr__(self):
+		return "Bike {bike} for User '{user}'\n  rented {rent_start} from {start_position}/{start_station}\n  return {rent_end} at {end_position}/{end_station}".format(
+			bike=self.bike,
+			user=self.user,
+			start_position=self.start_position,
+			start_station=self.start_station,
+			rent_start=self.rent_start,
+			end_position=self.end_position,
+			end_station=self.end_station,
+			rent_end=self.rent_end
+			)
+
 class Lock(models.Model):
 	lock_id = models.CharField(editable=True, max_length=255)
 	lock_type = models.CharField(max_length=2, choices=lock_type_choices, default='CL')
@@ -69,7 +89,18 @@ class Lock(models.Model):
 	unlock_key = models.CharField(editable=True, max_length=255, blank=True)
 
 	def __str__(self):
-		return str(self.lock_id)
+		return "#{lock_id} ({lock_type})".format(
+			lock_id=self.lock_id,
+			lock_type=self.lock_type
+			)
+
+	def __repr__(self):
+		return "#{lock_id} ({lock_type}) mac_address={mac_address} unlock_key={unlock_key}".format(
+			lock_id=self.lock_id,
+			lock_type=self.lock_type,
+			mac_address=self.mac_address,
+			unlock_key=self.unlock_key,
+			)
 
 class Station(models.Model):
 	status = models.CharField(max_length=2, choices=station_status_choices, default='DI')
@@ -78,4 +109,11 @@ class Station(models.Model):
 	max_bikes = models.IntegerField(default=10)
 
 	def __str__(self):
-		return str(self.station_name)
+		return self.station_name
+
+	def __repr__(self):
+		return "Station '{station_name}', max. {max_bikes} bikes ({location})".format(
+			station_name=self.station_name,
+			max_bikes=self.max_bikes,
+			location=self.location
+			)
