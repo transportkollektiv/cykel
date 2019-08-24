@@ -79,7 +79,7 @@ class GbfsFreeBikeStatusViewSet(mixins.ListModelMixin, generics.GenericAPIView):
 
 @permission_classes([AllowAny])
 class GbfsStationInformationViewSet(mixins.ListModelMixin, generics.GenericAPIView):
-    queryset = Station.objects.all()
+    queryset = Station.objects.filter(status='AC')
     serializer_class = GbfsStationInformationSerializer
 
     def get(self, request, *args, **kwargs):
@@ -93,11 +93,11 @@ class GbfsStationInformationViewSet(mixins.ListModelMixin, generics.GenericAPIVi
 
 @permission_classes([AllowAny])
 class GbfsStationStatusViewSet(mixins.ListModelMixin, generics.GenericAPIView):
-    queryset = Station.objects.all()
+    queryset = Station.objects.filter(status='AC')
     serializer_class = GbfsStationStatusSerializer
 
     def get(self, request, *args, **kwargs):
-        stations = Station.objects.all()
+        stations = Station.objects.filter(status='AC')
         serializer = GbfsStationStatusSerializer(stations, many=True)
         station_data = {
             'stations': serializer.data
