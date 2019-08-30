@@ -42,3 +42,18 @@ The DB migration will fail otherwise.
 ## Running the local server
 
 Run `manage.py runserver`.
+
+### Configuring authentication
+
+For the administration interface you can run `manage.py createsuperuser` to create an user with administrative rights and access the interface at `http://localhost:8080/admin`.
+
+Then, visit `/admin/` and edit the URL of the first Website (`/admin/sites/site/1/change/`).
+
+### Configuring OAuth
+
+Visit `/admin/socialaccount/socialapp/add/` (Add Social Application).
+
+For example, for GitHub select "Provider: GitHub", "Name: github", the Client-Id and Secret are shown in the OAuth application creation process at GitHub.
+
+When you create an OAuth2-Application at a provider, you need to enter a callback URL. This URL is in the format `https://<host>/auth/<name>/callback/`.
+
