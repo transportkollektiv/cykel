@@ -85,8 +85,11 @@ def start_rent(request):
             #if (not lat or not lng) and (not station):
             #    return JsonResponse({"error": "lat and lng or station required"})
 
-            #check bike availability and set status to "in use"
+            
             bike = Bike.objects.get(bike_number=bike_number)
+
+            """
+            #TODO: message for bikes who are lost
             if (bike.state == 'MI'):
                 errortext = "We miss this bike. Please bring it to the bike tent at the Open Village"
                 if (bike.lock):
@@ -94,6 +97,9 @@ def start_rent(request):
                         errortext = "We miss this bike. Please bring it to the bike tent at the Open Village. Unlock key is " + bike.lock.unlock_key
                         
                 return JsonResponse({"error": errortext})
+            """
+
+            #check bike availability and set status to "in use"
             if (bike.availability_status != 'AV'):
                 return JsonResponse({"error": "bike is not available"})
             bike.availability_status = 'IU'
