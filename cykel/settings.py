@@ -49,7 +49,6 @@ INSTALLED_APPS = [
     'django.contrib.gis',
     'rest_framework',
     'rest_framework.authtoken',
-    'rest_auth',
     'django.contrib.sites',
     'allauth',
     'allauth.account',
