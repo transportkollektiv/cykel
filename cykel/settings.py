@@ -39,6 +39,7 @@ ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[])
 # Application definition
 
 INSTALLED_APPS = [
+    'cykel',
     'bikesharing.apps.BikesharingConfig',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -182,6 +183,8 @@ CSRF_COOKIE_SAMESITE = None
 SESSION_COOKIE_SAMESITE = None
 LOGIN_REDIRECT_URL = '/bikesharing/redirect/'
 UI_URL = env('UI_SITE_URL')
+
+AUTH_USER_MODEL = 'cykel.User'
 
 ACCOUNT_AUTHENTICATION_METHOD = 'username'
 ACCOUNT_EMAIL_VERIFICATION = None
