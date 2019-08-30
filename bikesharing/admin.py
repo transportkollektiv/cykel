@@ -21,7 +21,7 @@ class BikeAdmin(LeafletGeoAdmin, admin.ModelAdmin):
 class RentAdmin(LeafletGeoAdmin, admin.ModelAdmin):
 	list_display = ('bike', 'user', 'rent_start', 'rent_end')
 	list_filter = ('rent_start', 'rent_end')
-	search_fields = ('bike__bike_number', 'user__username', 'user__email', 'user__first_name', 'user__last_name',)
+	search_fields = ('bike__bike_number', 'user__username')
 
 admin.site.register(Lock, LeafletGeoAdmin)
 admin.site.register(Station, LeafletGeoAdmin)
