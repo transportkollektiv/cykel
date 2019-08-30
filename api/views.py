@@ -8,7 +8,7 @@ from rest_framework.decorators import api_view, permission_classes, authenticati
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import authentication
 from django.http import HttpResponse, JsonResponse
-
+from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import Point
 
 from .serializers import BikeSerializer
@@ -160,3 +160,33 @@ def finish_rent(request):
         except Rent.DoesNotExist:
             return JsonResponse({"error": "rent does not exist"})
 
+class UserDetailsSerializer(serializers.ModelSerializer):
+    """
+    User model w/o password
+    """
+    class Meta:
+        model = get_user_model()
+        fields = ('pk', 'username')
+
+class UserDetailsView(generics.RetrieveAPIView):
+    """
+    Reads UserModel fields
+    Accepts GET method.
+    Default accepted fields: username
+    Default display fields: pk, username
+    Read-only fields: pk
+    Returns UserModel fields.
+    """
+    serializer_class = UserDetailsSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_object(self):
+        return self.request.user
+
+    def get_queryset(self):
+        """
+        Adding this method since it is sometimes called when using
+        django-rest-swagger
+        https://github.com/Tivix/django-rest-auth/issues/275
+        """
+        return get_user_model().objects.none()

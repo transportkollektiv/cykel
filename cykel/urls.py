@@ -28,5 +28,4 @@ urlpatterns = [
     path('api/', include('api.urls')),
     path('gbfs/', include('gbfs.urls')),
     url(r'^auth/', include('allauth.urls')),
-    url(r'^rest-auth/', include('rest_auth.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
