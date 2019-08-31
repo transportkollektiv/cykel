@@ -7,6 +7,7 @@ from rest_framework import routers, serializers, viewsets, mixins, generics
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import authentication
+from rest_framework_api_key.permissions import HasAPIKey
 from django.http import HttpResponse, JsonResponse
 from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import Point
@@ -42,9 +43,8 @@ class CurrentRentViewSet(viewsets.ModelViewSet, mixins.ListModelMixin, generics.
         return Rent.objects.filter(user=user, rent_end=None)
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([HasAPIKey])
 def updatebikelocation(request):
-    #TODO: Auth für ttn service
     if request.method == 'POST':
         try:
             bike_number = request.data.get("bike_number")
