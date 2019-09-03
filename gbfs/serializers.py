@@ -1,3 +1,7 @@
+import pytz
+
+from datetime import datetime, timedelta
+
 from rest_framework import routers, serializers, viewsets
 
 from bikesharing.models import Bike
@@ -28,6 +32,7 @@ class GbfsStationInformationSerializer(serializers.HyperlinkedModelSerializer):
 	class Meta:
 		model = Station
 		fields = ('name', 'capacity', 'station_id', )
+
 	def to_representation(self, instance):
 		representation = super().to_representation(instance)
 		if instance.location is not None and instance.location.x and instance.location.y:
@@ -41,9 +46,10 @@ class GbfsStationStatusSerializer(serializers.HyperlinkedModelSerializer):
 	class Meta:
 		model = Station
 		fields = ('station_id', )
+
 	def to_representation(self, instance):
 		representation = super().to_representation(instance)
-		representation['num_bikes_available'] = instance.bike_set.filter(availability_status='AV').count()
+		representation['num_bikes_available'] = instance.bike_set.filter(availability_status='AV', last_reported__gte=datetime.now(pytz.utc) - timedelta(hours=1)).count()
 		representation['num_docks_available'] = instance.max_bikes - representation['num_bikes_available']
 		status = (instance.status == "AC") or False
 		representation['is_installed'] = status
