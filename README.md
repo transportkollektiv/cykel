@@ -55,5 +55,11 @@ Visit `/admin/socialaccount/socialapp/add/` (Add Social Application).
 
 For example, for GitHub select "Provider: GitHub", "Name: github", the Client-Id and Secret are shown in the OAuth application creation process at GitHub.
 
-When you create an OAuth2-Application at a provider, you need to enter a callback URL. This URL is in the format `https://<host>/auth/<name>/callback/`.
+When you create an OAuth2-Application at a provider, you need to enter a callback URL. This URL is in the format `https://<host>/auth/<name>/login/callback/`.
+
+## Update bike location
+
+For updating the current bike location we provide the `/api/bike/updatelocation` endpoint.
+
+One project which can use this together with TheThingsNetwork is the [`cykel-ttn`](https://github.com/stadtulm/cykel-ttn) adapter. Read the readme in the repository on how to use it - for authentication you need to add a new api key at `/admin/rest_framework_api_key/apikey/`.
 

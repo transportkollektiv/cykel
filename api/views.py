@@ -7,8 +7,9 @@ from rest_framework import routers, serializers, viewsets, mixins, generics
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import authentication
+from rest_framework_api_key.permissions import HasAPIKey
 from django.http import HttpResponse, JsonResponse
-
+from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import Point
 
 from .serializers import BikeSerializer
@@ -32,7 +33,7 @@ class StationViewSet(viewsets.ModelViewSet):
 """
 Returns current running Rents of the requesting user
 """
-@authentication_classes([authentication.BasicAuthentication, authentication.TokenAuthentication])
+@authentication_classes([authentication.TokenAuthentication])
 @permission_classes([IsAuthenticated])
 class CurrentRentViewSet(viewsets.ModelViewSet, mixins.ListModelMixin, generics.GenericAPIView):
     serializer_class = RentSerializer
@@ -42,11 +43,8 @@ class CurrentRentViewSet(viewsets.ModelViewSet, mixins.ListModelMixin, generics.
         return Rent.objects.filter(user=user, rent_end=None)
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([HasAPIKey])
 def updatebikelocation(request):
-    #TODO: Auth für ttn service
-    if request.method == 'POST':
-        try:
             bike_number = request.data.get("bike_number")
             lat = request.data.get("lat")
             lng = request.data.get("lng")
@@ -58,7 +56,11 @@ def updatebikelocation(request):
             if not (lng):
                 return JsonResponse({"error": "lng missing"})
 
+    try:
             bike = Bike.objects.get(bike_number=bike_number)
+    except Bike.DoesNotExist:
+        return JsonResponse({"error": "bike does not exist"})
+
             bike.current_position = Point(float(lng), float(lat), srid=4326)
             bike.last_reported = datetime.datetime.now()
             if battery_voltage:
@@ -77,16 +79,11 @@ def updatebikelocation(request):
             bike.save()
             
             return JsonResponse({"success": True})
-        except Bike.DoesNotExist:
-            return JsonResponse({"error": "bike does not exist"})
 
-@authentication_classes([authentication.BasicAuthentication, authentication.TokenAuthentication])
+@authentication_classes([authentication.TokenAuthentication])
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def start_rent(request):
-    #TODO: Auth für ttn service
-    if request.method == 'POST':
-        try:
             bike_number = request.data.get("bike_number")
             station = request.data.get("station")
             lat = request.data.get("lat")
@@ -96,8 +93,10 @@ def start_rent(request):
             #if (not lat or not lng) and (not station):
             #    return JsonResponse({"error": "lat and lng or station required"})
 
-            
+    try:
             bike = Bike.objects.get(bike_number=bike_number)
+    except Bike.DoesNotExist:
+        return JsonResponse({"error": "bike does not exist"})
 
             """
             #TODO: message for bikes who are lost
@@ -131,20 +130,19 @@ def start_rent(request):
                     res["unlock_key"] = bike.lock.unlock_key
 
             return JsonResponse(res)
-        except Bike.DoesNotExist:
-            return JsonResponse({"error": "bike does not exist"})
 
-@authentication_classes([authentication.BasicAuthentication, authentication.TokenAuthentication])
+@authentication_classes([authentication.TokenAuthentication])
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def finish_rent(request):
-    #TODO: Auth für ttn service
-    if request.method == 'POST':
-        try:
             lat = request.data.get("lat")
             lng = request.data.get("lng")
             rent_id = request.data.get("rent_id")
+    try:
             rent = Rent.objects.get(id=rent_id)
+    except Rent.DoesNotExist:
+        return JsonResponse({"error": "rent does not exist"})
+
             if (rent.user != request.user):
                 return JsonResponse({"error": "rent belongs to another user"})
             if (rent.rent_end!=None):
@@ -173,6 +171,34 @@ def finish_rent(request):
             rent.bike.save()
 
             return JsonResponse({"success": True})
-        except Rent.DoesNotExist:
-            return JsonResponse({"error": "rent does not exist"})
 
+class UserDetailsSerializer(serializers.ModelSerializer):
+    """
+    User model w/o password
+    """
+    class Meta:
+        model = get_user_model()
+        fields = ('pk', 'username')
+
+class UserDetailsView(generics.RetrieveAPIView):
+    """
+    Reads UserModel fields
+    Accepts GET method.
+    Default accepted fields: username
+    Default display fields: pk, username
+    Read-only fields: pk
+    Returns UserModel fields.
+    """
+    serializer_class = UserDetailsSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_object(self):
+        return self.request.user
+
+    def get_queryset(self):
+        """
+        Adding this method since it is sometimes called when using
+        django-rest-swagger
+        https://github.com/Tivix/django-rest-auth/issues/275
+        """
+        return get_user_model().objects.none()

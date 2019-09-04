@@ -39,6 +39,7 @@ ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[])
 # Application definition
 
 INSTALLED_APPS = [
+    'cykel',
     'bikesharing.apps.BikesharingConfig',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -49,11 +50,10 @@ INSTALLED_APPS = [
     'django.contrib.gis',
     'rest_framework',
     'rest_framework.authtoken',
-    'rest_auth',
+    'rest_framework_api_key',
     'django.contrib.sites',
     'allauth',
     'allauth.account',
-    'rest_auth.registration',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.twitter',
     'allauth.socialaccount.providers.github',
@@ -184,7 +184,13 @@ SESSION_COOKIE_SAMESITE = None
 LOGIN_REDIRECT_URL = '/bikesharing/redirect/'
 UI_URL = env('UI_SITE_URL')
 
+AUTH_USER_MODEL = 'cykel.User'
+
+ACCOUNT_AUTHENTICATION_METHOD = 'username'
 ACCOUNT_EMAIL_VERIFICATION = None
+SOCIALACCOUNT_QUERY_EMAIL = False
+ACCOUNT_ADAPTER = 'cykel.auth.account_adapter.NoSignupAccountAdapter'
+SOCIALACCOUNT_ADAPTER = 'cykel.auth.account_adapter.SocialAccountAdapter'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")

@@ -1,4 +1,7 @@
 import time
+import pytz
+
+from datetime import datetime, timedelta
 
 from django.shortcuts import render
 from rest_framework import routers, serializers, viewsets, mixins, generics
@@ -55,11 +58,17 @@ def gbfsSystemInformation(request):
 
 @permission_classes([AllowAny])        
 class GbfsFreeBikeStatusViewSet(mixins.ListModelMixin, generics.GenericAPIView):
-    queryset = Bike.objects.filter(availability_status='AV')
+    queryset = Bike.objects.filter(
+        availability_status='AV',
+        last_reported__gte=datetime.now(pytz.utc) - timedelta(hours=1)
+        )
     serializer_class = GbfsFreeBikeStatusSerializer
 
     def get(self, request, *args, **kwargs):
-        bikes = Bike.objects.filter(availability_status='AV')
+        bikes = Bike.objects.filter(
+            availability_status='AV',
+            last_reported__gte=datetime.now(pytz.utc) - timedelta(hours=1)
+        )
         serializer = GbfsFreeBikeStatusSerializer(bikes, many=True)
         bike_data = {
             'bikes': serializer.data
@@ -70,7 +79,7 @@ class GbfsFreeBikeStatusViewSet(mixins.ListModelMixin, generics.GenericAPIView):
 
 @permission_classes([AllowAny])
 class GbfsStationInformationViewSet(mixins.ListModelMixin, generics.GenericAPIView):
-    queryset = Station.objects.all()
+    queryset = Station.objects.filter(status='AC')
     serializer_class = GbfsStationInformationSerializer
 
     def get(self, request, *args, **kwargs):
@@ -84,11 +93,11 @@ class GbfsStationInformationViewSet(mixins.ListModelMixin, generics.GenericAPIVi
 
 @permission_classes([AllowAny])
 class GbfsStationStatusViewSet(mixins.ListModelMixin, generics.GenericAPIView):
-    queryset = Station.objects.all()
+    queryset = Station.objects.filter(status='AC')
     serializer_class = GbfsStationStatusSerializer
 
     def get(self, request, *args, **kwargs):
-        stations = Station.objects.all()
+        stations = Station.objects.filter(status='AC')
         serializer = GbfsStationStatusSerializer(stations, many=True)
         station_data = {
             'stations': serializer.data
