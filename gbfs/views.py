@@ -60,14 +60,16 @@ def gbfsSystemInformation(request):
 class GbfsFreeBikeStatusViewSet(mixins.ListModelMixin, generics.GenericAPIView):
     queryset = Bike.objects.filter(
         availability_status='AV',
-        last_reported__gte=datetime.now(pytz.utc) - timedelta(hours=1)
-        )
+        last_reported__gte=datetime.now(pytz.utc) - timedelta(hours=1),
+        current_station=None
+    )
     serializer_class = GbfsFreeBikeStatusSerializer
 
     def get(self, request, *args, **kwargs):
         bikes = Bike.objects.filter(
             availability_status='AV',
-            last_reported__gte=datetime.now(pytz.utc) - timedelta(hours=1)
+            last_reported__gte=datetime.now(pytz.utc) - timedelta(hours=1),
+            current_station=None
         )
         serializer = GbfsFreeBikeStatusSerializer(bikes, many=True)
         bike_data = {
