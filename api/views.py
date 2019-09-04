@@ -63,6 +63,17 @@ def updatebikelocation(request):
             bike.last_reported = datetime.datetime.now()
             if battery_voltage:
                 bike.battery_voltage = battery_voltage
+
+            #check if bike is near station and assign it to that station
+            station_closer_than_10m = Station.objects.filter(
+                location__distance_lte=(bike.current_position, D(m=10)),
+                status = 'AC'
+            ).first()
+            if station_closer_than_10m:
+                bike.current_station = station_closer_than_10m
+            else:
+                bike.current_station = None
+
             bike.save()
             
             return JsonResponse({"success": True})
@@ -148,9 +159,14 @@ def finish_rent(request):
             rent.save()
 
             # attach bike to station is location is closer than 10 meters
-            station_closer_than_10m = Station.objects.filter(location__distance_lte=(rent.end_position, D(m=10))).first()
+            station_closer_than_10m = Station.objects.filter(
+                location__distance_lte=(rent.end_position, D(m=10)),
+                status = 'AC'
+            ).first()
             if station_closer_than_10m:
                 rent.bike.current_station = station_closer_than_10m
+            else:
+                rent.bike.current_station = None
 
             # set Bike status back to available
             rent.bike.availability_status = 'AV'
