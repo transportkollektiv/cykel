@@ -45,132 +45,132 @@ class CurrentRentViewSet(viewsets.ModelViewSet, mixins.ListModelMixin, generics.
 @api_view(['POST'])
 @permission_classes([HasAPIKey])
 def updatebikelocation(request):
-            bike_number = request.data.get("bike_number")
-            lat = request.data.get("lat")
-            lng = request.data.get("lng")
-            battery_voltage = request.data.get("battery_voltage")
-            if not (bike_number):
-                return JsonResponse({"error": "bike_number missing"})
-            if not (lat):
-                return JsonResponse({"error": "lat missing"})
-            if not (lng):
-                return JsonResponse({"error": "lng missing"})
+    bike_number = request.data.get("bike_number")
+    lat = request.data.get("lat")
+    lng = request.data.get("lng")
+    battery_voltage = request.data.get("battery_voltage")
+    if not (bike_number):
+        return JsonResponse({"error": "bike_number missing"})
+    if not (lat):
+        return JsonResponse({"error": "lat missing"})
+    if not (lng):
+        return JsonResponse({"error": "lng missing"})
 
     try:
-            bike = Bike.objects.get(bike_number=bike_number)
+        bike = Bike.objects.get(bike_number=bike_number)
     except Bike.DoesNotExist:
         return JsonResponse({"error": "bike does not exist"})
 
-            bike.current_position = Point(float(lng), float(lat), srid=4326)
-            bike.last_reported = datetime.datetime.now()
-            if battery_voltage:
-                bike.battery_voltage = battery_voltage
+    bike.current_position = Point(float(lng), float(lat), srid=4326)
+    bike.last_reported = datetime.datetime.now()
+    if battery_voltage:
+        bike.battery_voltage = battery_voltage
 
-            #check if bike is near station and assign it to that station
-            station_closer_than_10m = Station.objects.filter(
-                location__distance_lte=(bike.current_position, D(m=10)),
-                status = 'AC'
-            ).first()
-            if station_closer_than_10m:
-                bike.current_station = station_closer_than_10m
-            else:
-                bike.current_station = None
+    #check if bike is near station and assign it to that station
+    station_closer_than_10m = Station.objects.filter(
+        location__distance_lte=(bike.current_position, D(m=10)),
+        status = 'AC'
+    ).first()
+    if station_closer_than_10m:
+        bike.current_station = station_closer_than_10m
+    else:
+        bike.current_station = None
 
-            bike.save()
-            
-            return JsonResponse({"success": True})
+    bike.save()
+    
+    return JsonResponse({"success": True})
 
 @authentication_classes([authentication.TokenAuthentication])
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def start_rent(request):
-            bike_number = request.data.get("bike_number")
-            station = request.data.get("station")
-            lat = request.data.get("lat")
-            lng = request.data.get("lng")
-            if not (bike_number):
-                return JsonResponse({"error": "bike_number missing"})
-            #if (not lat or not lng) and (not station):
-            #    return JsonResponse({"error": "lat and lng or station required"})
+    bike_number = request.data.get("bike_number")
+    station = request.data.get("station")
+    lat = request.data.get("lat")
+    lng = request.data.get("lng")
+    if not (bike_number):
+        return JsonResponse({"error": "bike_number missing"})
+    #if (not lat or not lng) and (not station):
+    #    return JsonResponse({"error": "lat and lng or station required"})
 
     try:
             bike = Bike.objects.get(bike_number=bike_number)
     except Bike.DoesNotExist:
         return JsonResponse({"error": "bike does not exist"})
 
-            """
-            #TODO: message for bikes who are lost
-            if (bike.state == 'MI'):
-                errortext = "We miss this bike. Please bring it to the bike tent at the Open Village"
-                if (bike.lock):
-                    if (bike.lock.lock_type == "CL" and bike.lock.unlock_key):
-                        errortext = "We miss this bike. Please bring it to the bike tent at the Open Village. Unlock key is " + bike.lock.unlock_key
-                        
-                return JsonResponse({"error": errortext})
-            """
-
-            #check bike availability and set status to "in use"
-            if (bike.availability_status != 'AV'):
-                return JsonResponse({"error": "bike is not available"})
-            bike.availability_status = 'IU'
-            bike.save()
-
-            rent = Rent.objects.create(rent_start=datetime.datetime.now(), user=request.user, bike=bike)
-            if (lat and lng):
-                rent.start_position = Point(float(lng), float(lat), srid=4326)
-            else:
-                rent.start_position = bike.current_position
-            rent.save()
-            #TODO station position and bike position if no lat lng over APIt
-            
-            res = {"success": True}
-            #TODO return Lock code (or Open Lock?)
+        """
+        #TODO: message for bikes who are lost
+        if (bike.state == 'MI'):
+            errortext = "We miss this bike. Please bring it to the bike tent at the Open Village"
             if (bike.lock):
                 if (bike.lock.lock_type == "CL" and bike.lock.unlock_key):
-                    res["unlock_key"] = bike.lock.unlock_key
+                    errortext = "We miss this bike. Please bring it to the bike tent at the Open Village. Unlock key is " + bike.lock.unlock_key
+                    
+            return JsonResponse({"error": errortext})
+        """
 
-            return JsonResponse(res)
+        #check bike availability and set status to "in use"
+        if (bike.availability_status != 'AV'):
+            return JsonResponse({"error": "bike is not available"})
+        bike.availability_status = 'IU'
+        bike.save()
+
+        rent = Rent.objects.create(rent_start=datetime.datetime.now(), user=request.user, bike=bike)
+        if (lat and lng):
+            rent.start_position = Point(float(lng), float(lat), srid=4326)
+        else:
+            rent.start_position = bike.current_position
+        rent.save()
+        #TODO station position and bike position if no lat lng over APIt
+        
+        res = {"success": True}
+        #TODO return Lock code (or Open Lock?)
+        if (bike.lock):
+            if (bike.lock.lock_type == "CL" and bike.lock.unlock_key):
+                res["unlock_key"] = bike.lock.unlock_key
+
+        return JsonResponse(res)
 
 @authentication_classes([authentication.TokenAuthentication])
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def finish_rent(request):
-            lat = request.data.get("lat")
-            lng = request.data.get("lng")
-            rent_id = request.data.get("rent_id")
+    lat = request.data.get("lat")
+    lng = request.data.get("lng")
+    rent_id = request.data.get("rent_id")
     try:
-            rent = Rent.objects.get(id=rent_id)
+        rent = Rent.objects.get(id=rent_id)
     except Rent.DoesNotExist:
         return JsonResponse({"error": "rent does not exist"})
 
-            if (rent.user != request.user):
-                return JsonResponse({"error": "rent belongs to another user"})
-            if (rent.rent_end!=None):
-                return JsonResponse({"error": "rent was already finished"})
+        if (rent.user != request.user):
+            return JsonResponse({"error": "rent belongs to another user"})
+        if (rent.rent_end!=None):
+            return JsonResponse({"error": "rent was already finished"})
 
-            rent.rent_end = datetime.datetime.now()
-            if (lat and lng):
-                rent.end_position = Point(float(lng), float(lat), srid=4326)
-                rent.bike.current_position = Point(float(lng), float(lat), srid=4326)
-            else:
-                rent.end_position = rent.bike.current_position
-            rent.save()
+        rent.rent_end = datetime.datetime.now()
+        if (lat and lng):
+            rent.end_position = Point(float(lng), float(lat), srid=4326)
+            rent.bike.current_position = Point(float(lng), float(lat), srid=4326)
+        else:
+            rent.end_position = rent.bike.current_position
+        rent.save()
 
-            # attach bike to station is location is closer than 10 meters
-            station_closer_than_10m = Station.objects.filter(
-                location__distance_lte=(rent.end_position, D(m=10)),
-                status = 'AC'
-            ).first()
-            if station_closer_than_10m:
-                rent.bike.current_station = station_closer_than_10m
-            else:
-                rent.bike.current_station = None
+        # attach bike to station is location is closer than 10 meters
+        station_closer_than_10m = Station.objects.filter(
+            location__distance_lte=(rent.end_position, D(m=10)),
+            status = 'AC'
+        ).first()
+        if station_closer_than_10m:
+            rent.bike.current_station = station_closer_than_10m
+        else:
+            rent.bike.current_station = None
 
-            # set Bike status back to available
-            rent.bike.availability_status = 'AV'
-            rent.bike.save()
+        # set Bike status back to available
+        rent.bike.availability_status = 'AV'
+        rent.bike.save()
 
-            return JsonResponse({"success": True})
+        return JsonResponse({"success": True})
 
 class UserDetailsSerializer(serializers.ModelSerializer):
     """
