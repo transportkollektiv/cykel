@@ -11,6 +11,7 @@ from rest_framework_api_key.permissions import HasAPIKey
 from django.http import HttpResponse, JsonResponse
 from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import Point
+from preferences import preferences
 
 from .serializers import BikeSerializer
 from .serializers import StationSerializer
@@ -67,12 +68,14 @@ def updatebikelocation(request):
         bike.battery_voltage = battery_voltage
 
     #check if bike is near station and assign it to that station
-    station_closer_than_10m = Station.objects.filter(
-        location__distance_lte=(bike.current_position, D(m=10)),
+    # distance ist configured in prefernces
+    max_distance = preferences.BikeSharePreferences.station_match_max_distance
+    station_closer_than_Xm = Station.objects.filter(
+        location__distance_lte=(bike.current_position, D(m=max_distance)),
         status = 'AC'
     ).first()
-    if station_closer_than_10m:
-        bike.current_station = station_closer_than_10m
+    if station_closer_than_Xm:
+        bike.current_station = station_closer_than_Xm
     else:
         bike.current_station = None
 
@@ -156,13 +159,15 @@ def finish_rent(request):
             rent.end_position = rent.bike.current_position
         rent.save()
 
-        # attach bike to station is location is closer than 10 meters
-        station_closer_than_10m = Station.objects.filter(
-            location__distance_lte=(rent.end_position, D(m=10)),
+        # attach bike to station is location is closer than X meters
+        # distance ist configured in prefernces
+        max_distance = preferences.BikeSharePreferences.station_match_max_distance
+        station_closer_than_Xm = Station.objects.filter(
+            location__distance_lte=(rent.end_position, D(m=max_distance)),
             status = 'AC'
         ).first()
-        if station_closer_than_10m:
-            rent.bike.current_station = station_closer_than_10m
+        if station_closer_than_Xm:
+            rent.bike.current_station = station_closer_than_Xm
         else:
             rent.bike.current_station = None
 
