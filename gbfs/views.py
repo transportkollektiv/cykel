@@ -8,6 +8,7 @@ from rest_framework import routers, serializers, viewsets, mixins, generics
 from django.http import HttpResponse, JsonResponse
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from preferences import preferences
 
 from .serializers import GbfsFreeBikeStatusSerializer
 from .serializers import GbfsStationInformationSerializer
@@ -58,19 +59,23 @@ def gbfsSystemInformation(request):
 
 @permission_classes([AllowAny])        
 class GbfsFreeBikeStatusViewSet(mixins.ListModelMixin, generics.GenericAPIView):
-    queryset = Bike.objects.filter(
-        availability_status='AV',
-        last_reported__gte=datetime.now(pytz.utc) - timedelta(hours=1),
-        current_station=None
-    )
     serializer_class = GbfsFreeBikeStatusSerializer
 
     def get(self, request, *args, **kwargs):
-        bikes = Bike.objects.filter(
-            availability_status='AV',
-            last_reported__gte=datetime.now(pytz.utc) - timedelta(hours=1),
-            current_station=None
-        )
+        # if configured filter vehicles, where time report is older than configure allowed silent timepreiod
+        if (preferences.BikeSharePreferences.gbfs_hide_bikes_after_location_report_silence):
+            bikes = Bike.objects.filter(
+                availability_status='AV',
+                last_reported__gte=datetime.now(pytz.utc) - timedelta(
+                    hours=preferences.BikeSharePreferences.gbfs_hide_bikes_after_location_report_hours
+                ),
+                current_station=None
+            )
+        else:
+            bikes = Bike.objects.filter(
+                availability_status='AV',
+                current_station=None
+            )
         serializer = GbfsFreeBikeStatusSerializer(bikes, many=True)
         bike_data = {
             'bikes': serializer.data
