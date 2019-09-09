@@ -3,6 +3,7 @@ import pytz
 from datetime import datetime, timedelta
 
 from rest_framework import routers, serializers, viewsets
+from preferences import preferences
 
 from bikesharing.models import Bike
 from bikesharing.models import Lock
@@ -49,7 +50,16 @@ class GbfsStationStatusSerializer(serializers.HyperlinkedModelSerializer):
 
 	def to_representation(self, instance):
 		representation = super().to_representation(instance)
-		representation['num_bikes_available'] = instance.bike_set.filter(availability_status='AV', last_reported__gte=datetime.now(pytz.utc) - timedelta(hours=1)).count()
+		# if configured filter vehicles, where time report is older than configure allowed silent timepreiod
+		if (preferences.BikeSharePreferences.gbfs_hide_bikes_after_location_report_silence):
+			representation['num_bikes_available'] = instance.bike_set.filter(
+				availability_status='AV',
+				last_reported__gte=datetime.now(pytz.utc) - timedelta(
+					hours=preferences.BikeSharePreferences.gbfs_hide_bikes_after_location_report_hours
+				)
+			).count()
+		else:
+			representation['num_bikes_available'] = instance.bike_set.filter(availability_status='AV').count()
 		representation['num_docks_available'] = instance.max_bikes - representation['num_bikes_available']
 		status = (instance.status == "AC") or False
 		representation['is_installed'] = status
