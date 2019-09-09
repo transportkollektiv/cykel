@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.contrib.gis.db import models as geomodels
 from macaddress.fields import MACAddressField
+from preferences.models import Preferences
 
 # Create your models here.
 
@@ -117,3 +118,7 @@ class Station(models.Model):
 			max_bikes=self.max_bikes,
 			location=self.location
 			)
+
+
+class BikeSharePreferences(Preferences):
+    station_match_max_distance = models.IntegerField(default=20)
