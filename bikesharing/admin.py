@@ -1,5 +1,6 @@
 from django.contrib import admin
 from leaflet.admin import LeafletGeoAdmin
+from preferences.admin import PreferencesAdmin
 
 # Register your models here.
 
@@ -7,6 +8,7 @@ from .models import Bike
 from .models import Rent
 from .models import Lock
 from .models import Station
+from .models import BikeSharePreferences
 
 #admin.site.register(Bike, OSMGeoAdmin)
 #admin.site.register(Rent, OSMGeoAdmin)
@@ -25,3 +27,4 @@ class RentAdmin(LeafletGeoAdmin, admin.ModelAdmin):
 
 admin.site.register(Lock, LeafletGeoAdmin)
 admin.site.register(Station, LeafletGeoAdmin)
+admin.site.register(BikeSharePreferences, PreferencesAdmin)

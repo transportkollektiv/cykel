@@ -48,10 +48,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.gis',
+    'django.contrib.sites',
     'rest_framework',
     'rest_framework.authtoken',
     'rest_framework_api_key',
-    'django.contrib.sites',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     'gbfs',
     'corsheaders',
     'leaflet',
+    'preferences',
 ]
 
 SITE_ID = 1
