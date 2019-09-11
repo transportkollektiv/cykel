@@ -37,11 +37,14 @@ station_status_choices = (
     ('AC', 'Active'),
 )
 
+location_source_choices = (
+    ('LO', 'Lock'),
+    ('US', 'User')
+)
+
 
 class Bike(models.Model):
     bike_number = models.CharField(max_length=8)
-    current_position = geomodels.PointField(
-        default=None, null=True, blank=True)
     availability_status = models.CharField(
         max_length=2, choices=bike_availability_status_choices, default='DI')
     state = models.CharField(
@@ -66,10 +69,15 @@ class Bike(models.Model):
         return "#{bike_number} ({state}) @ {position} ({last_reported})".format(
             bike_number=self.bike_number,
             state=self.state,
-            position=self.current_position,
+            position=self.current_position(),
             last_reported=self.last_reported,
         )
 
+    def current_position(self):
+        try:
+            return Location.objects.filter(bike=self).latest('reported_at')
+        except DoesNotExist:
+            return None
 
 class Rent(models.Model):
     rent_start = models.DateTimeField()
@@ -136,7 +144,6 @@ class Station(models.Model):
             location=self.location
         )
 
-
 class BikeSharePreferences(Preferences):
     station_match_max_distance = models.IntegerField(default=20)
     gbfs_hide_bikes_after_location_report_silence = models.BooleanField(
@@ -147,3 +154,17 @@ class BikeSharePreferences(Preferences):
         default=1,
         help_text="Time period (in hours) after the vehicles will hidden from GBFS, if there was no location report. Needs 'Gbfs hide bikes after location report silence' activated."
     )
+
+
+class Location(models.Model):
+    bike = models.ForeignKey('Bike', default=None, on_delete=models.PROTECT)
+    geo = geomodels.PointField(default=None, null=True, blank=True)
+    source = models.CharField(max_length=2, choices=location_source_choices, default='LO')
+    reported_at = models.DateTimeField(default=None, null=True, blank=True)
+
+    def __str__(self):
+        return str(self.geo)
+
+    class Meta:
+        get_latest_by = 'reported_at'
+
