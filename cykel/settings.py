@@ -108,9 +108,10 @@ WSGI_APPLICATION = 'cykel.wsgi.application'
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
 
 
+defaultdbuser = env.str('USER', default='postgres')
 # Use DATABASE_URL env with default:
 DATABASES = {
-    'default': env.db('DATABASE_URL', default='postgis://postgres:somesecurePass0rd@db:5432/postgres')
+    'default': env.db('DATABASE_URL', default='postgis://' + defaultdbuser + '@localhost/cykel')
 }
 
 
