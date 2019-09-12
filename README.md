@@ -5,7 +5,9 @@ Basic backend for a mobility sharing service. Used on [CCCamp2019](https://event
 ## Prerequisites
 
 * Python (≥3.7)
-* A database that supports GIS extensions, for example PostGIS or SpatiaLite
+* A database that supports GIS extensions, for example PostGIS.
+
+### Configuration
 
 Create a file `.env` in the `cykel` subdirectory, with the following contents:
 
@@ -69,6 +71,13 @@ One project which can use this together with TheThingsNetwork is the [`cykel-ttn
 ```
 docker-compose pull
 docker-compose up -d --build
+```
+
+To run the `migrate.py` commands that are shown above, prefix them with `docker-compose exec web`:
+
+```
 docker-compose exec web python manage.py migrate
 docker-compose exec web python manage.py createsuperuser
 ```
+
+To use other settings (like `ALLOWED_HOSTS`) from above, add them to the `environment` in `docker-compose.yml`.
