@@ -23,13 +23,17 @@ from bikesharing.models import Rent
 
 # Create your views here.
 # ViewSets define the view behavior.
+
+
 class BikeViewSet(viewsets.ModelViewSet):
     queryset = Bike.objects.all()
     serializer_class = BikeSerializer
 
+
 class StationViewSet(viewsets.ModelViewSet):
     queryset = Station.objects.all()
     serializer_class = StationSerializer
+
 
 """
 Returns current running Rents of the requesting user
@@ -42,6 +46,7 @@ class CurrentRentViewSet(viewsets.ModelViewSet, mixins.ListModelMixin, generics.
     def get_queryset(self):
         user = self.request.user
         return Rent.objects.filter(user=user, rent_end=None)
+
 
 @api_view(['POST'])
 @permission_classes([HasAPIKey])
@@ -67,12 +72,12 @@ def updatebikelocation(request):
     if battery_voltage:
         bike.battery_voltage = battery_voltage
 
-    #check if bike is near station and assign it to that station
+    # check if bike is near station and assign it to that station
     # distance ist configured in prefernces
     max_distance = preferences.BikeSharePreferences.station_match_max_distance
     station_closer_than_Xm = Station.objects.filter(
         location__distance_lte=(bike.current_position, D(m=max_distance)),
-        status = 'AC'
+        status='AC'
     ).first()
     if station_closer_than_Xm:
         bike.current_station = station_closer_than_Xm
@@ -80,8 +85,9 @@ def updatebikelocation(request):
         bike.current_station = None
 
     bike.save()
-    
+
     return JsonResponse({"success": True})
+
 
 @authentication_classes([authentication.TokenAuthentication])
 @api_view(['POST'])
@@ -93,11 +99,11 @@ def start_rent(request):
     lng = request.data.get("lng")
     if not (bike_number):
         return JsonResponse({"error": "bike_number missing"})
-    #if (not lat or not lng) and (not station):
+    # if (not lat or not lng) and (not station):
     #    return JsonResponse({"error": "lat and lng or station required"})
 
     try:
-            bike = Bike.objects.get(bike_number=bike_number)
+        bike = Bike.objects.get(bike_number=bike_number)
     except Bike.DoesNotExist:
         return JsonResponse({"error": "bike does not exist"})
 
@@ -112,27 +118,29 @@ def start_rent(request):
         return JsonResponse({"error": errortext})
     """
 
-    #check bike availability and set status to "in use"
+    # check bike availability and set status to "in use"
     if (bike.availability_status != 'AV'):
         return JsonResponse({"error": "bike is not available"})
     bike.availability_status = 'IU'
     bike.save()
 
-    rent = Rent.objects.create(rent_start=datetime.datetime.now(), user=request.user, bike=bike)
+    rent = Rent.objects.create(
+        rent_start=datetime.datetime.now(), user=request.user, bike=bike)
     if (lat and lng):
         rent.start_position = Point(float(lng), float(lat), srid=4326)
     else:
         rent.start_position = bike.current_position
     rent.save()
-    #TODO station position and bike position if no lat lng over APIt
-    
+    # TODO station position and bike position if no lat lng over APIt
+
     res = {"success": True}
-    #TODO return Lock code (or Open Lock?)
+    # TODO return Lock code (or Open Lock?)
     if (bike.lock):
         if (bike.lock.lock_type == "CL" and bike.lock.unlock_key):
             res["unlock_key"] = bike.lock.unlock_key
 
     return JsonResponse(res)
+
 
 @authentication_classes([authentication.TokenAuthentication])
 @api_view(['POST'])
@@ -148,7 +156,7 @@ def finish_rent(request):
 
     if (rent.user != request.user):
         return JsonResponse({"error": "rent belongs to another user"})
-    if (rent.rent_end!=None):
+    if (rent.rent_end != None):
         return JsonResponse({"error": "rent was already finished"})
 
     rent.rent_end = datetime.datetime.now()
@@ -164,7 +172,7 @@ def finish_rent(request):
     max_distance = preferences.BikeSharePreferences.station_match_max_distance
     station_closer_than_Xm = Station.objects.filter(
         location__distance_lte=(rent.end_position, D(m=max_distance)),
-        status = 'AC'
+        status='AC'
     ).first()
     if station_closer_than_Xm:
         rent.bike.current_station = station_closer_than_Xm
@@ -177,6 +185,7 @@ def finish_rent(request):
 
     return JsonResponse({"success": True})
 
+
 class UserDetailsSerializer(serializers.ModelSerializer):
     """
     User model w/o password
@@ -184,6 +193,7 @@ class UserDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = ('pk', 'username')
+
 
 class UserDetailsView(generics.RetrieveAPIView):
     """

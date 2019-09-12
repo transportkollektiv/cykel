@@ -155,7 +155,7 @@ STATIC_ROOT = os.path.abspath(os.path.join(PROJECT_ROOT, "..", "public"))
 
 STATIC_URL = '/static/'
 
-SPATIALITE_LIBRARY_PATH='/usr/local/lib/mod_spatialite.dylib'
+SPATIALITE_LIBRARY_PATH = '/usr/local/lib/mod_spatialite.dylib'
 
 # Rest Framework
 REST_FRAMEWORK = {

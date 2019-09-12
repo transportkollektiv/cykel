@@ -20,6 +20,7 @@ from bikesharing.models import Station
 # Create your views here.
 # ViewSets define the view behavior.
 
+
 def gbfs(request):
     if request.method == 'GET':
         data = {
@@ -57,7 +58,8 @@ def gbfsSystemInformation(request):
         }
         return JsonResponse(getGbfsWithData(data), safe=False)
 
-@permission_classes([AllowAny])        
+
+@permission_classes([AllowAny])
 class GbfsFreeBikeStatusViewSet(mixins.ListModelMixin, generics.GenericAPIView):
     serializer_class = GbfsFreeBikeStatusSerializer
 
@@ -98,6 +100,7 @@ class GbfsStationInformationViewSet(mixins.ListModelMixin, generics.GenericAPIVi
         data = getGbfsWithData(station_data)
         return JsonResponse(data, safe=False)
 
+
 @permission_classes([AllowAny])
 class GbfsStationStatusViewSet(mixins.ListModelMixin, generics.GenericAPIView):
     queryset = Station.objects.filter(status='AC')
@@ -115,6 +118,7 @@ class GbfsStationStatusViewSet(mixins.ListModelMixin, generics.GenericAPIView):
 
 def getGbfsRoot(request):
     return request.scheme + "://" + request.get_host() + "/gbfs/"
+
 
 def getGbfsWithData(data):
     return {

@@ -4,6 +4,7 @@ from django.utils.translation import gettext, gettext_lazy as _
 
 from .models import User
 
+
 class CykelUserAdmin(UserAdmin):
     """
     Fork of UserAdmin, with all references to first_name, last_name and email removed
@@ -17,5 +18,6 @@ class CykelUserAdmin(UserAdmin):
     )
     list_display = ('username', 'is_staff')
     search_fields = ('username', )
+
 
 admin.site.register(User, CykelUserAdmin)
