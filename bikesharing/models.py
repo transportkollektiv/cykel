@@ -79,6 +79,7 @@ class Bike(models.Model):
         except DoesNotExist:
             return None
 
+
 class Rent(models.Model):
     rent_start = models.DateTimeField()
     rent_end = models.DateTimeField(default=None, null=True, blank=True)
@@ -144,6 +145,7 @@ class Station(models.Model):
             location=self.location
         )
 
+
 class BikeSharePreferences(Preferences):
     station_match_max_distance = models.IntegerField(default=20)
     gbfs_hide_bikes_after_location_report_silence = models.BooleanField(
@@ -159,7 +161,8 @@ class BikeSharePreferences(Preferences):
 class Location(models.Model):
     bike = models.ForeignKey('Bike', default=None, on_delete=models.PROTECT)
     geo = geomodels.PointField(default=None, null=True, blank=True)
-    source = models.CharField(max_length=2, choices=location_source_choices, default='LO')
+    source = models.CharField(
+        max_length=2, choices=location_source_choices, default='LO')
     reported_at = models.DateTimeField(default=None, null=True, blank=True)
 
     def __str__(self):
@@ -167,4 +170,3 @@ class Location(models.Model):
 
     class Meta:
         get_latest_by = 'reported_at'
-

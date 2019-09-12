@@ -9,12 +9,14 @@ from .models import Location
 from .models import Station
 from .models import BikeSharePreferences
 
+
 @admin.register(Location)
 class LocationAdmin(LeafletGeoAdmin, admin.ModelAdmin):
     list_display = ('bike', 'geo', 'source', 'reported_at')
     list_filter = ('bike', 'source')
     search_fields = ('bike__bike_number', )
     date_hierarchy = 'reported_at'
+
 
 class LocationInline(LeafletGeoAdminMixin, admin.StackedInline):
     model = Location
