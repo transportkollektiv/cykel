@@ -20,6 +20,7 @@ from .serializers import RentSerializer
 from bikesharing.models import Bike
 from bikesharing.models import Station
 from bikesharing.models import Rent
+from bikesharing.models import Location
 
 # Create your views here.
 # ViewSets define the view behavior.
@@ -71,11 +72,16 @@ def updatebikelocation(request):
     if battery_voltage:
         bike.battery_voltage = battery_voltage
 
+    loc = Location.objects.create(bike=bike, source='LO')
+    loc.geo = Point(float(lng), float(lat), srid=4326)
+    loc.last_reported = datetime.datetime.now()
+    loc.save()
+
     # check if bike is near station and assign it to that station
     # distance ist configured in prefernces
     max_distance = preferences.BikeSharePreferences.station_match_max_distance
     station_closer_than_Xm = Station.objects.filter(
-        location__distance_lte=(bike.current_position, D(m=max_distance)),
+        location__distance_lte=(loc.geo, D(m=max_distance)),
         status='AC'
     ).first()
     if station_closer_than_Xm:
@@ -84,11 +90,6 @@ def updatebikelocation(request):
         bike.current_station = None
 
     bike.save()
-
-    loc = Location.objects.create(bike=bike, source='LO')
-    loc.geo = Point(float(lng), float(lat), srid=4326)
-    loc.last_reported = datetime.datetime.now()
-    loc.save()
 
     return JsonResponse({"success": True})
 
