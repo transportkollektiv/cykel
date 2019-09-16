@@ -74,7 +74,7 @@ def updatebikelocation(request):
 
     loc = Location.objects.create(bike=bike, source='LO')
     loc.geo = Point(float(lng), float(lat), srid=4326)
-    loc.last_reported = datetime.datetime.now()
+    loc.reported_at = datetime.datetime.now()
     loc.save()
 
     # check if bike is near station and assign it to that station
@@ -136,7 +136,7 @@ def start_rent(request):
 
         loc = Location.objects.create(bike=bike, source='US')
         loc.geo = Point(float(lng), float(lat), srid=4326)
-        loc.last_reported = datetime.datetime.now()
+        loc.reported_at = datetime.datetime.now()
         loc.save()
     else:
         rent.start_position = bike.current_position
@@ -175,7 +175,7 @@ def finish_rent(request):
 
         loc = Location.objects.create(bike=rent.bike, source='US')
         loc.geo = Point(float(lng), float(lat), srid=4326)
-        loc.last_reported = datetime.datetime.now()
+        loc.reported_at = datetime.datetime.now()
         loc.save()
     else:
         if rent.bike.current_position():
