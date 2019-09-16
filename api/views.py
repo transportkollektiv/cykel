@@ -67,7 +67,6 @@ def updatebikelocation(request):
     except Bike.DoesNotExist:
         return JsonResponse({"error": "bike does not exist"})
 
-    bike.current_position = Point(float(lng), float(lat), srid=4326)
     bike.last_reported = datetime.datetime.now()
     if battery_voltage:
         bike.battery_voltage = battery_voltage
@@ -85,6 +84,11 @@ def updatebikelocation(request):
         bike.current_station = None
 
     bike.save()
+
+    loc = Location.objects.create(bike=bike, source='LO')
+    loc.geo = Point(float(lng), float(lat), srid=4326)
+    loc.last_reported = datetime.datetime.now()
+    loc.save()
 
     return JsonResponse({"success": True})
 
@@ -114,7 +118,7 @@ def start_rent(request):
         if (bike.lock):
             if (bike.lock.lock_type == "CL" and bike.lock.unlock_key):
                 errortext = "We miss this bike. Please bring it to the bike tent at the Open Village. Unlock key is " + bike.lock.unlock_key
-                
+
         return JsonResponse({"error": errortext})
     """
 
@@ -128,6 +132,11 @@ def start_rent(request):
         rent_start=datetime.datetime.now(), user=request.user, bike=bike)
     if (lat and lng):
         rent.start_position = Point(float(lng), float(lat), srid=4326)
+
+        loc = Location.objects.create(bike=bike, source='US')
+        loc.geo = Point(float(lng), float(lat), srid=4326)
+        loc.last_reported = datetime.datetime.now()
+        loc.save()
     else:
         rent.start_position = bike.current_position
     rent.save()
@@ -162,9 +171,14 @@ def finish_rent(request):
     rent.rent_end = datetime.datetime.now()
     if (lat and lng):
         rent.end_position = Point(float(lng), float(lat), srid=4326)
-        rent.bike.current_position = Point(float(lng), float(lat), srid=4326)
+
+        loc = Location.objects.create(bike=rent.bike, source='US')
+        loc.geo = Point(float(lng), float(lat), srid=4326)
+        loc.last_reported = datetime.datetime.now()
+        loc.save()
     else:
-        rent.end_position = rent.bike.current_position
+        if rent.bike.current_position():
+            rent.end_position = rent.bike.current_position().geo
     rent.save()
 
     # attach bike to station is location is closer than X meters
