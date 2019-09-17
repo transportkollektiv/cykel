@@ -15,14 +15,7 @@ class LocationAdmin(LeafletGeoAdmin, admin.ModelAdmin):
     list_display = ('bike', 'geo', 'source', 'reported_at')
     list_filter = ('bike', 'source')
     search_fields = ('bike__bike_number', )
-    date_hierarchy = 'reported_at'
-
-
-class LocationInline(LeafletGeoAdminMixin, admin.StackedInline):
-    model = Location
-    extra = 1
-    max_num = 1
-
+    date_hierarchy = 'reported_at'       
 
 @admin.register(Bike)
 class BikeAdmin(LeafletGeoAdmin, admin.ModelAdmin):
@@ -30,9 +23,12 @@ class BikeAdmin(LeafletGeoAdmin, admin.ModelAdmin):
                     'state', 'last_reported', 'battery_voltage')
     list_filter = ('bike_type', 'availability_status', 'state')
     search_fields = ('bike_number',)
-    inlines = [
-        LocationInline,
-    ]
+    readonly_fields = ['location']
+
+    def location(self, obj):
+        lat = str(obj.current_position().geo.y)
+        lng = str(obj.current_position().geo.x)
+        return lat + ", " + lng + " - https://www.openstreetmap.org/?mlat="+lat+"&mlon="+lng+"#map=16/"+lat+"/"+lng+""
 
 
 @admin.register(Rent)
