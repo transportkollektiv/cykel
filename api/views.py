@@ -8,7 +8,7 @@ from rest_framework.decorators import api_view, permission_classes, authenticati
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import authentication
 from rest_framework_api_key.permissions import HasAPIKey
-from django.http import HttpResponse, JsonResponse
+from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import Point
 from preferences import preferences
@@ -48,7 +48,6 @@ class CurrentRentViewSet(viewsets.ModelViewSet, mixins.ListModelMixin, generics.
         user = self.request.user
         return Rent.objects.filter(user=user, rent_end=None)
 
-
 @api_view(['POST'])
 @permission_classes([HasAPIKey])
 def updatebikelocation(request):
@@ -57,16 +56,16 @@ def updatebikelocation(request):
     lng = request.data.get("lng")
     battery_voltage = request.data.get("battery_voltage")
     if not (bike_number):
-        return JsonResponse({"error": "bike_number missing"})
+        return Response({"error": "bike_number missing"}, status=400)
     if not (lat):
-        return JsonResponse({"error": "lat missing"})
+        return Response({"error": "lat missing"}, status=400)
     if not (lng):
-        return JsonResponse({"error": "lng missing"})
+        return Response({"error": "lng missing"}, status=400)
 
     try:
         bike = Bike.objects.get(bike_number=bike_number)
     except Bike.DoesNotExist:
-        return JsonResponse({"error": "bike does not exist"})
+        return Response({"error": "bike does not exist"}, status=404)
 
     bike.last_reported = datetime.datetime.now()
     if battery_voltage:
@@ -91,7 +90,7 @@ def updatebikelocation(request):
 
     bike.save()
 
-    return JsonResponse({"success": True})
+    return Response({"success": True})
 
 
 @authentication_classes([authentication.TokenAuthentication])
@@ -103,14 +102,14 @@ def start_rent(request):
     lat = request.data.get("lat")
     lng = request.data.get("lng")
     if not (bike_number):
-        return JsonResponse({"error": "bike_number missing"})
+        return Response({"error": "bike_number missing"}, status=400)
     # if (not lat or not lng) and (not station):
-    #    return JsonResponse({"error": "lat and lng or station required"})
+    #    return Response({"error": "lat and lng or station required"}, status=400)
 
     try:
         bike = Bike.objects.get(bike_number=bike_number)
     except Bike.DoesNotExist:
-        return JsonResponse({"error": "bike does not exist"})
+        return Response({"error": "bike does not exist"}, status=404)
 
     """
     #TODO: message for bikes who are lost
@@ -120,12 +119,12 @@ def start_rent(request):
             if (bike.lock.lock_type == "CL" and bike.lock.unlock_key):
                 errortext = "We miss this bike. Please bring it to the bike tent at the Open Village. Unlock key is " + bike.lock.unlock_key
 
-        return JsonResponse({"error": errortext})
+        return Response({"error": errortext}, status=400)
     """
 
     # check bike availability and set status to "in use"
     if (bike.availability_status != 'AV'):
-        return JsonResponse({"error": "bike is not available"})
+        return Response({"error": "bike is not available"}, status=409)
     bike.availability_status = 'IU'
     bike.save()
 
@@ -149,7 +148,7 @@ def start_rent(request):
         if (bike.lock.lock_type == "CL" and bike.lock.unlock_key):
             res["unlock_key"] = bike.lock.unlock_key
 
-    return JsonResponse(res)
+    return Response(res)
 
 
 @authentication_classes([authentication.TokenAuthentication])
@@ -162,12 +161,12 @@ def finish_rent(request):
     try:
         rent = Rent.objects.get(id=rent_id)
     except Rent.DoesNotExist:
-        return JsonResponse({"error": "rent does not exist"})
+        return Response({"error": "rent does not exist"}, status=404)
 
     if (rent.user != request.user):
-        return JsonResponse({"error": "rent belongs to another user"})
+        return Response({"error": "rent belongs to another user"}, status=403)
     if (rent.rent_end != None):
-        return JsonResponse({"error": "rent was already finished"})
+        return Response({"error": "rent was already finished"}, status=410)
 
     rent.rent_end = datetime.datetime.now()
     if (lat and lng):
@@ -198,7 +197,7 @@ def finish_rent(request):
     rent.bike.availability_status = 'AV'
     rent.bike.save()
 
-    return JsonResponse({"success": True})
+    return Response({"success": True})
 
 
 class UserDetailsSerializer(serializers.ModelSerializer):
