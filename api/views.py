@@ -5,7 +5,7 @@ from django.shortcuts import render
 from django.contrib.gis.measure import D
 from rest_framework import routers, serializers, viewsets, mixins, generics
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import BasePermission, AllowAny, IsAuthenticated
 from rest_framework import authentication
 from rest_framework_api_key.permissions import HasAPIKey
 from rest_framework.response import Response
@@ -35,6 +35,17 @@ class StationViewSet(viewsets.ModelViewSet):
     queryset = Station.objects.all()
     serializer_class = StationSerializer
 
+class CanRentBikePermission(BasePermission):
+    """
+    The request is authenticated as a user and has add_rent permission.
+    """
+    message = 'You cannot rent a bike at this time.'
+
+    def has_permission(self, request, view):
+        if not request.user or not request.user.is_authenticated:
+            return False
+
+        return request.user.has_perm('bikesharing.add_rent')
 
 """
 Returns current running Rents of the requesting user
@@ -47,6 +58,7 @@ class CurrentRentViewSet(viewsets.ModelViewSet, mixins.ListModelMixin, generics.
     def get_queryset(self):
         user = self.request.user
         return Rent.objects.filter(user=user, rent_end=None)
+
 
 @api_view(['POST'])
 @permission_classes([HasAPIKey])
@@ -95,7 +107,7 @@ def updatebikelocation(request):
 
 @authentication_classes([authentication.TokenAuthentication])
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, CanRentBikePermission])
 def start_rent(request):
     bike_number = request.data.get("bike_number")
     station = request.data.get("station")
