@@ -216,9 +216,14 @@ class UserDetailsSerializer(serializers.ModelSerializer):
     """
     User model w/o password
     """
+    can_rent_bike = serializers.SerializerMethodField()
+
+    def get_can_rent_bike(self, user):
+        return user.has_perm('bikesharing.add_rent')
+
     class Meta:
         model = get_user_model()
-        fields = ('pk', 'username')
+        fields = ('pk', 'username', 'can_rent_bike')
 
 
 class UserDetailsView(generics.RetrieveAPIView):
