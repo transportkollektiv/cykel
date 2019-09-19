@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.contrib.gis.db import models as geomodels
+from django.core.exceptions import ObjectDoesNotExist
 from macaddress.fields import MACAddressField
 from preferences.models import Preferences
 
@@ -76,7 +77,7 @@ class Bike(models.Model):
     def current_position(self):
         try:
             return Location.objects.filter(bike=self).latest('reported_at')
-        except DoesNotExist:
+        except ObjectDoesNotExist:
             return None
 
 

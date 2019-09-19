@@ -15,7 +15,7 @@ class LocationAdmin(LeafletGeoAdmin, admin.ModelAdmin):
     list_display = ('bike', 'geo', 'source', 'reported_at')
     list_filter = ('bike', 'source')
     search_fields = ('bike__bike_number', )
-    date_hierarchy = 'reported_at'       
+    date_hierarchy = 'reported_at'
 
 @admin.register(Bike)
 class BikeAdmin(LeafletGeoAdmin, admin.ModelAdmin):
@@ -26,6 +26,8 @@ class BikeAdmin(LeafletGeoAdmin, admin.ModelAdmin):
     readonly_fields = ['location']
 
     def location(self, obj):
+        if obj is None or obj.current_position() is None:
+            return ""
         lat = str(obj.current_position().geo.y)
         lng = str(obj.current_position().geo.x)
         return lat + ", " + lng + " - https://www.openstreetmap.org/?mlat="+lat+"&mlon="+lng+"#map=16/"+lat+"/"+lng+""
