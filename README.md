@@ -73,11 +73,14 @@ docker-compose pull
 docker-compose up -d --build
 ```
 
-To run the `migrate.py` commands that are shown above, prefix them with `docker-compose exec web`:
+To run the `migrate.py` commands that are shown above, prefix them with `docker-compose exec cykel`:
 
 ```
-docker-compose exec web python manage.py migrate
-docker-compose exec web python manage.py createsuperuser
+docker-compose exec cykel python manage.py migrate
+docker-compose exec cykel python manage.py createsuperuser
 ```
 
 To use other settings (like `ALLOWED_HOSTS`) from above, add them to the `environment` in `docker-compose.yml`.
+
+Docker Compose runs cykel and [voorwiel](https://github.com/stadtulm/voorwiel) (one frontend implementation), so you can develop and test with a client right away.
+

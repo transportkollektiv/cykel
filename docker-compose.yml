@@ -8,7 +8,7 @@ services:
     environment:
       - POSTGRES_DB=cykel
       - POSTGRES_PASSWORD=password
-  web:
+  cykel:
     build: .
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
@@ -22,5 +22,10 @@ services:
       - DATABASE_URL=postgis://postgres:password@db:5432/cykel
     depends_on:
       - db
+  voorwiel:
+    image: stadtulm/voorwiel
+    ports:
+      - "8080:80"
+
 volumes:
   data:
