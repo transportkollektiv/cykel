@@ -5,6 +5,8 @@ from bikesharing.models import Lock
 from bikesharing.models import Station
 from bikesharing.models import Rent
 
+from allauth.socialaccount.models import SocialApp
+
 # class LocationSerializer(serializers.HyperlinkedModelSerializer):
 #    class Meta:
 
@@ -38,3 +40,8 @@ class RentSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Rent
         fields = ('id', 'bike', 'rent_start',)
+
+class SocialAppSerializer(serializers.HyperlinkedModelSerializer):
+	class Meta:
+		model = SocialApp
+		fields = ('provider', 'name',)

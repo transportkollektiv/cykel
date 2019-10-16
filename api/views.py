@@ -16,11 +16,13 @@ from preferences import preferences
 from .serializers import BikeSerializer
 from .serializers import StationSerializer
 from .serializers import RentSerializer
+from .serializers import SocialAppSerializer
 
 from bikesharing.models import Bike
 from bikesharing.models import Station
 from bikesharing.models import Rent
 from bikesharing.models import Location
+from allauth.socialaccount.models import SocialApp
 
 # Create your views here.
 # ViewSets define the view behavior.
@@ -248,3 +250,14 @@ class UserDetailsView(generics.RetrieveAPIView):
         https://github.com/Tivix/django-rest-auth/issues/275
         """
         return get_user_model().objects.none()
+
+"""
+return the configured social login providers
+"""
+@permission_classes([AllowAny])
+class LoginProviderViewSet(viewsets.ModelViewSet, mixins.ListModelMixin, generics.GenericAPIView):
+    serializer_class = SocialAppSerializer
+
+    def get_queryset(self):
+        return SocialApp.objects.all()
+    

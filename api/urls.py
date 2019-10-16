@@ -25,6 +25,7 @@ from .views import CurrentRentViewSet
 from .views import updatebikelocation
 from .views import start_rent
 from .views import finish_rent
+from .views import LoginProviderViewSet
 from .views import UserDetailsView
 
 # Routers provide an easy way of automatically determining the URL conf.
@@ -40,4 +41,5 @@ urlpatterns = [
     path('rent/finish', finish_rent),
     path('rent/current', CurrentRentViewSet.as_view({'get': 'list'})),
     path('user', UserDetailsView.as_view()),
+    path('config/loginproviders', LoginProviderViewSet.as_view({'get': 'list'}))
 ]
