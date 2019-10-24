@@ -62,6 +62,8 @@ class Bike(models.Model):
         default=None, null=True, blank=True)  # TODO Move to lock
     photo = models.FileField(
         upload_to='uploads/', default=None, null=True, blank=True)  # TODO Thumbnail
+    vehicle_identification_number = models.CharField(
+    	default=None, null=True, blank=True, max_length=17)
 
     def __str__(self):
         return str(self.bike_number)
