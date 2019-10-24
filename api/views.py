@@ -22,6 +22,7 @@ from bikesharing.models import Bike
 from bikesharing.models import Station
 from bikesharing.models import Rent
 from bikesharing.models import Location
+from bikesharing.models import LocationTracker
 from allauth.socialaccount.models import SocialApp
 
 # Create your views here.
@@ -66,6 +67,15 @@ class CurrentRentViewSet(viewsets.ModelViewSet, mixins.ListModelMixin, generics.
 @permission_classes([HasAPIKey])
 def updatebikelocation(request):
     bike_number = request.data.get("bike_number")
+    lora_tracker_id = request.data.get("lora_tracker_id")
+    if not (lora_tracker_id):
+        return Response({"error": "lora_tracker_id missing"}, status=400)
+    try:
+        tracker = LocationTracker.objects.get(lora_tracker_id=lora_tracker_id)
+    except LocationTracker.DoesNotExist:
+        return Response({"error": "tracker does not exist"}, status=404)
+    if (not bike_number) or (bike_number == ""):
+            bike_number = tracker.bike.bike_number
     lat = request.data.get("lat")
     lng = request.data.get("lng")
     battery_voltage = request.data.get("battery_voltage")
@@ -82,13 +92,17 @@ def updatebikelocation(request):
         return Response({"error": "bike does not exist"}, status=404)
 
     bike.last_reported = datetime.datetime.now()
+    tracker.last_reported = datetime.datetime.now()
     if battery_voltage:
         bike.battery_voltage = battery_voltage
+        tracker.battery_voltage = battery_voltage
 
     loc = Location.objects.create(bike=bike, source='LO')
     loc.geo = Point(float(lng), float(lat), srid=4326)
     loc.reported_at = datetime.datetime.now()
+    loc.tracker = tracker
     loc.save()
+    tracker.save()
 
     # check if bike is near station and assign it to that station
     # distance ist configured in prefernces

@@ -8,6 +8,7 @@ from .models import Lock
 from .models import Location
 from .models import Station
 from .models import BikeSharePreferences
+from .models import LocationTracker
 
 
 @admin.register(Location)
@@ -30,7 +31,15 @@ class BikeAdmin(LeafletGeoAdmin, admin.ModelAdmin):
             return ""
         lat = str(obj.current_position().geo.y)
         lng = str(obj.current_position().geo.x)
-        return lat + ", " + lng + " - https://www.openstreetmap.org/?mlat="+lat+"&mlon="+lng+"#map=16/"+lat+"/"+lng+""
+        if obj.current_position().accuracy:
+            accuracy = ", accuracy: " + str(obj.current_position().accuracy) + "m"
+        else:
+            accuracy = ""
+        if (obj.current_position().tracker):
+            trackerid = ", tracker: " + obj.current_position().tracker.lora_tracker_id
+        else:
+            trackerid = ""
+        return lat + ", " + lng + accuracy + trackerid + " - https://www.openstreetmap.org/?mlat="+lat+"&mlon="+lng+"#map=16/"+lat+"/"+lng+""
 
 
 @admin.register(Rent)
@@ -39,6 +48,15 @@ class RentAdmin(LeafletGeoAdmin, admin.ModelAdmin):
     list_filter = ('rent_start', 'rent_end')
     search_fields = ('bike__bike_number', 'user__username')
 
+@admin.register(LocationTracker)
+class LocationTrackerAdmin(LeafletGeoAdmin, admin.ModelAdmin):
+    readonly_fields = ['location']
+    def location(self, obj):
+        if obj is None or obj.current_position() is None:
+            return ""
+        lat = str(obj.current_position().geo.y)
+        lng = str(obj.current_position().geo.x)
+        return lat + ", " + lng + " - https://www.openstreetmap.org/?mlat="+lat+"&mlon="+lng+"#map=16/"+lat+"/"+lng+""
 
 admin.site.register(Lock, LeafletGeoAdmin)
 admin.site.register(Station, LeafletGeoAdmin)
