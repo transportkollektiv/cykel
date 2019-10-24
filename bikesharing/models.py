@@ -85,7 +85,7 @@ class Bike(models.Model):
 class LocationTracker(models.Model):
     bike = models.ForeignKey(
         'Bike', on_delete=models.PROTECT, null=True, blank=True)
-    lora_tracker_id = models.CharField(
+    device_id = models.CharField(
         default=None, null=True, blank=True, max_length=255)
     last_reported = models.DateTimeField(default=None, null=True, blank=True)
     battery_voltage = models.FloatField(
@@ -99,7 +99,7 @@ class LocationTracker(models.Model):
             return None
 
     def __str__(self):
-        return str(self.lora_tracker_id)
+        return str(self.device_id)
         
 
 class Rent(models.Model):

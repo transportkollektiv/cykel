@@ -67,12 +67,12 @@ class CurrentRentViewSet(viewsets.ModelViewSet, mixins.ListModelMixin, generics.
 @permission_classes([HasAPIKey])
 def updatebikelocation(request):
     bike_number = request.data.get("bike_number")
-    lora_tracker_id = request.data.get("lora_tracker_id")
+    device_id = request.data.get("device_id")
     accuracy = request.data.get("accuracy")
-    if not (lora_tracker_id):
-        return Response({"error": "lora_tracker_id missing"}, status=400)
+    if not (device_id):
+        return Response({"error": "device_id missing"}, status=400)
     try:
-        tracker = LocationTracker.objects.get(lora_tracker_id=lora_tracker_id)
+        tracker = LocationTracker.objects.get(device_id=device_id)
     except LocationTracker.DoesNotExist:
         return Response({"error": "tracker does not exist"}, status=404)
     if (not bike_number) or (bike_number == ""):

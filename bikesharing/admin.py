@@ -36,7 +36,7 @@ class BikeAdmin(LeafletGeoAdmin, admin.ModelAdmin):
         else:
             accuracy = ""
         if (obj.current_position().tracker):
-            trackerid = ", tracker: " + obj.current_position().tracker.lora_tracker_id
+            trackerid = ", tracker: " + obj.current_position().tracker.device_id
         else:
             trackerid = ""
         return lat + ", " + lng + accuracy + trackerid + " - https://www.openstreetmap.org/?mlat="+lat+"&mlon="+lng+"#map=16/"+lat+"/"+lng+""
