@@ -68,6 +68,7 @@ class CurrentRentViewSet(viewsets.ModelViewSet, mixins.ListModelMixin, generics.
 def updatebikelocation(request):
     bike_number = request.data.get("bike_number")
     lora_tracker_id = request.data.get("lora_tracker_id")
+    accuracy = request.data.get("accuracy")
     if not (lora_tracker_id):
         return Response({"error": "lora_tracker_id missing"}, status=400)
     try:
@@ -101,6 +102,8 @@ def updatebikelocation(request):
     loc.geo = Point(float(lng), float(lat), srid=4326)
     loc.reported_at = datetime.datetime.now()
     loc.tracker = tracker
+    if accuracy:
+        loc.accuracy = accuracy
     loc.save()
     tracker.save()
 
