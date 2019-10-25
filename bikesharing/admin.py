@@ -50,7 +50,11 @@ class RentAdmin(LeafletGeoAdmin, admin.ModelAdmin):
 
 @admin.register(LocationTracker)
 class LocationTrackerAdmin(LeafletGeoAdmin, admin.ModelAdmin):
+    list_display = ('device_id',  'tracker_type', 'bike', 'last_reported', 'battery_voltage')
+    list_filter = ('tracker_type', )
+    search_fields = ('device_id', 'bike__bike_number')
     readonly_fields = ['location']
+
     def location(self, obj):
         if obj is None or obj.current_position() is None:
             return ""
