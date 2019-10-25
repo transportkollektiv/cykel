@@ -75,6 +75,8 @@ class Bike(models.Model):
         )
 
     def current_position(self):
+        if not self.id:
+            return None
         try:
             return Location.objects.filter(bike=self).latest('reported_at')
         except ObjectDoesNotExist:
