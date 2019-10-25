@@ -21,7 +21,7 @@ class LocationAdmin(LeafletGeoAdmin, admin.ModelAdmin):
 @admin.register(Bike)
 class BikeAdmin(LeafletGeoAdmin, admin.ModelAdmin):
     list_display = ('bike_number', 'bike_type', 'availability_status',
-                    'state', 'last_reported', 'battery_voltage')
+                    'state', 'last_reported')
     list_filter = ('bike_type', 'availability_status', 'state')
     search_fields = ('bike_number',)
     readonly_fields = ['location']

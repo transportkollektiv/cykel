@@ -95,7 +95,6 @@ def updatebikelocation(request):
     bike.last_reported = datetime.datetime.now()
     tracker.last_reported = datetime.datetime.now()
     if battery_voltage:
-        bike.battery_voltage = battery_voltage
         tracker.battery_voltage = battery_voltage
 
     loc = Location.objects.create(bike=bike, source='LO')

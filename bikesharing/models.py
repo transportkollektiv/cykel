@@ -58,8 +58,6 @@ class Bike(models.Model):
         'Station', on_delete=models.PROTECT, blank=True, null=True, default=None)
     last_reported = models.DateTimeField(default=None, null=True, blank=True)
     internal_note = models.TextField(default=None, null=True, blank=True)
-    battery_voltage = models.FloatField(
-        default=None, null=True, blank=True)  # TODO Move to lock
     photo = models.FileField(
         upload_to='uploads/', default=None, null=True, blank=True)  # TODO Thumbnail
     vehicle_identification_number = models.CharField(
@@ -100,7 +98,7 @@ class LocationTracker(models.Model):
 
     def __str__(self):
         return str(self.device_id)
-        
+
 
 class Rent(models.Model):
     rent_start = models.DateTimeField()
