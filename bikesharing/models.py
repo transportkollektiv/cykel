@@ -182,7 +182,7 @@ class BikeSharePreferences(Preferences):
 
 
 class Location(models.Model):
-    bike = models.ForeignKey('Bike', null=True, default=None, on_delete=models.PROTECT)
+    bike = models.ForeignKey('Bike', blank=True, null=True, default=None, on_delete=models.PROTECT)
     tracker = models.ForeignKey('LocationTracker', null=True, default=None, on_delete=models.PROTECT)
     geo = geomodels.PointField(default=None, null=True, blank=True)
     source = models.CharField(
