@@ -14,9 +14,9 @@ from .models import LocationTracker
 
 @admin.register(Location)
 class LocationAdmin(LeafletGeoAdmin, admin.ModelAdmin):
-    list_display = ('bike', 'geo', 'source', 'reported_at')
-    list_filter = ('bike', 'source')
-    search_fields = ('bike__bike_number', )
+    list_display = ('bike', 'tracker', 'geo', 'source', 'reported_at')
+    list_filter = ('bike', 'tracker', 'source')
+    search_fields = ('bike__bike_number', 'tracker__device_id')
     date_hierarchy = 'reported_at'
 
 @admin.register(Bike)
