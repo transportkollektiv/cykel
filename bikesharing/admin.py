@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.safestring import mark_safe
 from leaflet.admin import LeafletGeoAdmin, LeafletGeoAdminMixin
 from preferences.admin import PreferencesAdmin
 
@@ -26,21 +27,21 @@ class BikeAdmin(LeafletGeoAdmin, admin.ModelAdmin):
     search_fields = ('bike_number',)
     readonly_fields = ['location']
 
+    @mark_safe
     def location(self, obj):
         if obj is None or obj.current_position() is None:
             return ""
         lat = str(obj.current_position().geo.y)
         lng = str(obj.current_position().geo.x)
+        accuracy = ""
         if obj.current_position().accuracy:
             accuracy = ", accuracy: " + str(obj.current_position().accuracy) + "m"
-        else:
-            accuracy = ""
+        source = ""
         if (obj.current_position().tracker):
-            trackerid = ", tracker: " + obj.current_position().tracker.device_id
-        else:
-            trackerid = ""
-        return lat + ", " + lng + accuracy + trackerid + " - https://www.openstreetmap.org/?mlat="+lat+"&mlon="+lng+"#map=16/"+lat+"/"+lng+""
-
+            source = " (source: tracker %s)" % obj.current_position().tracker.device_id
+        url = "https://www.openstreetmap.org/?mlat={lat}&mlon={lng}#map=16/{lat}/{lng}".format(lat=lat, lng=lng)
+        return "<a href='%s'>%s, %s</a>%s%s" % (url, lat, lng, accuracy, source)
+    location.allow_tags = True
 
 @admin.register(Rent)
 class RentAdmin(LeafletGeoAdmin, admin.ModelAdmin):
@@ -55,12 +56,15 @@ class LocationTrackerAdmin(LeafletGeoAdmin, admin.ModelAdmin):
     search_fields = ('device_id', 'bike__bike_number')
     readonly_fields = ['location']
 
+    @mark_safe
     def location(self, obj):
         if obj is None or obj.current_position() is None:
             return ""
         lat = str(obj.current_position().geo.y)
         lng = str(obj.current_position().geo.x)
-        return lat + ", " + lng + " - https://www.openstreetmap.org/?mlat="+lat+"&mlon="+lng+"#map=16/"+lat+"/"+lng+""
+        url = "https://www.openstreetmap.org/?mlat={lat}&mlon={lng}#map=16/{lat}/{lng}".format(lat=lat, lng=lng)
+        return "<a href='%s'>%s, %s</a>" % (url, lat, lng)
+    location.allow_tags = True
 
 admin.site.register(Lock, LeafletGeoAdmin)
 admin.site.register(Station, LeafletGeoAdmin)
