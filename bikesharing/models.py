@@ -90,7 +90,10 @@ class LocationTracker(models.Model):
         default=None, null=True, blank=True)
     tracker_type = models.CharField(
         default=None, null=True, blank=True, max_length=255)
+
     def current_position(self):
+        if not self.id:
+            return None
         try:
             return Location.objects.filter(tracker=self).latest('reported_at')
         except ObjectDoesNotExist:
