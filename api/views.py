@@ -66,59 +66,56 @@ class CurrentRentViewSet(viewsets.ModelViewSet, mixins.ListModelMixin, generics.
 @api_view(['POST'])
 @permission_classes([HasAPIKey])
 def updatebikelocation(request):
-    bike_number = request.data.get("bike_number")
     device_id = request.data.get("device_id")
-    accuracy = request.data.get("accuracy")
     if not (device_id):
         return Response({"error": "device_id missing"}, status=400)
     try:
         tracker = LocationTracker.objects.get(device_id=device_id)
     except LocationTracker.DoesNotExist:
         return Response({"error": "tracker does not exist"}, status=404)
-    if (not bike_number) or (bike_number == ""):
-            bike_number = tracker.bike.bike_number
+
     lat = request.data.get("lat")
     lng = request.data.get("lng")
+    accuracy = request.data.get("accuracy")
     battery_voltage = request.data.get("battery_voltage")
-    if not (bike_number):
-        return Response({"error": "bike_number missing"}, status=400)
+
     if not (lat):
         return Response({"error": "lat missing"}, status=400)
     if not (lng):
         return Response({"error": "lng missing"}, status=400)
 
-    try:
-        bike = Bike.objects.get(bike_number=bike_number)
-    except Bike.DoesNotExist:
-        return Response({"error": "bike does not exist"}, status=404)
-
-    bike.last_reported = datetime.datetime.now()
     tracker.last_reported = datetime.datetime.now()
     if battery_voltage:
         tracker.battery_voltage = battery_voltage
+    tracker.save()
 
-    loc = Location.objects.create(bike=bike, source='LO')
+    loc = Location.objects.create(source='LO')
+    if tracker.bike:
+        loc.bike = tracker.bike
     loc.geo = Point(float(lng), float(lat), srid=4326)
     loc.reported_at = datetime.datetime.now()
     loc.tracker = tracker
     if accuracy:
         loc.accuracy = accuracy
     loc.save()
-    tracker.save()
 
-    # check if bike is near station and assign it to that station
-    # distance ist configured in prefernces
-    max_distance = preferences.BikeSharePreferences.station_match_max_distance
-    station_closer_than_Xm = Station.objects.filter(
-        location__distance_lte=(loc.geo, D(m=max_distance)),
-        status='AC'
-    ).first()
-    if station_closer_than_Xm:
-        bike.current_station = station_closer_than_Xm
-    else:
-        bike.current_station = None
+    if tracker.bike:
+        bike = tracker.bike
+        bike.last_reported = datetime.datetime.now()
 
-    bike.save()
+        # check if bike is near station and assign it to that station
+        # distance ist configured in prefernces
+        max_distance = preferences.BikeSharePreferences.station_match_max_distance
+        station_closer_than_Xm = Station.objects.filter(
+            location__distance_lte=(loc.geo, D(m=max_distance)),
+            status='AC'
+        ).first()
+        if station_closer_than_Xm:
+            bike.current_station = station_closer_than_Xm
+        else:
+            bike.current_station = None
+
+        bike.save()
 
     return Response({"success": True})
 
@@ -276,4 +273,3 @@ class LoginProviderViewSet(viewsets.ModelViewSet, mixins.ListModelMixin, generic
 
     def get_queryset(self):
         return SocialApp.objects.all()
-    
