@@ -71,12 +71,14 @@ class GbfsFreeBikeStatusViewSet(mixins.ListModelMixin, generics.GenericAPIView):
                 last_reported__gte=datetime.now(pytz.utc) - timedelta(
                     hours=preferences.BikeSharePreferences.gbfs_hide_bikes_after_location_report_hours
                 ),
-                current_station=None
+                current_station=None,
+                location__isnull=False
             )
         else:
             bikes = Bike.objects.filter(
                 availability_status='AV',
-                current_station=None
+                current_station=None,
+                location__isnull=False
             )
         serializer = GbfsFreeBikeStatusSerializer(bikes, many=True)
         bike_data = {
