@@ -12,7 +12,7 @@ def index(request):
 def redirect_to_ui(request):
     if request.user.is_authenticated:
         token, created = Token.objects.get_or_create(user=request.user)
-        return redirect('{url}?token={token}'.format(
+        return redirect('{url}/login/return?token={token}'.format(
             url=settings.UI_URL, token=token.key
         ))
 
