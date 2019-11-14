@@ -79,43 +79,45 @@ def updatebikelocation(request):
     accuracy = request.data.get("accuracy")
     battery_voltage = request.data.get("battery_voltage")
 
-    if not (lat):
-        return Response({"error": "lat missing"}, status=400)
-    if not (lng):
-        return Response({"error": "lng missing"}, status=400)
-
     tracker.last_reported = datetime.datetime.now()
     if battery_voltage:
         tracker.battery_voltage = battery_voltage
     tracker.save()
 
-    loc = Location.objects.create(source='LO')
-    if tracker.bike:
-        loc.bike = tracker.bike
-    loc.geo = Point(float(lng), float(lat), srid=4326)
-    loc.reported_at = datetime.datetime.now()
-    loc.tracker = tracker
-    if accuracy:
-        loc.accuracy = accuracy
-    loc.save()
+    loc = None
+
+    if lat and lng:
+        loc = Location.objects.create(source='LO')
+        if tracker.bike:
+            loc.bike = tracker.bike
+        loc.geo = Point(float(lng), float(lat), srid=4326)
+        loc.reported_at = datetime.datetime.now()
+        loc.tracker = tracker
+        if accuracy:
+            loc.accuracy = accuracy
+        loc.save()
 
     if tracker.bike:
         bike = tracker.bike
         bike.last_reported = datetime.datetime.now()
 
-        # check if bike is near station and assign it to that station
-        # distance ist configured in prefernces
-        max_distance = preferences.BikeSharePreferences.station_match_max_distance
-        station_closer_than_Xm = Station.objects.filter(
-            location__distance_lte=(loc.geo, D(m=max_distance)),
-            status='AC'
-        ).first()
-        if station_closer_than_Xm:
-            bike.current_station = station_closer_than_Xm
-        else:
-            bike.current_station = None
+        if loc:
+            # check if bike is near station and assign it to that station
+            # distance ist configured in prefernces
+            max_distance = preferences.BikeSharePreferences.station_match_max_distance
+            station_closer_than_Xm = Station.objects.filter(
+                location__distance_lte=(loc.geo, D(m=max_distance)),
+                status='AC'
+            ).first()
+            if station_closer_than_Xm:
+                bike.current_station = station_closer_than_Xm
+            else:
+                bike.current_station = None
 
         bike.save()
+
+    if not loc:
+        return Response({"success": True, "warning": "lat/lng missing"})
 
     return Response({"success": True})
 
