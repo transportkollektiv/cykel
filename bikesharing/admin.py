@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.urls import reverse
 from django.utils.safestring import mark_safe
 from leaflet.admin import LeafletGeoAdmin, LeafletGeoAdminMixin
 from preferences.admin import PreferencesAdmin
@@ -38,7 +39,10 @@ class BikeAdmin(LeafletGeoAdmin, admin.ModelAdmin):
             accuracy = ", accuracy: " + str(obj.current_position().accuracy) + "m"
         source = ""
         if (obj.current_position().tracker):
-            source = " (source: tracker %s)" % obj.current_position().tracker.device_id
+            tracker = obj.current_position().tracker
+            source = " (source: <a href='{url}'>tracker {device_id}</a>)".format(
+                url=reverse("admin:bikesharing_locationtracker_change", args=(tracker.id,)),
+                device_id=tracker.device_id)
         url = "https://www.openstreetmap.org/?mlat={lat}&mlon={lng}#map=16/{lat}/{lng}".format(lat=lat, lng=lng)
         return "<a href='%s'>%s, %s</a>%s%s" % (url, lat, lng, accuracy, source)
     location.allow_tags = True
