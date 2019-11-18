@@ -73,13 +73,13 @@ class GbfsFreeBikeStatusViewSet(mixins.ListModelMixin, generics.GenericAPIView):
                 ),
                 current_station=None,
                 location__isnull=False
-            )
+            ).distinct()
         else:
             bikes = Bike.objects.filter(
                 availability_status='AV',
                 current_station=None,
                 location__isnull=False
-            )
+            ).distinct()
         serializer = GbfsFreeBikeStatusSerializer(bikes, many=True)
         bike_data = {
             'bikes': serializer.data
