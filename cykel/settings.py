@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.github',
     'allauth.socialaccount.providers.stackexchange',
     'fragdenstaat_auth',
+    'suowncloud_auth',
     'eventphone_auth',
     'allauth.socialaccount.providers.slack',
 

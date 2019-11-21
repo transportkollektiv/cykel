@@ -6,6 +6,7 @@ django-environ==0.4.5
 django-allauth==0.39.1
 django-leaflet
 django-allauth-fragdenstaat
+-e git+ssh://git@github.com/robbi5/django-allauth-suowncloud.git#egg=django-allauth-suowncloud
 djangorestframework-api-key==1.4.1
 django-preferences==1.0.0
 psycopg2
