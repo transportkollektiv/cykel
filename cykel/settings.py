@@ -60,7 +60,6 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.github',
     'allauth.socialaccount.providers.stackexchange',
     'fragdenstaat_auth',
-    'suowncloud_auth',
     'eventphone_auth',
     'allauth.socialaccount.providers.slack',
 
@@ -192,6 +191,15 @@ ACCOUNT_EMAIL_VERIFICATION = None
 SOCIALACCOUNT_QUERY_EMAIL = False
 ACCOUNT_ADAPTER = 'cykel.auth.account_adapter.NoSignupAccountAdapter'
 SOCIALACCOUNT_ADAPTER = 'cykel.auth.account_adapter.SocialAccountAdapter'
+
+SOCIALACCOUNT_PROVIDERS = {}
+
+OWNCLOUD_URL = env('OWNCLOUD_URL', default=None)
+if OWNCLOUD_URL is not None:
+    INSTALLED_APPS.append('owncloud_auth')
+    SOCIALACCOUNT_PROVIDERS['sub'] = {
+        'SERVER': OWNCLOUD_URL
+    }
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
