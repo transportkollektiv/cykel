@@ -201,5 +201,7 @@ if OWNCLOUD_URL is not None:
         'SERVER': OWNCLOUD_URL
     }
 
+AUTOENROLLMENT_PROVIDERS = env.list('AUTOENROLLMENT_PROVIDERS', default=[])
+
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
