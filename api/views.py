@@ -3,6 +3,7 @@ import datetime
 
 from django.shortcuts import render
 from django.contrib.gis.measure import D
+from django.contrib.sites.shortcuts import get_current_site
 from rest_framework import routers, serializers, viewsets, mixins, generics
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import BasePermission, AllowAny, IsAuthenticated
@@ -274,4 +275,4 @@ class LoginProviderViewSet(viewsets.ModelViewSet, mixins.ListModelMixin, generic
     serializer_class = SocialAppSerializer
 
     def get_queryset(self):
-        return SocialApp.objects.all()
+        return SocialApp.objects.filter(sites__id=get_current_site(self.request).id)
