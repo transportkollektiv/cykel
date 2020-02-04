@@ -40,6 +40,7 @@ station_status_choices = (
 
 location_source_choices = (
     ('LO', 'Lock'),
+    ('TR', 'Tracker'),
     ('US', 'User')
 )
 

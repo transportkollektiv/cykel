@@ -88,7 +88,7 @@ def updatebikelocation(request):
     loc = None
 
     if lat and lng:
-        loc = Location.objects.create(source='LO')
+        loc = Location.objects.create(source='TR')
         if tracker.bike:
             loc.bike = tracker.bike
         loc.geo = Point(float(lng), float(lat), srid=4326)
