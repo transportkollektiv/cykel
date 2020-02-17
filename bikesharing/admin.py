@@ -27,6 +27,7 @@ class BikeAdmin(LeafletGeoAdmin, admin.ModelAdmin):
     list_filter = ('bike_type', 'availability_status', 'state')
     search_fields = ('bike_number',)
     readonly_fields = ['location']
+    ordering = ['bike_number']
 
     @mark_safe
     def location(self, obj):
@@ -59,6 +60,7 @@ class LocationTrackerAdmin(LeafletGeoAdmin, admin.ModelAdmin):
     list_filter = ('tracker_type', )
     search_fields = ('device_id', 'bike__bike_number')
     readonly_fields = ['location']
+    ordering = ['device_id']
 
     @mark_safe
     def location(self, obj):
