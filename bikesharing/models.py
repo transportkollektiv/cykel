@@ -44,6 +44,13 @@ location_source_choices = (
     ('US', 'User')
 )
 
+tracker_status_choices = (
+    ('AC', 'Active'),
+    ('IN', 'Inactive'),
+    ('MI', 'Missing'),
+    ('DE', 'Decommissioned'),
+)
+
 
 class Bike(models.Model):
     bike_number = models.CharField(max_length=8)
@@ -93,6 +100,8 @@ class LocationTracker(models.Model):
         default=None, null=True, blank=True)
     tracker_type = models.CharField(
         default=None, null=True, blank=True, max_length=255)
+    tracker_status = models.CharField(
+        max_length=2, choices=tracker_status_choices, default='IN')
 
     def current_position(self):
         if not self.id:
