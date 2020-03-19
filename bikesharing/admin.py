@@ -56,7 +56,7 @@ class RentAdmin(LeafletGeoAdmin, admin.ModelAdmin):
 
 @admin.register(LocationTracker)
 class LocationTrackerAdmin(LeafletGeoAdmin, admin.ModelAdmin):
-    list_display = ('device_id',  'tracker_type', 'bike', 'last_reported', 'battery_voltage')
+    list_display = ('device_id',  'tracker_type', 'bike', 'last_reported', 'battery_voltage', 'tracker_status')
     list_filter = ('tracker_type', 'tracker_status')
     search_fields = ('device_id', 'bike__bike_number')
     readonly_fields = ['location']
