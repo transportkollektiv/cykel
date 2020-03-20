@@ -78,11 +78,19 @@ class Bike(models.Model):
         return "#{bike_number} ({state}) @ {position} ({last_reported})".format(
             bike_number=self.bike_number,
             state=self.state,
-            position=self.current_position(),
+            position=self.public_geolocation(),
             last_reported=self.last_reported,
         )
 
-    def current_position(self):
+    def public_geolocation(self):
+        if not self.id:
+            return None
+        try:
+            return Location.objects.filter(bike=self, internal_location=False).latest('reported_at')
+        except ObjectDoesNotExist:
+            return None
+
+    def internal_geolocation(self):
         if not self.id:
             return None
         try:
@@ -107,7 +115,7 @@ class LocationTracker(models.Model):
         help_text="Internal trackers don't publish their locations to the enduser. They are usefull for backup trackers with lower accuracy e.g. wifi trackers."
     )
 
-    def current_position(self):
+    def current_geolocation(self):
         if not self.id:
             return None
         try:

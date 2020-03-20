@@ -168,7 +168,7 @@ def start_rent(request):
         loc.reported_at = datetime.datetime.now()
         loc.save()
     else:
-        rent.start_position = bike.current_position().geo
+        rent.start_position = bike.public_geolocation().geo
     rent.save()
     # TODO station position and bike position if no lat lng over APIt
 
@@ -207,8 +207,8 @@ def finish_rent(request):
         loc.reported_at = datetime.datetime.now()
         loc.save()
     else:
-        if rent.bike.current_position():
-            rent.end_position = rent.bike.current_position().geo
+        if rent.bike.public_geolocation():
+            rent.end_position = rent.bike.public_geolocation().geo
     rent.save()
 
     # attach bike to station is location is closer than X meters

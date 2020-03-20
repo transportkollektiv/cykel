@@ -29,18 +29,19 @@ class BikeAdmin(LeafletGeoAdmin, admin.ModelAdmin):
     readonly_fields = ['location']
     ordering = ['bike_number']
 
+    #TODO internal geolocation
     @mark_safe
     def location(self, obj):
-        if obj is None or obj.current_position() is None:
+        if obj is None or obj.public_geolocation() is None:
             return ""
-        lat = str(obj.current_position().geo.y)
-        lng = str(obj.current_position().geo.x)
+        lat = str(obj.public_geolocation().geo.y)
+        lng = str(obj.public_geolocation().geo.x)
         accuracy = ""
-        if obj.current_position().accuracy:
-            accuracy = ", accuracy: " + str(obj.current_position().accuracy) + "m"
+        if obj.public_geolocation().accuracy:
+            accuracy = ", accuracy: " + str(obj.public_geolocation().accuracy) + "m"
         source = ""
-        if (obj.current_position().tracker):
-            tracker = obj.current_position().tracker
+        if (obj.public_geolocation().tracker):
+            tracker = obj.public_geolocation().tracker
             source = " (source: <a href='{url}'>tracker {device_id}</a>)".format(
                 url=reverse("admin:bikesharing_locationtracker_change", args=(tracker.id,)),
                 device_id=tracker.device_id)
@@ -64,10 +65,10 @@ class LocationTrackerAdmin(LeafletGeoAdmin, admin.ModelAdmin):
 
     @mark_safe
     def location(self, obj):
-        if obj is None or obj.current_position() is None:
+        if obj is None or obj.current_geolocation() is None:
             return ""
-        lat = str(obj.current_position().geo.y)
-        lng = str(obj.current_position().geo.x)
+        lat = str(obj.current_geolocation().geo.y)
+        lng = str(obj.current_geolocation().geo.x)
         url = "https://www.openstreetmap.org/?mlat={lat}&mlon={lng}#map=16/{lat}/{lng}".format(lat=lat, lng=lng)
         return "<a href='%s'>%s, %s</a>" % (url, lat, lng)
     location.allow_tags = True
