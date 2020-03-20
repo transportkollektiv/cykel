@@ -36,17 +36,33 @@ class BikeAdmin(LeafletGeoAdmin, admin.ModelAdmin):
             return ""
         lat = str(obj.public_geolocation().geo.y)
         lng = str(obj.public_geolocation().geo.x)
+        internal_lat = str(obj.internal_geolocation().geo.y)
+        internal_lng = str(obj.internal_geolocation().geo.x)
         accuracy = ""
         if obj.public_geolocation().accuracy:
             accuracy = ", accuracy: " + str(obj.public_geolocation().accuracy) + "m"
+        internal_accuracy = ""
+        if obj.internal_geolocation().accuracy:
+            internal_accuracy = ", accuracy: " + str(obj.internal_geolocation().accuracy) + "m"
         source = ""
         if (obj.public_geolocation().tracker):
             tracker = obj.public_geolocation().tracker
             source = " (source: <a href='{url}'>tracker {device_id}</a>)".format(
                 url=reverse("admin:bikesharing_locationtracker_change", args=(tracker.id,)),
                 device_id=tracker.device_id)
+        if (obj.internal_geolocation().tracker):
+            internal_tracker = obj.internal_geolocation().tracker
+            internal_source = " (source: <a href='{url}'>tracker {device_id}</a>)".format(
+                url=reverse("admin:bikesharing_locationtracker_change", args=(internal_tracker.id,)),
+                device_id=internal_tracker.device_id)
         url = "https://www.openstreetmap.org/?mlat={lat}&mlon={lng}#map=16/{lat}/{lng}".format(lat=lat, lng=lng)
-        return "<a href='%s'>%s, %s</a>%s%s" % (url, lat, lng, accuracy, source)
+        internal_url = "https://www.openstreetmap.org/?mlat={lat}&mlon={lng}#map=16/{lat}/{lng}".format(lat=internal_lat, lng=internal_lng)
+        if (internal_url == url):
+            return "<a href='%s'>%s, %s</a>%s%s" % (url, lat, lng, accuracy, source)
+        else:
+            public_info = "<a href='%s'>%s, %s</a>%s%s" % (url, lat, lng, accuracy, source)
+            internal_info = "<a href='%s'>%s, %s</a>%s%s" % (internal_url, internal_lat, internal_lng, internal_accuracy, internal_source)
+            return "Public: %s,<br>Internal: %s" % (public_info, internal_info)
     location.allow_tags = True
 
 @admin.register(Rent)
