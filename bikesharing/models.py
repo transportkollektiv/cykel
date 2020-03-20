@@ -102,6 +102,10 @@ class LocationTracker(models.Model):
         default=None, null=True, blank=True, max_length=255)
     tracker_status = models.CharField(
         max_length=2, choices=tracker_status_choices, default='IN')
+    internal_only = models.BooleanField(
+        default=False,
+        help_text="Internal trackers don't publish their locations to the enduser. They are usefull for backup trackers with lower accuracy e.g. wifi trackers."
+    )
 
     def current_position(self):
         if not self.id:
@@ -202,6 +206,13 @@ class Location(models.Model):
     reported_at = models.DateTimeField(default=None, null=True, blank=True)
     accuracy = models.FloatField(
         default=None, null=True, blank=True)
+    internal_location = models.BooleanField(
+        default=False,
+        help_text="Internal locations are not published to the enduser. They are usefull for backup trackers with lower accuracy e.g. wifi trackers."
+    )
+    def save(self, *args, **kwargs):
+        self.internal_location = self.tracker.internal_only
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return str(self.geo)
