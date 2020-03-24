@@ -29,7 +29,6 @@ class BikeAdmin(LeafletGeoAdmin, admin.ModelAdmin):
     readonly_fields = ['location']
     ordering = ['bike_number']
 
-    #TODO internal geolocation
     @mark_safe
     def location(self, obj):
         if obj is None or obj.public_geolocation() is None:
