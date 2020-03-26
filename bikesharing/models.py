@@ -110,7 +110,7 @@ class LocationTracker(models.Model):
         default=None, null=True, blank=True, max_length=255)
     tracker_status = models.CharField(
         max_length=2, choices=tracker_status_choices, default='IN')
-    internal_only = models.BooleanField(
+    internal = models.BooleanField(
         default=False,
         help_text="Internal trackers don't publish their locations to the enduser. They are useful for backup trackers with lower accuracy e.g. wifi trackers."
     )
@@ -220,7 +220,7 @@ class Location(models.Model):
     )
     def save(self, *args, **kwargs):
         if (self.tracker):
-            self.internal_location = self.tracker.internal_only
+            self.internal_location = self.tracker.internal
         super().save(*args, **kwargs)
 
     def __str__(self):
