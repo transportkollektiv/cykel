@@ -219,7 +219,8 @@ class Location(models.Model):
         help_text="Internal locations are not published to the enduser. They are usefull for backup trackers with lower accuracy e.g. wifi trackers."
     )
     def save(self, *args, **kwargs):
-        self.internal_location = self.tracker.internal_only
+        if (self.tracker):
+            self.internal_location = self.tracker.internal_only
         super().save(*args, **kwargs)
 
     def __str__(self):
