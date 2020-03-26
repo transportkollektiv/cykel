@@ -86,7 +86,7 @@ class Bike(models.Model):
         if not self.id:
             return None
         try:
-            return Location.objects.filter(bike=self, internal_location=False).latest('reported_at')
+            return Location.objects.filter(bike=self, internal=False).latest('reported_at')
         except ObjectDoesNotExist:
             return None
 
@@ -214,13 +214,13 @@ class Location(models.Model):
     reported_at = models.DateTimeField(default=None, null=True, blank=True)
     accuracy = models.FloatField(
         default=None, null=True, blank=True)
-    internal_location = models.BooleanField(
+    internal = models.BooleanField(
         default=False,
         help_text="Internal locations are not published to the enduser. They are usefull for backup trackers with lower accuracy e.g. wifi trackers."
     )
     def save(self, *args, **kwargs):
         if (self.tracker):
-            self.internal_location = self.tracker.internal
+            self.internal = self.tracker.internal
         super().save(*args, **kwargs)
 
     def __str__(self):
