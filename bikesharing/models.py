@@ -112,7 +112,7 @@ class LocationTracker(models.Model):
         max_length=2, choices=tracker_status_choices, default='IN')
     internal_only = models.BooleanField(
         default=False,
-        help_text="Internal trackers don't publish their locations to the enduser. They are usefull for backup trackers with lower accuracy e.g. wifi trackers."
+        help_text="Internal trackers don't publish their locations to the enduser. They are useful for backup trackers with lower accuracy e.g. wifi trackers."
     )
 
     def current_geolocation(self):
