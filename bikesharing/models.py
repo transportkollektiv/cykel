@@ -94,7 +94,7 @@ class Bike(models.Model):
         if not self.id:
             return None
         try:
-            return Location.objects.filter(bike=self).latest('reported_at')
+            return Location.objects.filter(bike=self, internal=True).latest('reported_at')
         except ObjectDoesNotExist:
             return None
 
