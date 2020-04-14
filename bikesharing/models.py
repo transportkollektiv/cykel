@@ -78,15 +78,23 @@ class Bike(models.Model):
         return "#{bike_number} ({state}) @ {position} ({last_reported})".format(
             bike_number=self.bike_number,
             state=self.state,
-            position=self.current_position(),
+            position=self.public_geolocation(),
             last_reported=self.last_reported,
         )
 
-    def current_position(self):
+    def public_geolocation(self):
         if not self.id:
             return None
         try:
-            return Location.objects.filter(bike=self).latest('reported_at')
+            return Location.objects.filter(bike=self, internal=False).latest('reported_at')
+        except ObjectDoesNotExist:
+            return None
+
+    def internal_geolocation(self):
+        if not self.id:
+            return None
+        try:
+            return Location.objects.filter(bike=self, internal=True).latest('reported_at')
         except ObjectDoesNotExist:
             return None
 
@@ -102,8 +110,12 @@ class LocationTracker(models.Model):
         default=None, null=True, blank=True, max_length=255)
     tracker_status = models.CharField(
         max_length=2, choices=tracker_status_choices, default='IN')
+    internal = models.BooleanField(
+        default=False,
+        help_text="Internal trackers don't publish their locations to the enduser. They are useful for backup trackers with lower accuracy e.g. wifi trackers."
+    )
 
-    def current_position(self):
+    def current_geolocation(self):
         if not self.id:
             return None
         try:
@@ -202,6 +214,14 @@ class Location(models.Model):
     reported_at = models.DateTimeField(default=None, null=True, blank=True)
     accuracy = models.FloatField(
         default=None, null=True, blank=True)
+    internal = models.BooleanField(
+        default=False,
+        help_text="Internal locations are not published to the enduser. They are usefull for backup trackers with lower accuracy e.g. wifi trackers."
+    )
+    def save(self, *args, **kwargs):
+        if (self.tracker):
+            self.internal = self.tracker.internal
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return str(self.geo)

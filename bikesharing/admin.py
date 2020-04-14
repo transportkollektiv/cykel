@@ -30,22 +30,31 @@ class BikeAdmin(LeafletGeoAdmin, admin.ModelAdmin):
     ordering = ['bike_number']
 
     @mark_safe
-    def location(self, obj):
-        if obj is None or obj.current_position() is None:
-            return ""
-        lat = str(obj.current_position().geo.y)
-        lng = str(obj.current_position().geo.x)
+    def location(self, bike):
+        public_info = ""
+        internal_info = ""
+        if bike.public_geolocation():
+            public_info = "Public: %s<br>" % (self.format_geolocation_text(bike.public_geolocation()))
+        if bike.internal_geolocation():
+            internal_info = "Internal: %s" % (self.format_geolocation_text(bike.internal_geolocation()))
+        return "%s %s" % (public_info, internal_info)
+
+    @staticmethod
+    def format_geolocation_text(geolocation):
+        lat = str(geolocation.geo.y)
+        lng = str(geolocation.geo.x)
         accuracy = ""
-        if obj.current_position().accuracy:
-            accuracy = ", accuracy: " + str(obj.current_position().accuracy) + "m"
+        if geolocation.accuracy:
+            accuracy = ", accuracy: " + str(geolocation.accuracy) + "m"
         source = ""
-        if (obj.current_position().tracker):
-            tracker = obj.current_position().tracker
+        if (geolocation.tracker):
+            tracker = geolocation.tracker
             source = " (source: <a href='{url}'>tracker {device_id}</a>)".format(
                 url=reverse("admin:bikesharing_locationtracker_change", args=(tracker.id,)),
                 device_id=tracker.device_id)
         url = "https://www.openstreetmap.org/?mlat={lat}&mlon={lng}#map=16/{lat}/{lng}".format(lat=lat, lng=lng)
         return "<a href='%s'>%s, %s</a>%s%s" % (url, lat, lng, accuracy, source)
+
     location.allow_tags = True
 
 @admin.register(Rent)
@@ -64,10 +73,10 @@ class LocationTrackerAdmin(LeafletGeoAdmin, admin.ModelAdmin):
 
     @mark_safe
     def location(self, obj):
-        if obj is None or obj.current_position() is None:
+        if obj is None or obj.current_geolocation() is None:
             return ""
-        lat = str(obj.current_position().geo.y)
-        lng = str(obj.current_position().geo.x)
+        lat = str(obj.current_geolocation().geo.y)
+        lng = str(obj.current_geolocation().geo.x)
         url = "https://www.openstreetmap.org/?mlat={lat}&mlon={lng}#map=16/{lat}/{lng}".format(lat=lat, lng=lng)
         return "<a href='%s'>%s, %s</a>" % (url, lat, lng)
     location.allow_tags = True
