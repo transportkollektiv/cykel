@@ -21,3 +21,25 @@ def test_tracker_updatebikelocation_without_device_id(tracker, tracker_client_wi
     assert response.status_code == 400, response.content
     assert response.json()['error'] == 'device_id missing'
 
+@pytest.mark.django_db
+def test_tracker_updatebikelocation_updates_last_reported(tracker, tracker_client_with_apikey):
+    assert tracker.last_reported is None
+    data = {
+        'device_id': tracker.device_id
+    }
+    response = tracker_client_with_apikey.post('/api/bike/updatelocation', data=data)
+    assert response.status_code == 200, response.content
+    tracker.refresh_from_db()
+    assert tracker.last_reported is not None
+
+@pytest.mark.django_db
+def test_tracker_updatebikelocation_updates_battery_voltage(tracker, tracker_client_with_apikey):
+    assert tracker.battery_voltage is None
+    data = {
+        'device_id': tracker.device_id,
+        'battery_voltage': 3.45
+    }
+    response = tracker_client_with_apikey.post('/api/bike/updatelocation', data=data)
+    assert response.status_code == 200, response.content
+    tracker.refresh_from_db()
+    assert tracker.battery_voltage == 3.45
