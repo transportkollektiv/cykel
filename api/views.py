@@ -12,6 +12,7 @@ from rest_framework_api_key.permissions import HasAPIKey
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import Point
+from django.utils.timezone import now
 from preferences import preferences
 
 from .serializers import BikeSerializer
@@ -80,10 +81,10 @@ def updatebikelocation(request):
     accuracy = request.data.get("accuracy")
     battery_voltage = request.data.get("battery_voltage")
 
-    tracker.last_reported = datetime.datetime.now()
     if battery_voltage:
         tracker.battery_voltage = battery_voltage
     tracker.save()
+    tracker.last_reported = now()
 
     loc = None
 
@@ -92,7 +93,7 @@ def updatebikelocation(request):
         if tracker.bike:
             loc.bike = tracker.bike
         loc.geo = Point(float(lng), float(lat), srid=4326)
-        loc.reported_at = datetime.datetime.now()
+        loc.reported_at = now()
         loc.tracker = tracker
         if accuracy:
             loc.accuracy = accuracy
@@ -100,7 +101,7 @@ def updatebikelocation(request):
 
     if tracker.bike:
         bike = tracker.bike
-        bike.last_reported = datetime.datetime.now()
+        bike.last_reported = now()
 
         if loc:
             # check if bike is near station and assign it to that station
