@@ -19,6 +19,7 @@ from .serializers import BikeSerializer
 from .serializers import StationSerializer
 from .serializers import RentSerializer
 from .serializers import SocialAppSerializer
+from .serializers import LocationTrackerUpdateSerializer
 
 from bikesharing.models import Bike
 from bikesharing.models import Station
@@ -76,16 +77,15 @@ def updatebikelocation(request):
     except LocationTracker.DoesNotExist:
         return Response({"error": "tracker does not exist"}, status=404)
 
+    serializer = LocationTrackerUpdateSerializer(tracker, data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=400)
+
+    serializer.save()
+
     lat = request.data.get("lat")
     lng = request.data.get("lng")
     accuracy = request.data.get("accuracy")
-    battery_voltage = request.data.get("battery_voltage")
-
-    if battery_voltage:
-        tracker.battery_voltage = battery_voltage
-    tracker.save()
-    tracker.last_reported = now()
-
     loc = None
 
     if lat and lng:

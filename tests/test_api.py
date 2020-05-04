@@ -43,3 +43,13 @@ def test_tracker_updatebikelocation_updates_battery_voltage(tracker, tracker_cli
     assert response.status_code == 200, response.content
     tracker.refresh_from_db()
     assert tracker.battery_voltage == 3.45
+
+@pytest.mark.django_db
+def test_tracker_updatebikelocation_wants_both_parts_of_a_coordinate(tracker, tracker_client_with_apikey):
+    assert tracker.battery_voltage is None
+    data = {
+        'device_id': tracker.device_id,
+        'lat': 1
+    }
+    response = tracker_client_with_apikey.post('/api/bike/updatelocation', data=data)
+    assert response.status_code == 400, response.content
