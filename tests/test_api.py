@@ -1,7 +1,8 @@
 import pytest
 from rest_framework.test import APIClient
 from rest_framework_api_key.models import APIKey
-from bikesharing.models import Location, LocationTracker
+from django.contrib.gis.geos import Point
+from bikesharing.models import Location, LocationTracker, Bike, Station
 
 # TODO: move into conftest.py
 @pytest.fixture
@@ -12,8 +13,16 @@ def tracker_client_with_apikey():
     return client
 
 @pytest.fixture
-def tracker():
-    return LocationTracker.objects.create(device_id=42)
+def available_bike():
+    return Bike.objects.create(availability_status='AV', bike_number='1337')
+
+@pytest.fixture
+def active_station():
+    return Station.objects.create(status='AC', station_name='Station McStationface', location=Point(48.39662, 9.99024, srid=4326))
+
+@pytest.fixture
+def tracker(available_bike):
+    return LocationTracker.objects.create(device_id=42, bike=available_bike)
 
 @pytest.fixture
 def internal_tracker():
