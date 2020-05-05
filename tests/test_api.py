@@ -18,7 +18,7 @@ def available_bike():
 
 @pytest.fixture
 def active_station():
-    return Station.objects.create(status='AC', station_name='Station McStationface', location=Point(48.39662, 9.99024, srid=4326))
+    return Station.objects.create(status='AC', station_name='Station McStationface', location=Point(9.99024, 48.39662, srid=4326))
 
 @pytest.fixture
 def tracker(available_bike):
@@ -102,3 +102,18 @@ def test_tracker_updatebikelocation_check_internal_tracker_location(internal_tra
     assert response.status_code == 200, response.content
     internal_tracker.refresh_from_db()
     assert internal_tracker.current_geolocation().internal == True
+
+@pytest.mark.django_db
+def test_tracker_updatebikelocation_check_automatic_station_assignment(tracker, available_bike, active_station, tracker_client_with_apikey):
+    assert available_bike.current_station is None
+    data = {
+        'device_id': tracker.device_id,
+        'lat': 48.39662,
+        'lng': 9.99026
+    }
+    response = tracker_client_with_apikey.post('/api/bike/updatelocation', data=data)
+    assert response.status_code == 200, response.content
+    available_bike.refresh_from_db()
+    print(dir(available_bike.current_station))
+    assert available_bike.current_station is not None
+    assert available_bike.current_station == active_station
