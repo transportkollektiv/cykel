@@ -15,6 +15,10 @@ def tracker_client_with_apikey():
 def tracker():
     return LocationTracker.objects.create(device_id=42)
 
+@pytest.fixture
+def internal_tracker():
+    return LocationTracker.objects.create(device_id=23, internal=True)
+
 @pytest.mark.django_db
 def test_tracker_updatebikelocation_without_device_id(tracker, tracker_client_with_apikey):
     response = tracker_client_with_apikey.post('/api/bike/updatelocation')
@@ -46,7 +50,6 @@ def test_tracker_updatebikelocation_updates_battery_voltage(tracker, tracker_cli
 
 @pytest.mark.django_db
 def test_tracker_updatebikelocation_wants_both_parts_of_a_coordinate(tracker, tracker_client_with_apikey):
-    assert tracker.battery_voltage is None
     data = {
         'device_id': tracker.device_id,
         'lat': 1
@@ -56,7 +59,6 @@ def test_tracker_updatebikelocation_wants_both_parts_of_a_coordinate(tracker, tr
 
 @pytest.mark.django_db
 def test_tracker_updatebikelocation_check_current_geolocation(tracker, tracker_client_with_apikey):
-    assert tracker.battery_voltage is None
     data = {
         'device_id': tracker.device_id,
         'lat': -99,
@@ -67,3 +69,27 @@ def test_tracker_updatebikelocation_check_current_geolocation(tracker, tracker_c
     tracker.refresh_from_db()
     assert tracker.current_geolocation().geo.y == -99
     assert tracker.current_geolocation().geo.x == -89
+
+@pytest.mark.django_db
+def test_tracker_updatebikelocation_check_public_tracker_location(tracker, tracker_client_with_apikey):
+    data = {
+        'device_id': tracker.device_id,
+        'lat': -99.9,
+        'lng': -89.9
+    }
+    response = tracker_client_with_apikey.post('/api/bike/updatelocation', data=data)
+    assert response.status_code == 200, response.content
+    tracker.refresh_from_db()
+    assert tracker.current_geolocation().internal == False
+
+@pytest.mark.django_db
+def test_tracker_updatebikelocation_check_internal_tracker_location(internal_tracker, tracker_client_with_apikey):
+    data = {
+        'device_id': internal_tracker.device_id,
+        'lat': -99.99,
+        'lng': -89.99
+    }
+    response = tracker_client_with_apikey.post('/api/bike/updatelocation', data=data)
+    assert response.status_code == 200, response.content
+    internal_tracker.refresh_from_db()
+    assert internal_tracker.current_geolocation().internal == True
