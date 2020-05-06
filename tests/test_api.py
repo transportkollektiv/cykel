@@ -30,6 +30,17 @@ def internal_tracker():
     return LocationTracker.objects.create(device_id=23, internal=True)
 
 @pytest.mark.django_db
+def test_tracker_updatebikelocation_without_apikey(tracker):
+    client = APIClient()
+    data = {
+        'device_id': tracker.device_id,
+        'lat': 13.2455,
+        'lng': 35.345
+    }
+    response = client.post('/api/bike/updatelocation', data=data)
+    assert response.status_code == 401
+
+@pytest.mark.django_db
 def test_tracker_updatebikelocation_without_device_id(tracker, tracker_client_with_apikey):
     response = tracker_client_with_apikey.post('/api/bike/updatelocation')
     assert response.status_code == 400, response.content
