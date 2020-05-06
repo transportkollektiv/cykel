@@ -116,6 +116,19 @@ def test_tracker_updatebikelocation_check_internal_tracker_location(internal_tra
     assert internal_tracker.current_geolocation().internal == True
 
 @pytest.mark.django_db
+def test_tracker_updatebikelocation_check_accuracy_on_location(tracker, tracker_client_with_apikey):
+    data = {
+        'device_id': tracker.device_id,
+        'lat': -99.997,
+        'lng': -89.9911,
+        'accuracy': 10.765
+    }
+    response = tracker_client_with_apikey.post('/api/bike/updatelocation', data=data)
+    assert response.status_code == 200, response.content
+    tracker.refresh_from_db()
+    assert tracker.current_geolocation().accuracy == 10.765
+
+@pytest.mark.django_db
 def test_tracker_updatebikelocation_check_automatic_station_assignment_under_20m(tracker, available_bike, active_station, tracker_client_with_apikey):
     assert available_bike.current_station is None
     assert preferences.BikeSharePreferences.station_match_max_distance == 20
