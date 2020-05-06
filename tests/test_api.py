@@ -3,6 +3,7 @@ from rest_framework.test import APIClient
 from rest_framework_api_key.models import APIKey
 from django.contrib.gis.geos import Point
 from bikesharing.models import Location, LocationTracker, Bike, Station
+from preferences import preferences
 
 # TODO: move into conftest.py
 @pytest.fixture
@@ -104,8 +105,9 @@ def test_tracker_updatebikelocation_check_internal_tracker_location(internal_tra
     assert internal_tracker.current_geolocation().internal == True
 
 @pytest.mark.django_db
-def test_tracker_updatebikelocation_check_automatic_station_assignment(tracker, available_bike, active_station, tracker_client_with_apikey):
+def test_tracker_updatebikelocation_check_automatic_station_assignment_under_20m(tracker, available_bike, active_station, tracker_client_with_apikey):
     assert available_bike.current_station is None
+    assert preferences.BikeSharePreferences.station_match_max_distance == 20
     data = {
         'device_id': tracker.device_id,
         'lat': 48.39662,
@@ -115,5 +117,36 @@ def test_tracker_updatebikelocation_check_automatic_station_assignment(tracker, 
     assert response.status_code == 200, response.content
     available_bike.refresh_from_db()
     print(dir(available_bike.current_station))
+    assert available_bike.current_station == active_station
+
+@pytest.mark.django_db
+def test_tracker_updatebikelocation_check_automatic_station_assignment_under_80m(tracker, available_bike, active_station, tracker_client_with_apikey):
+    assert available_bike.current_station is None
+    prefs = preferences.BikeSharePreferences
+    prefs.station_match_max_distance = 80
+    prefs.save()
+    assert preferences.BikeSharePreferences.station_match_max_distance == 80
+    data = {
+        'device_id': tracker.device_id,
+        'lat': 48.39679,
+        'lng': 9.99034
+    }
+    response = tracker_client_with_apikey.post('/api/bike/updatelocation', data=data)
+    assert response.status_code == 200, response.content
+    available_bike.refresh_from_db()
     assert available_bike.current_station is not None
     assert available_bike.current_station == active_station
+
+@pytest.mark.django_db
+def test_tracker_updatebikelocation_check_automatic_station_assignment_over_20m(tracker, available_bike, active_station, tracker_client_with_apikey):
+    assert available_bike.current_station is None
+    assert preferences.BikeSharePreferences.station_match_max_distance == 20
+    data = {
+        'device_id': tracker.device_id,
+        'lat': 48.39679,
+        'lng': 9.99034
+    }
+    response = tracker_client_with_apikey.post('/api/bike/updatelocation', data=data)
+    assert response.status_code == 200, response.content
+    available_bike.refresh_from_db()
+    assert available_bike.current_station is None
