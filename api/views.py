@@ -169,7 +169,8 @@ def start_rent(request):
         loc.reported_at = datetime.datetime.now()
         loc.save()
     else:
-        rent.start_position = bike.public_geolocation().geo
+        if bike.public_geolocation():
+            rent.start_position = bike.public_geolocation().geo
     rent.save()
     # TODO station position and bike position if no lat lng over APIt
 
