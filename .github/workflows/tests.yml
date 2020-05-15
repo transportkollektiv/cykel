@@ -13,8 +13,14 @@ jobs:
     env:
       SECRET_KEY: DUMMYSECRETVALUEFORTESTS
       UI_SITE_URL: http://example.org
+      DATABASE_URL: 'postgis://cykel:cykel@127.0.0.1/cykel'
     steps:
       - uses: actions/checkout@v2
+      - uses: huaxk/postgis-action@v1
+        with:
+          postgresql version: '11'
+          postgresql password: 'cykel'
+          postgresql user: 'cykel'
       - name: Set up Python 3.8
         uses: actions/setup-python@v2
         with:
