@@ -25,6 +25,8 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
+      - name: Install geospatial libraries
+        run: sudo apt-get install -y libproj-dev libgeos-dev libspatialite-dev libgdal-dev gdal-bin binutils proj-data proj-bin
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
