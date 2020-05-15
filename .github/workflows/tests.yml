@@ -12,6 +12,7 @@ jobs:
     name: tests
     env:
       SECRET_KEY: DUMMYSECRETVALUEFORTESTS
+      UI_SITE_URL: http://example.org
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python 3.8
