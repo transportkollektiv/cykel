@@ -84,3 +84,8 @@ To use other settings (like `ALLOWED_HOSTS`) from above, add them to the `enviro
 
 Docker Compose runs cykel and [voorwiel](https://github.com/stadtulm/voorwiel) (one frontend implementation), so you can develop and test with a client right away.
 
+## Tests
+
+`pip install -r requirements-dev.txt`
+
+`pytest --no-migrations`
