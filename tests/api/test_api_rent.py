@@ -2,7 +2,7 @@ import pytest
 from rest_framework.test import APIClient
 from rest_framework.authtoken.models import Token
 from django.contrib.auth.models import Permission
-from bikesharing.models import Bike
+from bikesharing.models import Bike, Lock
 
 @pytest.fixture
 def testuser_john_doe(django_user_model):
@@ -16,8 +16,12 @@ def user_client_john_doe_logged_in(testuser_john_doe):
     return client
 
 @pytest.fixture
-def available_bike():
-    return Bike.objects.create(availability_status='AV', bike_number='1337')
+def lock():
+    return Lock.objects.create(unlock_key='000000')
+
+@pytest.fixture
+def available_bike(lock):
+    return Bike.objects.create(availability_status='AV', bike_number='1337', lock=lock)
 
 @pytest.fixture
 def disabled_bike():
@@ -50,7 +54,7 @@ def test_start_rent_logged_out(available_bike):
     assert available_bike.availability_status == 'AV'
 
 @pytest.mark.django_db
-def test_start_rent_logged_in_without_renting_rights(testuser_john_doe, user_client_john_doe_logged_in, available_bike):
+def test_start_rent_logged_in_with_renting_rights(testuser_john_doe, user_client_john_doe_logged_in, available_bike):
     can_add_rent_permission = Permission.objects.get(name='Can add rent')
     testuser_john_doe.user_permissions.add(can_add_rent_permission)
     data = {
@@ -59,6 +63,7 @@ def test_start_rent_logged_in_without_renting_rights(testuser_john_doe, user_cli
     response = user_client_john_doe_logged_in.post('/api/rent/start', data)
     assert response.status_code == 200, response.content
     assert response.json()['success'] == True
+    assert response.json()['unlock_key'] == '000000'
 
     available_bike.refresh_from_db()
     assert available_bike.availability_status == 'IU'
