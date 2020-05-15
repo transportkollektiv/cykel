@@ -48,3 +48,17 @@ def test_start_rent_logged_out(available_bike):
     assert response.status_code == 401, response.content
     available_bike.refresh_from_db()
     assert available_bike.availability_status == 'AV'
+
+@pytest.mark.django_db
+def test_start_rent_logged_in_without_renting_rights(testuser_john_doe, user_client_john_doe_logged_in, available_bike):
+    can_add_rent_permission = Permission.objects.get(name='Can add rent')
+    testuser_john_doe.user_permissions.add(can_add_rent_permission)
+    data = {
+        'bike_number': '1337'
+    }
+    response = user_client_john_doe_logged_in.post('/api/rent/start', data)
+    assert response.status_code == 200, response.content
+    assert response.json()['success'] == True
+
+    available_bike.refresh_from_db()
+    assert available_bike.availability_status == 'IU'
