@@ -10,6 +10,8 @@ jobs:
   test:
     runs-on: ubuntu-latest
     name: tests
+    env:
+      SECRET_KEY: DUMMYSECRETVALUEFORTESTS
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python 3.8
