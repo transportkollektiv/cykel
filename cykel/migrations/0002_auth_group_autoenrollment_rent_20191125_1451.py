@@ -2,13 +2,20 @@
 
 from django.db import migrations
 from django.conf import settings
+from django.contrib.auth.management import create_permissions
 
 
 def apply_migration(apps, schema_editor):
+    # this is important, else the add_rent permission is missing
+    for app_config in apps.get_app_configs():
+        app_config.models_module = True
+        create_permissions(app_config, verbosity=0)
+        app_config.models_module = None
+
     Group = apps.get_model('auth', 'Group')
     Permission = apps.get_model('auth', 'Permission')
     new_group = Group.objects.create(name='autoenrollment-rent')
-    rent_add_perm = Permission.objects.get(name='Can add rent')
+    rent_add_perm = Permission.objects.get(codename='add_rent')
     new_group.permissions.add(rent_add_perm)
 
 
