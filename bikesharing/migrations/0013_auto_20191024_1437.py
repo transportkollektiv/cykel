@@ -6,18 +6,23 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('bikesharing', '0012_auto_20190911_2043'),
+        ("bikesharing", "0012_auto_20190911_2043"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='bike',
-            name='vehicle_identification_number',
+            model_name="bike",
+            name="vehicle_identification_number",
             field=models.CharField(blank=True, default=None, max_length=17, null=True),
         ),
         migrations.AlterField(
-            model_name='bikesharepreferences',
-            name='gbfs_hide_bikes_after_location_report_hours',
-            field=models.IntegerField(default=1, help_text="Time period (in hours) after the vehicles will hidden from GBFS, if there was no location report. Needs 'Gbfs hide bikes after location report silence' activated."),
+            model_name="bikesharepreferences",
+            name="gbfs_hide_bikes_after_location_report_hours",
+            field=models.IntegerField(
+                default=1,
+                help_text="""Time period (in hours) after the vehicles will be
+                 hidden from GBFS, if there was no location report.
+                 Needs 'Gbfs hide bikes after location report silence' activated.""",
+            ),
         ),
     ]

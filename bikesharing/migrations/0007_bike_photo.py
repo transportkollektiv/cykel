@@ -6,13 +6,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('bikesharing', '0006_bike_battery_voltage'),
+        ("bikesharing", "0006_bike_battery_voltage"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='bike',
-            name='photo',
-            field=models.FileField(blank=True, default=None, null=True, upload_to='uploads/'),
+            model_name="bike",
+            name="photo",
+            field=models.FileField(
+                blank=True, default=None, null=True, upload_to="uploads/"
+            ),
         ),
     ]

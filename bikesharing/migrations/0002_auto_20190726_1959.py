@@ -7,18 +7,30 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('bikesharing', '0001_initial'),
+        ("bikesharing", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='rent',
-            name='end_station',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='rent_end_station', to='bikesharing.Station'),
+            model_name="rent",
+            name="end_station",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="rent_end_station",
+                to="bikesharing.Station",
+            ),
         ),
         migrations.AddField(
-            model_name='rent',
-            name='start_station',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='rent_start_station', to='bikesharing.Station'),
+            model_name="rent",
+            name="start_station",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="rent_start_station",
+                to="bikesharing.Station",
+            ),
         ),
     ]

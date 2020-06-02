@@ -8,20 +8,28 @@ import django.db.models.manager
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('preferences', '0002_auto_20181220_0803'),
-        ('bikesharing', '0007_bike_photo'),
+        ("preferences", "0002_auto_20181220_0803"),
+        ("bikesharing", "0007_bike_photo"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='BikeSharePreferences',
+            name="BikeSharePreferences",
             fields=[
-                ('preferences_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='preferences.Preferences')),
-                ('station_match_max_distance', models.IntegerField(default=20)),
+                (
+                    "preferences_ptr",
+                    models.OneToOneField(
+                        auto_created=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        parent_link=True,
+                        primary_key=True,
+                        serialize=False,
+                        to="preferences.Preferences",
+                    ),
+                ),
+                ("station_match_max_distance", models.IntegerField(default=20)),
             ],
-            bases=('preferences.preferences',),
-            managers=[
-                ('singleton', django.db.models.manager.Manager()),
-            ],
+            bases=("preferences.preferences",),
+            managers=[("singleton", django.db.models.manager.Manager()),],
         ),
     ]

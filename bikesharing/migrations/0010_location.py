@@ -8,18 +8,48 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('bikesharing', '0009_auto_20190909_1700'),
+        ("bikesharing", "0009_auto_20190909_1700"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Location',
+            name="Location",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('geo', django.contrib.gis.db.models.fields.PointField(blank=True, default=None, null=True, srid=4326)),
-                ('source', models.CharField(choices=[('LO', 'Lock'), ('US', 'User')], default='LO', max_length=2)),
-                ('reported_at', models.DateTimeField(blank=True, default=None, null=True)),
-                ('bike', models.ForeignKey(default=None, on_delete=django.db.models.deletion.PROTECT, to='bikesharing.Bike')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "geo",
+                    django.contrib.gis.db.models.fields.PointField(
+                        blank=True, default=None, null=True, srid=4326
+                    ),
+                ),
+                (
+                    "source",
+                    models.CharField(
+                        choices=[("LO", "Lock"), ("US", "User")],
+                        default="LO",
+                        max_length=2,
+                    ),
+                ),
+                (
+                    "reported_at",
+                    models.DateTimeField(blank=True, default=None, null=True),
+                ),
+                (
+                    "bike",
+                    models.ForeignKey(
+                        default=None,
+                        on_delete=django.db.models.deletion.PROTECT,
+                        to="bikesharing.Bike",
+                    ),
+                ),
             ],
         ),
     ]

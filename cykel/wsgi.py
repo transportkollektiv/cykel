@@ -1,5 +1,4 @@
-"""
-WSGI config for cykel project.
+"""WSGI config for cykel project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 

@@ -1,4 +1,4 @@
-"""cykel URL Configuration
+"""cykel URL Configuration.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/2.0/topics/http/urls/
@@ -13,33 +13,29 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
+from django.conf.urls import url
 from django.urls import include, path
-from django.conf.urls import url, include
-from rest_framework import routers, serializers, viewsets
-from rest_framework.urlpatterns import format_suffix_patterns
+from rest_framework import routers
 
-from .views import BikeViewSet
-from .views import StationViewSet
-from .views import CurrentRentViewSet
-from .views import updatebikelocation
-from .views import start_rent
-from .views import finish_rent
-from .views import LoginProviderViewSet
-from .views import UserDetailsView
+from .views import (
+    CurrentRentViewSet,
+    LoginProviderViewSet,
+    UserDetailsView,
+    finish_rent,
+    start_rent,
+    updatebikelocation,
+)
 
 # Routers provide an easy way of automatically determining the URL conf.
 router = routers.DefaultRouter()
-#router.register(r'bikes', BikeViewSet)
-#router.register(r'stations', StationViewSet)
 
 urlpatterns = [
-    url(r'^', include(router.urls)),
-    url(r'^api/', include('rest_framework.urls', namespace='rest_framework_api')),
-    path('bike/updatelocation', updatebikelocation),
-    path('rent/start', start_rent),
-    path('rent/finish', finish_rent),
-    path('rent/current', CurrentRentViewSet.as_view({'get': 'list'})),
-    path('user', UserDetailsView.as_view()),
-    path('config/loginproviders', LoginProviderViewSet.as_view({'get': 'list'}))
+    url(r"^", include(router.urls)),
+    url(r"^api/", include("rest_framework.urls", namespace="rest_framework_api")),
+    path("bike/updatelocation", updatebikelocation),
+    path("rent/start", start_rent),
+    path("rent/finish", finish_rent),
+    path("rent/current", CurrentRentViewSet.as_view({"get": "list"})),
+    path("user", UserDetailsView.as_view()),
+    path("config/loginproviders", LoginProviderViewSet.as_view({"get": "list"})),
 ]

@@ -6,17 +6,19 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('bikesharing', '0021_location_internal_location'),
+        ("bikesharing", "0021_location_internal_location"),
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='locationtracker',
-            name='internal_only',
-        ),
+        migrations.RemoveField(model_name="locationtracker", name="internal_only",),
         migrations.AddField(
-            model_name='locationtracker',
-            name='internal',
-            field=models.BooleanField(default=False, help_text="Internal trackers don't publish their locations to the enduser. They are useful for backup trackers with lower accuracy e.g. wifi trackers."),
+            model_name="locationtracker",
+            name="internal",
+            field=models.BooleanField(
+                default=False,
+                help_text="""Internal trackers don't publish their locations
+                 to the enduser. They are useful for backup trackers
+                 with lower accuracy e.g. wifi trackers.""",
+            ),
         ),
     ]

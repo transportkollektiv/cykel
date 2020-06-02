@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('bikesharing', '0014_auto_20191024_1611'),
+        ("bikesharing", "0014_auto_20191024_1611"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='location',
-            name='accuracy',
+            model_name="location",
+            name="accuracy",
             field=models.FloatField(blank=True, default=None, null=True),
         ),
     ]

@@ -6,12 +6,9 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('bikesharing', '0016_auto_20191024_1831'),
+        ("bikesharing", "0016_auto_20191024_1831"),
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='bike',
-            name='battery_voltage',
-        ),
+        migrations.RemoveField(model_name="bike", name="battery_voltage",),
     ]

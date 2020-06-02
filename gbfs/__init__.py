@@ -1,1 +1,1 @@
-default_app_config = 'gbfs.apps.GbfsConfig'
+default_app_config = "gbfs.apps.GbfsConfig"

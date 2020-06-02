@@ -2,6 +2,7 @@ from django.apps import AppConfig
 
 
 class GbfsConfig(AppConfig):
-    name = 'gbfs'
+    name = "gbfs"
+
     def ready(self):
-        from gbfs import handlers
+        from gbfs import handlers  # noqa: F401

@@ -12,26 +12,24 @@ def apply_migration(apps, schema_editor):
         create_permissions(app_config, verbosity=0)
         app_config.models_module = None
 
-    Group = apps.get_model('auth', 'Group')
-    Permission = apps.get_model('auth', 'Permission')
-    new_group = Group.objects.create(name='autoenrollment-rent')
-    rent_add_perm = Permission.objects.get(codename='add_rent')
+    Group = apps.get_model("auth", "Group")
+    Permission = apps.get_model("auth", "Permission")
+    new_group = Group.objects.create(name="autoenrollment-rent")
+    rent_add_perm = Permission.objects.get(codename="add_rent")
     new_group.permissions.add(rent_add_perm)
 
 
 def revert_migration(apps, schema_editor):
-    Group = apps.get_model('auth', 'Group')
-    Group.objects.filter(name='autoenrollment-rent').delete()
+    Group = apps.get_model("auth", "Group")
+    Group.objects.filter(name="autoenrollment-rent").delete()
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('cykel', '0001_initial'),
+        ("cykel", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('bikesharing', '0001_initial'),
+        ("bikesharing", "0001_initial"),
     ]
 
-    operations = [
-        migrations.RunPython(apply_migration, revert_migration)
-    ]
+    operations = [migrations.RunPython(apply_migration, revert_migration)]

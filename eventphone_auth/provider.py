@@ -10,20 +10,20 @@ class EventPhoneAccount(ProviderAccount):
 
 
 class EventPhoneProvider(OAuth2Provider):
-    id = 'eventphone'
-    name = 'EventPhone'
-    package = 'eventphone_auth'
+    id = "eventphone"
+    name = "EventPhone"
+    package = "eventphone_auth"
     account_class = EventPhoneAccount
 
     def get_default_scope(self):
-        return ['read:user']
+        return ["read:user"]
 
     def extract_uid(self, data):
-        return str(data['id'])
+        return str(data["id"])
 
     def extract_common_fields(self, data):
         fields = {
-            'username': data.get('username'),
+            "username": data.get("username"),
         }
         return fields
 
