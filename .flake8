@@ -7,3 +7,5 @@ max-line-length = 88
 extend-ignore =
     # See https://github.com/PyCQA/pycodestyle/issues/373
     E203,
+    # See https://github.com/psf/black/issues/1288
+    E231,

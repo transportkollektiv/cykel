@@ -11,6 +11,6 @@ stylecheck:
 
 style:
 	isort -rc .
-	docformatter -r . --exclude venv
+	docformatter -i -r . --exclude venv
 	black .
 	flake8 .

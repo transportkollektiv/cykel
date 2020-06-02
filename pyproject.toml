@@ -14,3 +14,7 @@ skip = "migrations,venv"
 # not yet there: https://gitlab.com/pycqa/flake8/-/issues/428
 # look into the .flake8 file instead
 # [tool.flake8]
+
+# not yet there: https://github.com/pytest-dev/pytest/issues/1556
+# look into the setup.cfg file instead
+# [tool.pytest]
