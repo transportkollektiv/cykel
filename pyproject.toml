@@ -10,6 +10,7 @@ force_grid_wrap = 0
 use_parentheses = true
 line_length = 88
 skip = "migrations,venv"
+known_first_party = "api,bikesharing,cykel,eventphone_auth,gbfs,owncloud_auth"
 
 # not yet there: https://gitlab.com/pycqa/flake8/-/issues/428
 # look into the .flake8 file instead
