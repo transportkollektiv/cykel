@@ -1,6 +1,6 @@
 # Cykel
 
-Basic backend for a mobility sharing service. Used on [CCCamp2019](https://events.ccc.de/camp/2019/wiki/Main_Page).
+Basic backend for a mobility sharing service. First steps made at [CCCamp 2019](https://events.ccc.de/camp/2019/wiki/Main_Page), now developed, daily used and tested in [the City of Ulm](https://ulm.dev/projects/openbike/).
 
 ## Prerequisites
 
@@ -84,8 +84,18 @@ To use other settings (like `ALLOWED_HOSTS`) from above, add them to the `enviro
 
 Docker Compose runs cykel and [voorwiel](https://github.com/stadtulm/voorwiel) (one frontend implementation), so you can develop and test with a client right away.
 
-## Tests
 
-`pip install -r requirements-dev.txt`
+## Contributing
 
-`pytest --no-migrations`
+We welcome [issues](https://github.com/stadtulm/cykel/issues) and pull requests for new features, bugs or problems you encountered when setting it up. More Documentation or simply small typo fixes are also very appreciated. If you found a vulnerability or other security relevant issue, notify us at `openbike @ ulm.dev`
+
+For general discussion, feel free to hop into the [public matrix channel](https://matrix.to/#/!ghOLficeAycydtkZtA:matrix.org?via=matrix.org) for openbike and related projects.
+
+Generally, the cykel python/django code follows [PEP8](https://www.python.org/dev/peps/pep-0008/). We're using `flake8`, `isort`,
+`black` and `docformatter` as style checkers, so those can help you if you're not sure how to format something.
+
+### Tests
+
+To get stated with tests, you need to install the development dependencies: `pip install -r requirements-dev.txt`
+
+If you want to run them on your machine, use `pytest`. Tests are also automatically run for pull requests.

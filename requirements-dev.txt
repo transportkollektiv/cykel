@@ -1,3 +1,9 @@
 pytest==5.4.1
 pytest-django==3.9.0
 pytest-sugar==0.9.3
+black
+# docformatter
+# using docformatter from git until exclude feature is released
+git+https://github.com/myint/docformatter.git@020ec4f4c2b39091403cbde4e66c8970e0152a79#egg=docformatter
+flake8
+isort[pyproject]

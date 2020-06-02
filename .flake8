@@ -1,0 +1,9 @@
+# config for flake8 in pyproject.toml
+# is not yet there: https://gitlab.com/pycqa/flake8/-/issues/428
+
+[flake8]
+exclude = venv
+max-line-length = 88
+extend-ignore =
+    # See https://github.com/PyCQA/pycodestyle/issues/373
+    E203,

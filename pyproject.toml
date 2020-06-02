@@ -1,0 +1,16 @@
+[tool.black]
+exclude = "venv"
+
+# black compatible isort config
+# from https://black.readthedocs.io/en/stable/the_black_code_style.html
+[tool.isort]
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+line_length = 88
+skip = "migrations,venv"
+
+# not yet there: https://gitlab.com/pycqa/flake8/-/issues/428
+# look into the .flake8 file instead
+# [tool.flake8]

@@ -21,3 +21,7 @@ indent_size = 2
 [*.json]
 indent_size = 2
 insert_final_newline = ignore
+
+[Makefile]
+indent_style = tab
+indent_size = 4
