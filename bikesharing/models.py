@@ -102,7 +102,7 @@ class LocationTracker(models.Model):
     bike = models.ForeignKey(
         'Bike', on_delete=models.PROTECT, null=True, blank=True)
     device_id = models.CharField(
-        default=None, null=True, blank=True, max_length=255)
+        default=None, null=False, blank=True, max_length=255)
     last_reported = models.DateTimeField(default=None, null=True, blank=True)
     battery_voltage = models.FloatField(
         default=None, null=True, blank=True)
