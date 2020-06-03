@@ -218,16 +218,17 @@ def finish_rent(request):
             rent.end_position = rent.bike.public_geolocation().geo
     rent.save()
 
-    # attach bike to station is location is closer than X meters
-    # distance ist configured in prefernces
-    max_distance = preferences.BikeSharePreferences.station_match_max_distance
-    station_closer_than_Xm = Station.objects.filter(
-        location__distance_lte=(rent.end_position, D(m=max_distance)), status="AC"
-    ).first()
-    if station_closer_than_Xm:
-        rent.bike.current_station = station_closer_than_Xm
-    else:
-        rent.bike.current_station = None
+    if rent.end_position:
+        # attach bike to station if location is closer than X meters
+        # distance is configured in preferences
+        max_distance = preferences.BikeSharePreferences.station_match_max_distance
+        station_closer_than_Xm = Station.objects.filter(
+            location__distance_lte=(rent.end_position, D(m=max_distance)), status="AC"
+        ).first()
+        if station_closer_than_Xm:
+            rent.bike.current_station = station_closer_than_Xm
+        else:
+            rent.bike.current_station = None
 
     # set Bike status back to available
     rent.bike.availability_status = "AV"
