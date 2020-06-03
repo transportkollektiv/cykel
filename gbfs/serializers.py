@@ -1,6 +1,6 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 
-import pytz
+from django.utils.timezone import now
 from preferences import preferences
 from rest_framework import serializers
 
@@ -68,7 +68,7 @@ class GbfsStationStatusSerializer(serializers.HyperlinkedModelSerializer):
         if bsp.gbfs_hide_bikes_after_location_report_silence:
             representation["num_bikes_available"] = instance.bike_set.filter(
                 availability_status="AV",
-                last_reported__gte=datetime.now(pytz.utc)
+                last_reported__gte=now()
                 - timedelta(hours=bsp.gbfs_hide_bikes_after_location_report_hours),
             ).count()
         else:

@@ -1,5 +1,3 @@
-import datetime
-
 from allauth.socialaccount.models import SocialApp
 from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import Point
@@ -163,15 +161,13 @@ def start_rent(request):
     bike.availability_status = "IU"
     bike.save()
 
-    rent = Rent.objects.create(
-        rent_start=datetime.datetime.now(), user=request.user, bike=bike
-    )
+    rent = Rent.objects.create(rent_start=now(), user=request.user, bike=bike)
     if lat and lng:
         rent.start_position = Point(float(lng), float(lat), srid=4326)
 
         loc = Location.objects.create(bike=bike, source="US")
         loc.geo = Point(float(lng), float(lat), srid=4326)
-        loc.reported_at = datetime.datetime.now()
+        loc.reported_at = now()
         loc.save()
     else:
         if bike.public_geolocation():
@@ -205,13 +201,13 @@ def finish_rent(request):
     if rent.rent_end is not None:
         return Response({"error": "rent was already finished"}, status=410)
 
-    rent.rent_end = datetime.datetime.now()
+    rent.rent_end = now()
     if lat and lng:
         rent.end_position = Point(float(lng), float(lat), srid=4326)
 
         loc = Location.objects.create(bike=rent.bike, source="US")
         loc.geo = Point(float(lng), float(lat), srid=4326)
-        loc.reported_at = datetime.datetime.now()
+        loc.reported_at = now()
         loc.save()
     else:
         if rent.bike.public_geolocation():

@@ -1,8 +1,8 @@
 import time
-from datetime import datetime, timedelta
+from datetime import timedelta
 
-import pytz
 from django.http import JsonResponse
+from django.utils.timezone import now
 from preferences import preferences
 from rest_framework import generics, mixins
 from rest_framework.decorators import permission_classes
@@ -61,7 +61,7 @@ class GbfsFreeBikeStatusViewSet(mixins.ListModelMixin, generics.GenericAPIView):
         if bsp.gbfs_hide_bikes_after_location_report_silence:
             bikes = Bike.objects.filter(
                 availability_status="AV",
-                last_reported__gte=datetime.now(pytz.utc)
+                last_reported__gte=now()
                 - timedelta(hours=bsp.gbfs_hide_bikes_after_location_report_hours),
                 current_station=None,
                 location__isnull=False,

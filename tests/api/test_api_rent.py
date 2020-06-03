@@ -1,9 +1,7 @@
-import datetime
-
 import pytest
-import pytz
 from django.contrib.auth.models import Permission
 from django.contrib.gis.geos import Point
+from django.utils.timezone import now
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
@@ -62,9 +60,7 @@ def inuse_bike():
 @pytest.fixture
 def rent_jane_running(testuser_jane_canrent, inuse_bike):
     return Rent.objects.create(
-        rent_start=datetime.datetime.now(pytz.utc),
-        user=testuser_jane_canrent,
-        bike=inuse_bike,
+        rent_start=now(), user=testuser_jane_canrent, bike=inuse_bike,
     )
 
 
@@ -131,7 +127,7 @@ def test_end_rent_logged_in_with_renting_rights_and_location_from_bike(
 ):
     loc = Location.objects.create(bike=inuse_bike, source="TR")
     loc.geo = Point(-89.99, -99.99, srid=4326)
-    loc.reported_at = datetime.datetime.now(pytz.utc)
+    loc.reported_at = now()
     loc.save()
 
     data = {"rent_id": rent_jane_running.id}
