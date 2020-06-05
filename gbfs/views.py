@@ -46,7 +46,13 @@ def gbfs(request):
 
 def gbfsSystemInformation(request):
     if request.method == "GET":
-        data = {"system_id": "TBD", "language": "TBD", "name": "TBD", "timezone": "TBD"}
+        bsp = preferences.BikeSharePreferences
+        data = {
+            "system_id": bsp.gbfs_system_id,
+            "language": "TBD",
+            "name": "TBD",
+            "timezone": "TBD"
+        }
         return JsonResponse(getGbfsWithData(data), safe=False)
 
 

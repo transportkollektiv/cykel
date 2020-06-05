@@ -219,6 +219,7 @@ class BikeSharePreferences(Preferences):
          be hidden from GBFS, if there was no location report.
          Needs 'Gbfs hide bikes after location report silence' activated.""",
     )
+    gbfs_system_id = models.CharField(editable=True, max_length=255, default="")
 
 
 class Location(models.Model):
