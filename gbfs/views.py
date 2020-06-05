@@ -51,8 +51,9 @@ def gbfsSystemInformation(request):
         data = {
             "system_id": bsp.gbfs_system_id,
             "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
-            "language": "TBD",
-            "name": "TBD",
+            "language": "TBD", #TODO
+            "name": bsp.system_name,
+            "short_name": bsp.system_short_name,
             "timezone": settings.TIME_ZONE
         }
         return JsonResponse(getGbfsWithData(data), safe=False)
