@@ -3,6 +3,7 @@ from datetime import timedelta
 
 from django.http import JsonResponse
 from django.utils.timezone import now
+from django.conf import settings
 from preferences import preferences
 from rest_framework import generics, mixins
 from rest_framework.decorators import permission_classes
@@ -49,9 +50,10 @@ def gbfsSystemInformation(request):
         bsp = preferences.BikeSharePreferences
         data = {
             "system_id": bsp.gbfs_system_id,
+            "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
             "language": "TBD",
             "name": "TBD",
-            "timezone": "TBD"
+            "timezone": settings.TIME_ZONE
         }
         return JsonResponse(getGbfsWithData(data), safe=False)
 
