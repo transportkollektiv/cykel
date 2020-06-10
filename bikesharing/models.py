@@ -1,8 +1,11 @@
 from django.conf import settings
 from django.contrib.gis.db import models as geomodels
+from django.contrib.gis.measure import D
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+from django.utils.timezone import now
 from macaddress.fields import MACAddressField
+from preferences import preferences
 from preferences.models import Preferences
 
 bike_availability_status_choices = (
@@ -164,6 +167,33 @@ class Rent(models.Model):
             end_station=self.end_station,
             rent_end=self.rent_end,
         )
+
+    def end(self, end_position=None):
+        self.rent_end = now()
+        if end_position is not None:
+            self.end_position = end_position
+        elif self.bike.public_geolocation():
+            self.end_position = self.bike.public_geolocation().geo
+        self.save()
+
+        if self.end_position:
+            # attach bike to station if location is closer than X meters
+            # distance is configured in preferences
+            max_distance = preferences.BikeSharePreferences.station_match_max_distance
+            station_closer_than_Xm = Station.objects.filter(
+                location__distance_lte=(self.end_position, D(m=max_distance)),
+                status="AC",
+            ).first()
+            if station_closer_than_Xm:
+                self.bike.current_station = station_closer_than_Xm
+                self.end_station = station_closer_than_Xm
+                self.save()
+            else:
+                self.bike.current_station = None
+
+        # set Bike status back to available
+        self.bike.availability_status = "AV"
+        self.bike.save()
 
 
 class Lock(models.Model):

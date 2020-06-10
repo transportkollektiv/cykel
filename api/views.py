@@ -172,8 +172,9 @@ def start_rent(request):
     else:
         if bike.public_geolocation():
             rent.start_position = bike.public_geolocation().geo
+        if bike.current_station:
+            rent.start_station = bike.current_station
     rent.save()
-    # TODO station position and bike position if no lat lng over APIt
 
     res = {"success": True}
     # TODO return Lock code (or Open Lock?)
@@ -201,34 +202,15 @@ def finish_rent(request):
     if rent.rent_end is not None:
         return Response({"error": "rent was already finished"}, status=410)
 
-    rent.rent_end = now()
+    end_position = None
     if lat and lng:
-        rent.end_position = Point(float(lng), float(lat), srid=4326)
-
         loc = Location.objects.create(bike=rent.bike, source="US")
         loc.geo = Point(float(lng), float(lat), srid=4326)
         loc.reported_at = now()
         loc.save()
-    else:
-        if rent.bike.public_geolocation():
-            rent.end_position = rent.bike.public_geolocation().geo
-    rent.save()
+        end_position = loc.geo
 
-    if rent.end_position:
-        # attach bike to station if location is closer than X meters
-        # distance is configured in preferences
-        max_distance = preferences.BikeSharePreferences.station_match_max_distance
-        station_closer_than_Xm = Station.objects.filter(
-            location__distance_lte=(rent.end_position, D(m=max_distance)), status="AC"
-        ).first()
-        if station_closer_than_Xm:
-            rent.bike.current_station = station_closer_than_Xm
-        else:
-            rent.bike.current_station = None
-
-    # set Bike status back to available
-    rent.bike.availability_status = "AV"
-    rent.bike.save()
+    rent.end(end_position)
 
     return Response({"success": True})
 
