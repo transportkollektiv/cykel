@@ -5,6 +5,8 @@ from django.db import models
 from macaddress.fields import MACAddressField
 from preferences.models import Preferences
 
+import uuid
+
 bike_availability_status_choices = (
     ("DI", "Disabled"),
     ("IU", "In Use"),
@@ -67,6 +69,7 @@ class Bike(models.Model):
     vehicle_identification_number = models.CharField(
         default=None, null=True, blank=True, max_length=17
     )
+    non_static_bike_uuid = models.UUIDField(default=uuid.uuid4, blank=False, unique=True, help_text="A temporary ID used in public APIs, rotating it's value after each rent to protect users privacy.")
 
     def __str__(self):
         return str(self.bike_number)
