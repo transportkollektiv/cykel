@@ -9,7 +9,7 @@ from bikesharing.models import Bike, Station
 
 
 class GbfsFreeBikeStatusSerializer(serializers.HyperlinkedModelSerializer):
-    bike_id = serializers.CharField(source="bike_number", read_only=True)
+    bike_id = serializers.CharField(source="non_static_bike_uuid", read_only=True)
 
     class Meta:
         model = Bike
