@@ -25,6 +25,8 @@ from .serializers import (
     StationSerializer,
 )
 
+import uuid
+
 # Create your views here.
 # ViewSets define the view behavior.
 
@@ -228,6 +230,8 @@ def finish_rent(request):
 
     # set Bike status back to available
     rent.bike.availability_status = "AV"
+    # set new non static bike ID, so for GBFS observers can not track this bike
+    rent.bike.non_static_bike_uuid = uuid.uuid4()
     rent.bike.save()
 
     return Response({"success": True})
