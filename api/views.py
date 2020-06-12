@@ -230,9 +230,17 @@ def finish_rent(request):
 
     # set Bike status back to available
     rent.bike.availability_status = "AV"
-    # set new non static bike ID, so for GBFS observers can not track this bike
-    rent.bike.non_static_bike_uuid = uuid.uuid4()
     rent.bike.save()
+    try:
+        # set new non static bike ID, so for GBFS observers can not track this bike
+        rent.bike.non_static_bike_uuid = uuid.uuid4()
+        rent.bike.save()
+    except:
+        # Congratulations! The 2^64 chance of uuid4 collision has happend.
+        # here coul'd be the place for the famous comment: "should never happen"
+        # So we catch this error here, but don't handle it.
+        # because don't rotating a uuid every 18,446,744,073,709,551,615 rents is ok
+        pass
 
     return Response({"success": True})
 
