@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import D
 from django.contrib.sites.shortcuts import get_current_site
+from django.db.utils import IntegrityError
 from django.utils.timezone import now
 from preferences import preferences
 from rest_framework import authentication, generics, mixins, serializers, viewsets
@@ -235,7 +236,7 @@ def finish_rent(request):
         # set new non static bike ID, so for GBFS observers can not track this bike
         rent.bike.non_static_bike_uuid = uuid.uuid4()
         rent.bike.save()
-    except:
+    except IntegrityError:
         # Congratulations! The 2^64 chance of uuid4 collision has happend.
         # here coul'd be the place for the famous comment: "should never happen"
         # So we catch this error here, but don't handle it.
