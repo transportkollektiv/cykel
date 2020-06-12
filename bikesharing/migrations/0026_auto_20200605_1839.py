@@ -6,18 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('bikesharing', '0025_bikesharepreferences_gbfs_system_id'),
+        ("bikesharing", "0025_bikesharepreferences_gbfs_system_id"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='bikesharepreferences',
-            name='system_name',
-            field=models.CharField(default='', max_length=255),
+            model_name="bikesharepreferences",
+            name="system_name",
+            field=models.CharField(default="", max_length=255),
         ),
         migrations.AddField(
-            model_name='bikesharepreferences',
-            name='system_short_name',
-            field=models.CharField(default='', max_length=255),
+            model_name="bikesharepreferences",
+            name="system_short_name",
+            field=models.CharField(default="", max_length=255),
         ),
     ]

@@ -7,13 +7,18 @@ import uuid
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('bikesharing', '0026_auto_20200605_1839'),
+        ("bikesharing", "0026_auto_20200605_1839"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='bike',
-            name='non_static_bike_uuid',
-            field=models.UUIDField(default=uuid.uuid4, help_text="A temporary ID used in public APIs, rotating it's value after each rent to protect users privacy.", null=True),
+            model_name="bike",
+            name="non_static_bike_uuid",
+            field=models.UUIDField(
+                default=uuid.uuid4,
+                help_text="""A temporary ID used in public APIs,
+                rotating it's value after each rent to protect users privacy.""",
+                null=True,
+            ),
         ),
     ]

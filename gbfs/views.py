@@ -1,10 +1,10 @@
 import time
 from datetime import timedelta
 
-from django.http import JsonResponse
-from django.utils.timezone import now
-from django.utils import translation
 from django.conf import settings
+from django.http import JsonResponse
+from django.utils import translation
+from django.utils.timezone import now
 from preferences import preferences
 from rest_framework import generics, mixins
 from rest_framework.decorators import permission_classes
@@ -51,14 +51,14 @@ def gbfsSystemInformation(request):
         bsp = preferences.BikeSharePreferences
         lang = translation.get_language()
         twoletterlangcode = lang.split("-")[0]
-        #print(dir(info.values))
+        # print(dir(info.values))
         data = {
             "system_id": bsp.gbfs_system_id,
             "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
             "language": twoletterlangcode,
             "name": bsp.system_name,
             "short_name": bsp.system_short_name,
-            "timezone": settings.TIME_ZONE
+            "timezone": settings.TIME_ZONE,
         }
         return JsonResponse(getGbfsWithData(data), safe=False)
 
@@ -120,9 +120,4 @@ def getGbfsRoot(request):
 
 
 def getGbfsWithData(data):
-    return {
-        "ttl": 0,
-        "last_updated": int(time.time()),
-        "data": data,
-        "version": "2.0"
-    }
+    return {"ttl": 0, "last_updated": int(time.time()), "data": data, "version": "2.0"}

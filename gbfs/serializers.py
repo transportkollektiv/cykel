@@ -1,7 +1,7 @@
 from datetime import timedelta
 
-from django.utils.timezone import now
 from django.db.models import Max
+from django.utils.timezone import now
 from preferences import preferences
 from rest_framework import serializers
 
@@ -73,17 +73,17 @@ class GbfsStationStatusSerializer(serializers.HyperlinkedModelSerializer):
                 - timedelta(hours=bsp.gbfs_hide_bikes_after_location_report_hours),
             )
         else:
-            available_bikes = instance.bike_set.filter(
-                availability_status="AV"
-            )
+            available_bikes = instance.bike_set.filter(availability_status="AV")
         representation["num_bikes_available"] = available_bikes.count()
         representation["num_docks_available"] = (
             instance.max_bikes - representation["num_bikes_available"]
         )
-        last_reported_bike = available_bikes.aggregate(Max('last_reported'))
+        last_reported_bike = available_bikes.aggregate(Max("last_reported"))
 
-        if (last_reported_bike["last_reported__max"] is not None):
-            representation["last_reported"] = int(last_reported_bike["last_reported__max"].timestamp())
+        if last_reported_bike["last_reported__max"] is not None:
+            representation["last_reported"] = int(
+                last_reported_bike["last_reported__max"].timestamp()
+            )
         else:
             # if no bike is on station, last_report is now
             # not shure if this is the intended behavior of the field

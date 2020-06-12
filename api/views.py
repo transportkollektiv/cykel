@@ -1,3 +1,5 @@
+import uuid
+
 from allauth.socialaccount.models import SocialApp
 from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import Point
@@ -24,8 +26,6 @@ from .serializers import (
     SocialAppSerializer,
     StationSerializer,
 )
-
-import uuid
 
 # Create your views here.
 # ViewSets define the view behavior.
