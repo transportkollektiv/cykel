@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from django.db.models import Max
 from django.utils.timezone import now
 from preferences import preferences
 from rest_framework import serializers
@@ -8,7 +9,7 @@ from bikesharing.models import Bike, Station
 
 
 class GbfsFreeBikeStatusSerializer(serializers.HyperlinkedModelSerializer):
-    bike_id = serializers.CharField(source="bike_number", read_only=True)
+    bike_id = serializers.CharField(source="non_static_bike_uuid", read_only=True)
 
     class Meta:
         model = Bike
@@ -63,21 +64,33 @@ class GbfsStationStatusSerializer(serializers.HyperlinkedModelSerializer):
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         # if configured filter vehicles, where time report
-        # is older than configure allowed silent timepreiod
+        # is older than configure allowed silent timeperiod
         bsp = preferences.BikeSharePreferences
         if bsp.gbfs_hide_bikes_after_location_report_silence:
-            representation["num_bikes_available"] = instance.bike_set.filter(
+            available_bikes = instance.bike_set.filter(
                 availability_status="AV",
                 last_reported__gte=now()
                 - timedelta(hours=bsp.gbfs_hide_bikes_after_location_report_hours),
-            ).count()
+            )
         else:
-            representation["num_bikes_available"] = instance.bike_set.filter(
-                availability_status="AV"
-            ).count()
+            available_bikes = instance.bike_set.filter(availability_status="AV")
+        representation["num_bikes_available"] = available_bikes.count()
         representation["num_docks_available"] = (
             instance.max_bikes - representation["num_bikes_available"]
         )
+        last_reported_bike = available_bikes.aggregate(Max("last_reported"))
+
+        if last_reported_bike["last_reported__max"] is not None:
+            representation["last_reported"] = int(
+                last_reported_bike["last_reported__max"].timestamp()
+            )
+        else:
+            # if no bike is on station, last_report is now
+            # not shure if this is the intended behavior of the field
+            # or it should be the timestamp of the last bike removed
+            # but it is not so easy to implement
+            representation["last_reported"] = int(now().timestamp())
+
         status = (instance.status == "AC") or False
         representation["is_installed"] = status
         representation["is_renting"] = status

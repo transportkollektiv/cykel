@@ -1,8 +1,11 @@
+import uuid
+
 from django.conf import settings
 from django.contrib.gis.db import models as geomodels
 from django.contrib.gis.measure import D
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+from django.db.utils import IntegrityError
 from django.utils.timezone import now
 from macaddress.fields import MACAddressField
 from preferences import preferences
@@ -69,6 +72,13 @@ class Bike(models.Model):
     )  # TODO Thumbnail
     vehicle_identification_number = models.CharField(
         default=None, null=True, blank=True, max_length=17
+    )
+    non_static_bike_uuid = models.UUIDField(
+        default=uuid.uuid4,
+        blank=False,
+        unique=True,
+        help_text="""A temporary ID used in public APIs,
+        rotating it's value after each rent to protect users privacy.""",
     )
 
     def __str__(self):
@@ -194,6 +204,16 @@ class Rent(models.Model):
         # set Bike status back to available
         self.bike.availability_status = "AV"
         self.bike.save()
+        try:
+            # set new non static bike ID, so for GBFS observers can not track this bike
+            self.bike.non_static_bike_uuid = uuid.uuid4()
+            self.bike.save()
+        except IntegrityError:
+            # Congratulations! The 2^64 chance of uuid4 collision has happend.
+            # here coul'd be the place for the famous comment: "should never happen"
+            # So we catch this error here, but don't handle it.
+            # because don't rotating a uuid every 18,446,744,073,709,551,615 rents is ok
+            pass
 
 
 class Lock(models.Model):
@@ -249,6 +269,9 @@ class BikeSharePreferences(Preferences):
          be hidden from GBFS, if there was no location report.
          Needs 'Gbfs hide bikes after location report silence' activated.""",
     )
+    gbfs_system_id = models.CharField(editable=True, max_length=255, default="")
+    system_name = models.CharField(editable=True, max_length=255, default="")
+    system_short_name = models.CharField(editable=True, max_length=255, default="")
 
 
 class Location(models.Model):
