@@ -16,7 +16,10 @@ class Migration(migrations.Migration):
             name="gbfs_hide_bikes_after_location_report_hours",
             field=models.IntegerField(
                 default=1,
-                help_text="Time period (in hours) after the vehicles will\n         be hidden from GBFS, if there was no location report.\n         Needs 'Gbfs hide bikes after location report silence' activated.",
+                help_text="""
+                Time period (in hours) after the vehicles will\n
+                be hidden from GBFS, if there was no location report.\n
+                Needs 'Gbfs hide bikes after location report silence' activated.""",
             ),
         ),
         migrations.AlterField(
@@ -24,7 +27,9 @@ class Migration(migrations.Migration):
             name="gbfs_hide_bikes_after_location_report_silence",
             field=models.BooleanField(
                 default=False,
-                help_text="If activated, vehicles will disappear from GBFS,\n         if there was no location report in the configured time period.",
+                help_text="""
+                If activated, vehicles will disappear from GBFS,\n
+                if there was no location report in the configured time period.""",
             ),
         ),
         migrations.AlterField(
@@ -32,7 +37,9 @@ class Migration(migrations.Migration):
             name="internal",
             field=models.BooleanField(
                 default=False,
-                help_text="Internal locations are not published to the enduser.\n         They are useful for backup trackers with lower accuracy e.g. wifi trackers.",
+                help_text="""Internal locations are not published to the enduser.\n
+                They are useful for backup trackers
+                with lower accuracy e.g. wifi trackers.""",
             ),
         ),
         migrations.AlterField(
@@ -45,7 +52,10 @@ class Migration(migrations.Migration):
             name="internal",
             field=models.BooleanField(
                 default=False,
-                help_text="Internal trackers don't publish their locations to the enduser.\n         They are useful for backup trackers with lower accuracy e.g. wifi trackers.",
+                help_text="""
+                Internal trackers don't publish their locations to the enduser.\n
+                They are useful for backup trackers
+                with lower accuracy e.g. wifi trackers.""",
             ),
         ),
     ]

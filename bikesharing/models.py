@@ -1,3 +1,5 @@
+import uuid
+
 from django.conf import settings
 from django.contrib.gis.db import models as geomodels
 from django.core.exceptions import ObjectDoesNotExist
@@ -66,6 +68,13 @@ class Bike(models.Model):
     )  # TODO Thumbnail
     vehicle_identification_number = models.CharField(
         default=None, null=True, blank=True, max_length=17
+    )
+    non_static_bike_uuid = models.UUIDField(
+        default=uuid.uuid4,
+        blank=False,
+        unique=True,
+        help_text="""A temporary ID used in public APIs,
+        rotating it's value after each rent to protect users privacy.""",
     )
 
     def __str__(self):
@@ -219,6 +228,9 @@ class BikeSharePreferences(Preferences):
          be hidden from GBFS, if there was no location report.
          Needs 'Gbfs hide bikes after location report silence' activated.""",
     )
+    gbfs_system_id = models.CharField(editable=True, max_length=255, default="")
+    system_name = models.CharField(editable=True, max_length=255, default="")
+    system_short_name = models.CharField(editable=True, max_length=255, default="")
 
 
 class Location(models.Model):
