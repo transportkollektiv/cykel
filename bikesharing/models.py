@@ -2,9 +2,13 @@ import uuid
 
 from django.conf import settings
 from django.contrib.gis.db import models as geomodels
+from django.contrib.gis.measure import D
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+from django.db.utils import IntegrityError
+from django.utils.timezone import now
 from macaddress.fields import MACAddressField
+from preferences import preferences
 from preferences.models import Preferences
 
 bike_availability_status_choices = (
@@ -173,6 +177,43 @@ class Rent(models.Model):
             end_station=self.end_station,
             rent_end=self.rent_end,
         )
+
+    def end(self, end_position=None):
+        self.rent_end = now()
+        if end_position is not None:
+            self.end_position = end_position
+        elif self.bike.public_geolocation():
+            self.end_position = self.bike.public_geolocation().geo
+        self.save()
+
+        if self.end_position:
+            # attach bike to station if location is closer than X meters
+            # distance is configured in preferences
+            max_distance = preferences.BikeSharePreferences.station_match_max_distance
+            station_closer_than_Xm = Station.objects.filter(
+                location__distance_lte=(self.end_position, D(m=max_distance)),
+                status="AC",
+            ).first()
+            if station_closer_than_Xm:
+                self.bike.current_station = station_closer_than_Xm
+                self.end_station = station_closer_than_Xm
+                self.save()
+            else:
+                self.bike.current_station = None
+
+        # set Bike status back to available
+        self.bike.availability_status = "AV"
+        self.bike.save()
+        try:
+            # set new non static bike ID, so for GBFS observers can not track this bike
+            self.bike.non_static_bike_uuid = uuid.uuid4()
+            self.bike.save()
+        except IntegrityError:
+            # Congratulations! The 2^64 chance of uuid4 collision has happend.
+            # here coul'd be the place for the famous comment: "should never happen"
+            # So we catch this error here, but don't handle it.
+            # because don't rotating a uuid every 18,446,744,073,709,551,615 rents is ok
+            pass
 
 
 class Lock(models.Model):

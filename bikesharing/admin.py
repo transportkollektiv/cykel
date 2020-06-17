@@ -80,6 +80,14 @@ class RentAdmin(LeafletGeoAdmin, admin.ModelAdmin):
     list_display = ("bike", "user", "rent_start", "rent_end")
     list_filter = ("rent_start", "rent_end")
     search_fields = ("bike__bike_number", "user__username")
+    actions = ["force_end"]
+
+    def force_end(self, request, queryset):
+        for rent in queryset:
+            rent.end()
+
+    force_end.short_description = "Force end selected rents"
+    force_end.allowed_permissions = ("change",)
 
 
 @admin.register(LocationTracker)
