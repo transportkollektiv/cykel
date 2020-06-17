@@ -94,8 +94,12 @@ For general discussion, feel free to hop into the [public matrix channel](https:
 Generally, the cykel python/django code follows [PEP8](https://www.python.org/dev/peps/pep-0008/). We're using `flake8`, `isort`,
 `black` and `docformatter` as style checkers, so those can help you if you're not sure how to format something.
 
+You can run them all at once using `make style`.
+
 ### Tests
 
 To get stated with tests, you need to install the development dependencies: `pip install -r requirements-dev.txt`
 
 If you want to run them on your machine, use `pytest`. Tests are also automatically run for pull requests.
+
+`make` will also run all tests.
