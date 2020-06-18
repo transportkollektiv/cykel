@@ -23,7 +23,8 @@ def tracker(available_bike):
 @pytest.fixture
 def location_of_available_bike(available_bike, tracker):
     loc = Location.objects.create(
-        bike=available_bike, tracker=tracker, internal=False, source="TR"
+        bike=available_bike, tracker=tracker, internal=False, source="TR",
+        reported_at=now()
     )
     loc.geo = Point(9.95000, 48.35000, srid=4326)  # point is _not_ near a station
     return loc

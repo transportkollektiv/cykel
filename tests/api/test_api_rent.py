@@ -125,9 +125,8 @@ def test_end_rent_logged_in_with_renting_rights_and_location_from_bike(
     rent_jane_running,
     inuse_bike,
 ):
-    loc = Location.objects.create(bike=inuse_bike, source="TR")
+    loc = Location.objects.create(bike=inuse_bike, source="TR", reported_at=now())
     loc.geo = Point(-89.99, -99.99, srid=4326)
-    loc.reported_at = now()
     loc.save()
 
     data = {"rent_id": rent_jane_running.id}

@@ -91,11 +91,10 @@ def updatebikelocation(request):
     loc = None
 
     if lat and lng:
-        loc = Location.objects.create(source="TR")
+        loc = Location.objects.create(source="TR", reported_at=now())
         if tracker.bike:
             loc.bike = tracker.bike
         loc.geo = Point(float(lng), float(lat), srid=4326)
-        loc.reported_at = now()
         loc.tracker = tracker
         if accuracy:
             loc.accuracy = accuracy
@@ -165,9 +164,8 @@ def start_rent(request):
     if lat and lng:
         rent.start_position = Point(float(lng), float(lat), srid=4326)
 
-        loc = Location.objects.create(bike=bike, source="US")
+        loc = Location.objects.create(bike=bike, source="US", reported_at=now())
         loc.geo = Point(float(lng), float(lat), srid=4326)
-        loc.reported_at = now()
         loc.save()
     else:
         if bike.public_geolocation():
@@ -204,9 +202,8 @@ def finish_rent(request):
 
     end_position = None
     if lat and lng:
-        loc = Location.objects.create(bike=rent.bike, source="US")
+        loc = Location.objects.create(bike=rent.bike, source="US", reported_at=now())
         loc.geo = Point(float(lng), float(lat), srid=4326)
-        loc.reported_at = now()
         loc.save()
         end_position = loc.geo
 
