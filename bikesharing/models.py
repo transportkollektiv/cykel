@@ -96,9 +96,9 @@ class Bike(models.Model):
         if not self.id:
             return None
         try:
-            return Location.objects.filter(bike=self, internal=False).latest(
-                "reported_at"
-            )
+            return Location.objects.filter(
+                bike=self, internal=False, reported_at__isnull=False
+            ).latest("reported_at")
         except ObjectDoesNotExist:
             return None
 
@@ -106,9 +106,9 @@ class Bike(models.Model):
         if not self.id:
             return None
         try:
-            return Location.objects.filter(bike=self, internal=True).latest(
-                "reported_at"
-            )
+            return Location.objects.filter(
+                bike=self, internal=True, reported_at__isnull=False
+            ).latest("reported_at")
         except ObjectDoesNotExist:
             return None
 
@@ -132,7 +132,9 @@ class LocationTracker(models.Model):
         if not self.id:
             return None
         try:
-            return Location.objects.filter(tracker=self).latest("reported_at")
+            return Location.objects.filter(
+                tracker=self, reported_at__isnull=False
+            ).latest("reported_at")
         except ObjectDoesNotExist:
             return None
 
@@ -285,7 +287,7 @@ class Location(models.Model):
     source = models.CharField(
         max_length=2, choices=location_source_choices, default="LO"
     )
-    reported_at = models.DateTimeField(default=None, null=True, blank=True)
+    reported_at = models.DateTimeField(default=None, null=False, blank=False)
     accuracy = models.FloatField(default=None, null=True, blank=True)
     internal = models.BooleanField(
         default=False,
