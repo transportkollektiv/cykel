@@ -17,7 +17,12 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
     def validate_disconnect(self, account, accounts):
         raise ValidationError("Can not disconnect")
 
+    def new_user(self, request, sociallogin):
+        sociallogin.account.extra_data = {}
+        return super().new_user(request, sociallogin)
+
     def save_user(self, request, sociallogin, form=None):
+        sociallogin.account.extra_data = {}
         user = super().save_user(request, sociallogin, form)
         rent_group = Group.objects.get(name="autoenrollment-rent")
 
