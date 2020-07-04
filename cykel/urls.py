@@ -22,9 +22,10 @@ from django.views.generic import RedirectView
 
 urlpatterns = [
     path("", RedirectView.as_view(permanent=False, url=settings.UI_URL)),
-    path("bikesharing/", include("bikesharing.urls")),
     path("admin/", admin.site.urls),
     path("api/", include("api.urls")),
+    path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
+    path("bikesharing/", include("bikesharing.urls")),
     path("gbfs/", include("gbfs.urls")),
     url(r"^auth/", include("allauth.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
