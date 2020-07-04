@@ -5,7 +5,14 @@ from django.contrib.gis.measure import D
 from django.contrib.sites.shortcuts import get_current_site
 from django.utils.timezone import now
 from preferences import preferences
-from rest_framework import authentication, generics, mixins, serializers, viewsets
+from rest_framework import (
+    authentication,
+    generics,
+    mixins,
+    serializers,
+    status,
+    viewsets,
+)
 from rest_framework.decorators import (
     api_view,
     authentication_classes,
@@ -140,7 +147,9 @@ def start_rent(request):
     try:
         bike = Bike.objects.get(bike_number=bike_number)
     except Bike.DoesNotExist:
-        return Response({"error": "bike does not exist"}, status=404)
+        return Response(
+            {"error": "bike does not exist"}, status=status.HTTP_404_NOT_FOUND
+        )
 
     # #TODO: message for bikes who are lost
     # if (bike.state == 'MI'):
@@ -156,7 +165,9 @@ def start_rent(request):
 
     # check bike availability and set status to "in use"
     if bike.availability_status != "AV":
-        return Response({"error": "bike is not available"}, status=409)
+        return Response(
+            {"error": "bike is not available"}, status=status.HTTP_409_CONFLICT
+        )
     bike.availability_status = "IU"
     bike.save()
 
@@ -174,13 +185,8 @@ def start_rent(request):
             rent.start_station = bike.current_station
     rent.save()
 
-    res = {"success": True, "id": rent.id}
-    # TODO return Lock code (or Open Lock?)
-    if bike.lock:
-        if bike.lock.lock_type == "CL" and bike.lock.unlock_key:
-            res["unlock_key"] = bike.lock.unlock_key
-
-    return Response(res)
+    serializer = RentSerializer(rent)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 @authentication_classes([authentication.TokenAuthentication])
@@ -193,12 +199,19 @@ def finish_rent(request):
     try:
         rent = Rent.objects.get(id=rent_id)
     except Rent.DoesNotExist:
-        return Response({"error": "rent does not exist"}, status=404)
+        return Response(
+            {"error": "rent does not exist"}, status=status.HTTP_404_NOT_FOUND
+        )
 
     if rent.user != request.user:
-        return Response({"error": "rent belongs to another user"}, status=403)
+        return Response(
+            {"error": "rent belongs to another user"},
+            status=status.HTTP_403_PERMISSON_DENIED,
+        )
     if rent.rent_end is not None:
-        return Response({"error": "rent was already finished"}, status=410)
+        return Response(
+            {"error": "rent was already finished"}, status=status.HTTP_410_GONE
+        )
 
     end_position = None
     if lat and lng:
