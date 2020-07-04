@@ -22,6 +22,14 @@ def testuser_jane_canrent(django_user_model):
 
 
 @pytest.fixture
+def testuser_mary_canrent(django_user_model):
+    mary = django_user_model.objects.create(username="mary", password="canrent")
+    can_add_rent_permission = Permission.objects.get(name="Can add rent")
+    mary.user_permissions.add(can_add_rent_permission)
+    return mary
+
+
+@pytest.fixture
 def user_client_john_doe_logged_in(testuser_john_doe):
     client = APIClient()
     token, _ = Token.objects.get_or_create(user=testuser_john_doe)
@@ -33,6 +41,14 @@ def user_client_john_doe_logged_in(testuser_john_doe):
 def user_client_jane_canrent_logged_in(testuser_jane_canrent):
     client = APIClient()
     token, _ = Token.objects.get_or_create(user=testuser_jane_canrent)
+    client.credentials(HTTP_AUTHORIZATION="Token " + token.key)
+    return client
+
+
+@pytest.fixture
+def user_client_mary_canrent_logged_in(testuser_mary_canrent):
+    client = APIClient()
+    token, _ = Token.objects.get_or_create(user=testuser_mary_canrent)
     client.credentials(HTTP_AUTHORIZATION="Token " + token.key)
     return client
 
@@ -68,7 +84,7 @@ def rent_jane_running(testuser_jane_canrent, inuse_bike):
 def test_start_rent_logged_in_without_renting_rights(
     testuser_john_doe, user_client_john_doe_logged_in, available_bike
 ):
-    data = {"bike_number": "1337"}
+    data = {"bike_number": available_bike.bike_number}
     response = user_client_john_doe_logged_in.post("/api/rent/start", data)
     assert response.status_code == 403, response.content
     available_bike.refresh_from_db()
@@ -77,7 +93,7 @@ def test_start_rent_logged_in_without_renting_rights(
 
 @pytest.mark.django_db
 def test_start_rent_logged_out(available_bike):
-    data = {"bike_number": "1337"}
+    data = {"bike_number": available_bike.bike_number}
     client = APIClient()
     response = client.post("/api/rent/start", data)
     assert response.status_code == 401, response.content
@@ -89,14 +105,43 @@ def test_start_rent_logged_out(available_bike):
 def test_start_rent_logged_in_with_renting_rights(
     testuser_jane_canrent, user_client_jane_canrent_logged_in, available_bike
 ):
-    data = {"bike_number": "1337"}
+    data = {"bike_number": available_bike.bike_number}
     response = user_client_jane_canrent_logged_in.post("/api/rent/start", data)
     assert response.status_code == 200, response.content
-    assert response.json()["success"] is True
     assert response.json()["unlock_key"] == "000000"
 
     available_bike.refresh_from_db()
     assert available_bike.availability_status == "IU"
+
+
+@pytest.mark.django_db
+def test_start_rent_inuse_bike_logged_in_with_renting_rights(
+    testuser_jane_canrent, user_client_jane_canrent_logged_in, inuse_bike
+):
+    data = {"bike_number": inuse_bike.bike_number}
+    response = user_client_jane_canrent_logged_in.post("/api/rent/start", data)
+    assert response.status_code == 409, response.content
+
+
+@pytest.mark.django_db
+def test_start_rent_other_inuse_bike_logged_in_with_renting_rights(
+    testuser_mary_canrent,
+    user_client_mary_canrent_logged_in,
+    rent_jane_running,
+    inuse_bike,
+):
+    data = {"bike_number": inuse_bike.bike_number}
+    response = user_client_mary_canrent_logged_in.post("/api/rent/start", data)
+    assert response.status_code == 409, response.content
+
+
+@pytest.mark.django_db
+def test_start_rent_unknown_bike_logged_in_with_renting_rights(
+    testuser_jane_canrent, user_client_jane_canrent_logged_in
+):
+    data = {"bike_number": 404}
+    response = user_client_jane_canrent_logged_in.post("/api/rent/start", data)
+    assert response.status_code == 404, response.content
 
 
 @pytest.mark.django_db
@@ -132,7 +177,6 @@ def test_end_rent_logged_in_with_renting_rights_and_location_from_bike(
     data = {"rent_id": rent_jane_running.id}
     response = user_client_jane_canrent_logged_in.post("/api/rent/finish", data)
     assert response.status_code == 200, response.content
-    assert response.json()["success"] is True
 
     rent_jane_running.refresh_from_db()
     assert rent_jane_running.rent_end is not None
@@ -168,3 +212,28 @@ def test_end_rent_logged_in_with_renting_rights_and_location_from_client(
     assert inuse_bike.public_geolocation().source == "US"
     assert inuse_bike.public_geolocation().geo.x == -89.99
     assert inuse_bike.public_geolocation().geo.y == -99.99
+
+
+@pytest.mark.django_db
+def test_end_rent_logged_out(
+    rent_jane_running, inuse_bike,
+):
+    client = APIClient()
+    data = {"rent_id": rent_jane_running.id}
+    response = client.post("/api/rent/finish", data)
+    assert response.status_code == 401, response.content
+
+    rent_jane_running.refresh_from_db()
+    assert rent_jane_running.rent_end is None
+
+    inuse_bike.refresh_from_db()
+    assert inuse_bike.availability_status == "IU"
+
+
+@pytest.mark.django_db
+def test_end_rent_unknown_logged_in_with_renting_rights(
+    testuser_jane_canrent, user_client_jane_canrent_logged_in,
+):
+    data = {"rent_id": 99}
+    response = user_client_jane_canrent_logged_in.post("/api/rent/finish", data)
+    assert response.status_code == 404, response.content
