@@ -26,16 +26,13 @@ from .serializers import (
     UserDetailsSerializer,
 )
 
-# Create your views here.
-# ViewSets define the view behavior.
 
-
-class BikeViewSet(viewsets.ModelViewSet):
+class BikeViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Bike.objects.all()
     serializer_class = BikeSerializer
 
 
-class StationViewSet(viewsets.ModelViewSet):
+class StationViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Station.objects.all()
     serializer_class = StationSerializer
 
@@ -52,9 +49,6 @@ class CanRentBikePermission(BasePermission):
         return request.user.has_perm("bikesharing.add_rent")
 
 
-"""
-Returns current running Rents of the requesting user
-"""
 
 
 @authentication_classes([authentication.TokenAuthentication])
@@ -238,15 +232,12 @@ class UserDetailsView(generics.RetrieveAPIView):
         return get_user_model().objects.none()
 
 
-"""
-return the configured social login providers
-"""
-
-
 @permission_classes([AllowAny])
 class LoginProviderViewSet(
-    viewsets.ModelViewSet, mixins.ListModelMixin, generics.GenericAPIView
+    mixins.ListModelMixin, viewsets.GenericViewSet,
 ):
+    """return the configured social login providers."""
+
     serializer_class = SocialAppSerializer
 
     def get_queryset(self):

@@ -5,9 +5,6 @@ from rest_framework import serializers
 
 from bikesharing.models import Bike, LocationTracker, Lock, Rent, Station
 
-# class LocationSerializer(serializers.HyperlinkedModelSerializer):
-#    class Meta:
-
 
 class LockSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
