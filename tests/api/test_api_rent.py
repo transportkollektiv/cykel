@@ -74,14 +74,29 @@ def disabled_bike():
 
 
 @pytest.fixture
-def inuse_bike():
-    return Bike.objects.create(availability_status="IU", bike_number="8080")
+def inuse_bike(another_lock):
+    return Bike.objects.create(
+        availability_status="IU", bike_number="8080", lock=another_lock
+    )
 
 
 @pytest.fixture
 def rent_jane_running(testuser_jane_canrent, inuse_bike):
     return Rent.objects.create(
         rent_start=now(), user=testuser_jane_canrent, bike=inuse_bike,
+    )
+
+
+@pytest.mark.django_db
+def test_get_rents_logged_in_with_renting_rights(
+    testuser_jane_canrent, user_client_jane_canrent_logged_in, rent_jane_running
+):
+    response = user_client_jane_canrent_logged_in.get("/api/rent/current")
+    assert response.status_code == 200, response.content
+    assert len(response.json()) == 1
+    assert response.json()[0]["id"] == rent_jane_running.id
+    assert (
+        response.json()[0]["bike"]["bike_number"] == rent_jane_running.bike.bike_number
     )
 
 
