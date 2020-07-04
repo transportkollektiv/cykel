@@ -59,6 +59,11 @@ def lock():
 
 
 @pytest.fixture
+def another_lock():
+    return Lock.objects.create(unlock_key="000000")
+
+
+@pytest.fixture
 def available_bike(lock):
     return Bike.objects.create(availability_status="AV", bike_number="1337", lock=lock)
 
