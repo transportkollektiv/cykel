@@ -4,13 +4,13 @@ test:
 	pytest
 
 stylecheck:
-	isort -c -rc -df .
+	isort -c --df .
 	flake8 .
 	black --check .
 	docformatter --check -r . --exclude venv
 
 style:
-	isort -rc .
+	isort .
 	docformatter -i -r . --exclude venv
 	black .
 	flake8 .
