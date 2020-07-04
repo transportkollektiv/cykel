@@ -145,6 +145,26 @@ def test_start_rent_unknown_bike_logged_in_with_renting_rights(
 
 
 @pytest.mark.django_db
+def test_start_rent_logged_in_with_renting_rights_and_location_from_client(
+    testuser_jane_canrent, user_client_jane_canrent_logged_in, available_bike
+):
+    data = {"bike_number": available_bike.bike_number, "lat": -99.99, "lng": -89.99}
+    response = user_client_jane_canrent_logged_in.post("/api/rent/start", data)
+    assert response.status_code == 200, response.content
+    assert response.json()["unlock_key"] == "000000"
+
+    rent_id = response.json()["id"]
+
+    available_bike.refresh_from_db()
+    assert available_bike.availability_status == "IU"
+
+    rent = Rent.objects.get(id=rent_id)
+    assert rent.start_position is not None
+    assert rent.start_position.x == -89.99
+    assert rent.start_position.y == -99.99
+
+
+@pytest.mark.django_db
 def test_end_rent_logged_in_with_renting_rights(
     testuser_jane_canrent,
     user_client_jane_canrent_logged_in,

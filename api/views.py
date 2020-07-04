@@ -174,7 +174,7 @@ def start_rent(request):
             rent.start_station = bike.current_station
     rent.save()
 
-    res = {"success": True}
+    res = {"success": True, "id": rent.id}
     # TODO return Lock code (or Open Lock?)
     if bike.lock:
         if bike.lock.lock_type == "CL" and bike.lock.unlock_key:
