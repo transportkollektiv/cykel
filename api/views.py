@@ -5,13 +5,8 @@ from django.contrib.gis.measure import D
 from django.contrib.sites.shortcuts import get_current_site
 from django.utils.timezone import now
 from preferences import preferences
-from rest_framework import authentication, generics, mixins, status, viewsets
-from rest_framework.decorators import (
-    action,
-    api_view,
-    authentication_classes,
-    permission_classes,
-)
+from rest_framework import generics, mixins, status, viewsets
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import (
     SAFE_METHODS,
     AllowAny,
