@@ -5,14 +5,7 @@ from django.contrib.gis.measure import D
 from django.contrib.sites.shortcuts import get_current_site
 from django.utils.timezone import now
 from preferences import preferences
-from rest_framework import (
-    authentication,
-    generics,
-    mixins,
-    serializers,
-    status,
-    viewsets,
-)
+from rest_framework import authentication, generics, mixins, status, viewsets
 from rest_framework.decorators import (
     api_view,
     authentication_classes,
@@ -30,6 +23,7 @@ from .serializers import (
     RentSerializer,
     SocialAppSerializer,
     StationSerializer,
+    UserDetailsSerializer,
 )
 
 # Create your views here.
@@ -223,19 +217,6 @@ def finish_rent(request):
     rent.end(end_position)
 
     return Response({"success": True})
-
-
-class UserDetailsSerializer(serializers.ModelSerializer):
-    """User model w/o password."""
-
-    can_rent_bike = serializers.SerializerMethodField()
-
-    def get_can_rent_bike(self, user):
-        return user.has_perm("bikesharing.add_rent")
-
-    class Meta:
-        model = get_user_model()
-        fields = ("pk", "username", "can_rent_bike")
 
 
 class UserDetailsView(generics.RetrieveAPIView):

@@ -1,4 +1,5 @@
 from allauth.socialaccount.models import SocialApp
+from django.contrib.auth import get_user_model
 from django.utils.timezone import now
 from rest_framework import serializers
 
@@ -7,15 +8,10 @@ from bikesharing.models import Bike, LocationTracker, Lock, Rent, Station
 # class LocationSerializer(serializers.HyperlinkedModelSerializer):
 #    class Meta:
 
-
-# Serializers define the API representation.
 class LockSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Lock
         fields = ("mac_address", "unlock_key", "lock_type")
-
-
-# Serializers define the API representation.
 
 
 class BikeSerializer(serializers.HyperlinkedModelSerializer):
@@ -85,3 +81,16 @@ class LocationTrackerUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = LocationTracker
         fields = ("device_id", "battery_voltage", "lat", "lng", "accuracy")
+
+
+class UserDetailsSerializer(serializers.ModelSerializer):
+    """User model w/o password."""
+
+    can_rent_bike = serializers.SerializerMethodField()
+
+    def get_can_rent_bike(self, user):
+        return user.has_perm("bikesharing.add_rent")
+
+    class Meta:
+        model = get_user_model()
+        fields = ("pk", "username", "can_rent_bike")
