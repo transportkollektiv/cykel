@@ -21,12 +21,13 @@ class GbfsFreeBikeStatusSerializer(serializers.HyperlinkedModelSerializer):
         representation["is_reserved"] = False
         # Default to False TODO: maybe configuration later
         representation["is_disabled"] = False
-        if instance.public_geolocation() is not None:
-            pos = instance.public_geolocation().geo
+        public_geolocation = instance.public_geolocation()
+        if public_geolocation is not None:
+            pos = public_geolocation.geo
             if pos and pos.x and pos.y:
                 representation["lat"] = pos.y
                 representation["lon"] = pos.x
-        return representation
+                return representation #only return bikes with public geolocation
 
 
 class GbfsStationInformationSerializer(serializers.HyperlinkedModelSerializer):

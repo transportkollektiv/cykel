@@ -80,12 +80,11 @@ class GbfsFreeBikeStatusViewSet(mixins.ListModelMixin, generics.GenericAPIView):
             bikes = Bike.objects.filter(
                 availability_status="AV", current_station=None, location__isnull=False
             ).distinct()
-        bikes = [
-            bike for bike in bikes if bike.public_geolocation() is not None
-        ]  # only bikes with publice geolocation
-
+        
         serializer = GbfsFreeBikeStatusSerializer(bikes, many=True)
-        bike_data = {"bikes": serializer.data}
+        # filter bikes without data e.g. without public geolocation
+        serialized_bikes = [bike for bike in serializer.data if bike is not None] 
+        bike_data = {"bikes": serialized_bikes}
         data = getGbfsWithData(bike_data)
         return JsonResponse(data, safe=False)
 
