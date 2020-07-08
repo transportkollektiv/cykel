@@ -105,7 +105,7 @@ def updatebikelocation(request):
         bike = tracker.bike
         bike.last_reported = now()
 
-        if loc:
+        if loc and not loc.internal:
             # check if bike is near station and assign it to that station
             # distance ist configured in prefernces
             max_distance = preferences.BikeSharePreferences.station_match_max_distance
