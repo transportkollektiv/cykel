@@ -196,3 +196,21 @@ def test_tracker_updatebikelocation_no_automatic_station_assignment_for_internal
     assert response.status_code == 200, response.content
     available_bike.refresh_from_db()
     assert available_bike.current_station is None
+
+@pytest.mark.django_db
+def test_tracker_updatebikelocation_keep_automatic_station_assignment_for_internal(
+    tracker, internal_tracker, available_bike, active_station, tracker_client_with_apikey
+):
+    assert available_bike.current_station is None
+    assert preferences.BikeSharePreferences.station_match_max_distance == 20
+    data = {"device_id": tracker.device_id, "lat": 48.39662, "lng": 9.99026}
+    response = tracker_client_with_apikey.post("/api/bike/updatelocation", data=data)
+    assert response.status_code == 200, response.content
+    available_bike.refresh_from_db()
+    assert available_bike.current_station == active_station
+
+    data = {"device_id": internal_tracker.device_id, "lat": 49.39662, "lng": 9.99025}
+    response = tracker_client_with_apikey.post("/api/bike/updatelocation", data=data)
+    assert response.status_code == 200, response.content
+    available_bike.refresh_from_db()
+    assert available_bike.current_station == active_station
