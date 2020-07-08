@@ -27,7 +27,7 @@ class GbfsFreeBikeStatusSerializer(serializers.HyperlinkedModelSerializer):
             if pos and pos.x and pos.y:
                 representation["lat"] = pos.y
                 representation["lon"] = pos.x
-                return representation #only return bikes with public geolocation
+                return representation  # only return bikes with public geolocation
 
 
 class GbfsStationInformationSerializer(serializers.HyperlinkedModelSerializer):
