@@ -197,9 +197,14 @@ def test_tracker_updatebikelocation_no_automatic_station_assignment_for_internal
     available_bike.refresh_from_db()
     assert available_bike.current_station is None
 
+
 @pytest.mark.django_db
 def test_tracker_updatebikelocation_keep_automatic_station_assignment_for_internal(
-    tracker, internal_tracker, available_bike, active_station, tracker_client_with_apikey
+    tracker,
+    internal_tracker,
+    available_bike,
+    active_station,
+    tracker_client_with_apikey,
 ):
     assert available_bike.current_station is None
     assert preferences.BikeSharePreferences.station_match_max_distance == 20
