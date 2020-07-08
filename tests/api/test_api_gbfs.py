@@ -30,6 +30,7 @@ def location_of_available_bike(available_bike, tracker):
         reported_at=now(),
     )
     loc.geo = Point(9.95000, 48.35000, srid=4326)  # point is _not_ near a station
+    loc.save()
     return loc
 
 
