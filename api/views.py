@@ -5,7 +5,7 @@ from django.contrib.gis.measure import D
 from django.contrib.sites.shortcuts import get_current_site
 from django.utils.timezone import now
 from preferences import preferences
-from rest_framework import generics, mixins, status, viewsets
+from rest_framework import exceptions, generics, mixins, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import (
     SAFE_METHODS,
@@ -14,6 +14,7 @@ from rest_framework.permissions import (
     IsAuthenticated,
 )
 from rest_framework.response import Response
+from rest_framework.views import exception_handler
 from rest_framework_api_key.permissions import HasAPIKey
 
 from bikesharing.models import Bike, Location, LocationTracker, Rent, Station
@@ -199,3 +200,39 @@ class LoginProviderViewSet(
 
     def get_queryset(self):
         return SocialApp.objects.filter(sites__id=get_current_site(self.request).id)
+
+
+def custom_exception_handler(exc, context):
+    response = exception_handler(exc, context)
+    if response is None:
+        return None
+
+    headers = {}
+    if isinstance(exc, exceptions.APIException):
+        if getattr(exc, "auth_header", None):
+            headers["WWW-Authenticate"] = exc.auth_header
+
+    errors = []
+    if getattr(exc, "detail", None):
+        if isinstance(exc.detail, list):
+            errors.append({"detail": exc.detail})
+        elif isinstance(exc.detail, dict):
+            for key, value in exc.detail.items():
+                if isinstance(value, list):
+                    for item in value:
+                        errors.append({"detail": item, "source": key})
+                else:
+                    errors.append({"detail": value, "source": key})
+        else:
+            errors.append({"detail": exc.detail})
+    else:
+        errors.append({"detail": str(exc)})
+
+    messages = []
+    for item in errors:
+        if getattr(item["detail"], "code", None):
+            item["code"] = item["detail"].code
+        messages.append(item["detail"])
+
+    data = {"errors": errors, "message": "\n".join(messages)}
+    return Response(data, status=response.status_code, headers=headers)
