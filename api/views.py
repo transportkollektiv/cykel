@@ -27,6 +27,7 @@ from .serializers import (
     SocialAppSerializer,
     StationSerializer,
     UserDetailsSerializer,
+    MaintenanceBikeSerializer,
 )
 
 
@@ -169,6 +170,14 @@ def updatebikelocation(request):
         return Response({"success": True, "warning": "lat/lng missing"})
 
     return Response({"success": True})
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny]) #TODO only for Maintenance/Superusers
+def getMaintenanceMapData(request):
+    bikes = Bike.objects.filter(location__isnull=False).distinct()
+    serializer = MaintenanceBikeSerializer(bikes, many=True)
+    return Response(serializer.data)
 
 
 class UserDetailsView(generics.RetrieveAPIView):
