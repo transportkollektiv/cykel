@@ -3,23 +3,18 @@ from django.urls import include, path
 from rest_framework import routers
 
 from .views import (
-    CurrentRentViewSet,
     LoginProviderViewSet,
+    RentViewSet,
     UserDetailsView,
-    finish_rent,
-    start_rent,
     updatebikelocation,
 )
 
-# Routers provide an easy way of automatically determining the URL conf.
-router = routers.DefaultRouter()
+router = routers.DefaultRouter(trailing_slash=False)
+router.register(r"rent", RentViewSet, basename="rent")
 
 urlpatterns = [
     url(r"^", include(router.urls)),
     path("bike/updatelocation", updatebikelocation),
-    path("rent/start", start_rent),
-    path("rent/finish", finish_rent),
-    path("rent/current", CurrentRentViewSet.as_view({"get": "list"})),
     path("user", UserDetailsView.as_view()),
     path("config/loginproviders", LoginProviderViewSet.as_view({"get": "list"})),
 ]

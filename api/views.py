@@ -5,20 +5,23 @@ from django.contrib.gis.measure import D
 from django.contrib.sites.shortcuts import get_current_site
 from django.utils.timezone import now
 from preferences import preferences
-from rest_framework import authentication, generics, mixins, status, viewsets
-from rest_framework.decorators import (
-    api_view,
-    authentication_classes,
-    permission_classes,
+from rest_framework import exceptions, generics, mixins, status, viewsets
+from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.permissions import (
+    SAFE_METHODS,
+    AllowAny,
+    BasePermission,
+    IsAuthenticated,
 )
-from rest_framework.permissions import AllowAny, BasePermission, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import exception_handler
 from rest_framework_api_key.permissions import HasAPIKey
 
 from bikesharing.models import Bike, Location, LocationTracker, Rent, Station
 
 from .serializers import (
     BikeSerializer,
+    CreateRentSerializer,
     LocationTrackerUpdateSerializer,
     RentSerializer,
     SocialAppSerializer,
@@ -26,16 +29,13 @@ from .serializers import (
     UserDetailsSerializer,
 )
 
-# Create your views here.
-# ViewSets define the view behavior.
 
-
-class BikeViewSet(viewsets.ModelViewSet):
+class BikeViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Bike.objects.all()
     serializer_class = BikeSerializer
 
 
-class StationViewSet(viewsets.ModelViewSet):
+class StationViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Station.objects.all()
     serializer_class = StationSerializer
 
@@ -49,24 +49,70 @@ class CanRentBikePermission(BasePermission):
         if not request.user or not request.user.is_authenticated:
             return False
 
+        if request.method in SAFE_METHODS:
+            return True
+
         return request.user.has_perm("bikesharing.add_rent")
 
 
-"""
-Returns current running Rents of the requesting user
-"""
-
-
-@authentication_classes([authentication.TokenAuthentication])
-@permission_classes([IsAuthenticated])
-class CurrentRentViewSet(
-    viewsets.ModelViewSet, mixins.ListModelMixin, generics.GenericAPIView
+@permission_classes([IsAuthenticated, CanRentBikePermission])
+class RentViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
 ):
-    serializer_class = RentSerializer
+    def get_serializer_class(self):
+        if self.action == "create":
+            return CreateRentSerializer
+        else:
+            return RentSerializer
 
     def get_queryset(self):
         user = self.request.user
         return Rent.objects.filter(user=user, rent_end=None)
+
+    def create(self, request):
+        resp = super().create(request)
+        if resp.status_code != status.HTTP_201_CREATED:
+            return resp
+        # override output with RentSerializer
+        rent = self.get_queryset().get(id=resp.data["id"])
+        serializer = RentSerializer(rent)
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            serializer.data, status=status.HTTP_201_CREATED, headers=headers
+        )
+
+    @action(detail=True, methods=["post"])
+    def finish(self, request, pk=None):
+        rent = self.get_object()
+
+        lat = request.data.get("lat")
+        lng = request.data.get("lng")
+
+        if rent.user != request.user:
+            return Response(
+                {"error": "rent belongs to another user"},
+                status=status.HTTP_403_PERMISSON_DENIED,
+            )
+        if rent.rent_end is not None:
+            return Response(
+                {"error": "rent was already finished"}, status=status.HTTP_410_GONE
+            )
+
+        end_position = None
+        if lat and lng:
+            loc = Location.objects.create(
+                bike=rent.bike, source="US", reported_at=now()
+            )
+            loc.geo = Point(float(lng), float(lat), srid=4326)
+            loc.save()
+            end_position = loc.geo
+
+        rent.end(end_position)
+
+        return Response({"success": True})
 
 
 @api_view(["POST"])
@@ -125,100 +171,6 @@ def updatebikelocation(request):
     return Response({"success": True})
 
 
-@authentication_classes([authentication.TokenAuthentication])
-@api_view(["POST"])
-@permission_classes([IsAuthenticated, CanRentBikePermission])
-def start_rent(request):
-    bike_number = request.data.get("bike_number")
-    # station = request.data.get("station")
-    lat = request.data.get("lat")
-    lng = request.data.get("lng")
-    if not (bike_number):
-        return Response({"error": "bike_number missing"}, status=400)
-    # if (not lat or not lng) and (not station):
-    #    return Response({"error": "lat and lng or station required"}, status=400)
-
-    try:
-        bike = Bike.objects.get(bike_number=bike_number)
-    except Bike.DoesNotExist:
-        return Response(
-            {"error": "bike does not exist"}, status=status.HTTP_404_NOT_FOUND
-        )
-
-    # #TODO: message for bikes who are lost
-    # if (bike.state == 'MI'):
-    #     errortext = """We miss this bike.
-    #       Please bring it to the bike tent at the Open Village"""
-    #     if (bike.lock):
-    #         if (bike.lock.lock_type == "CL" and bike.lock.unlock_key):
-    #             errortext = """We miss this bike.
-    #               Please bring it to the bike tent at the Open Village.
-    #               Unlock key is """ + bike.lock.unlock_key
-    #
-    #     return Response({"error": errortext}, status=400)
-
-    # check bike availability and set status to "in use"
-    if bike.availability_status != "AV":
-        return Response(
-            {"error": "bike is not available"}, status=status.HTTP_409_CONFLICT
-        )
-    bike.availability_status = "IU"
-    bike.save()
-
-    rent = Rent.objects.create(rent_start=now(), user=request.user, bike=bike)
-    if lat and lng:
-        rent.start_position = Point(float(lng), float(lat), srid=4326)
-
-        loc = Location.objects.create(bike=bike, source="US", reported_at=now())
-        loc.geo = Point(float(lng), float(lat), srid=4326)
-        loc.save()
-    else:
-        if bike.public_geolocation():
-            rent.start_position = bike.public_geolocation().geo
-        if bike.current_station:
-            rent.start_station = bike.current_station
-    rent.save()
-
-    serializer = RentSerializer(rent)
-    return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
-@authentication_classes([authentication.TokenAuthentication])
-@api_view(["POST"])
-@permission_classes([IsAuthenticated])
-def finish_rent(request):
-    lat = request.data.get("lat")
-    lng = request.data.get("lng")
-    rent_id = request.data.get("rent_id")
-    try:
-        rent = Rent.objects.get(id=rent_id)
-    except Rent.DoesNotExist:
-        return Response(
-            {"error": "rent does not exist"}, status=status.HTTP_404_NOT_FOUND
-        )
-
-    if rent.user != request.user:
-        return Response(
-            {"error": "rent belongs to another user"},
-            status=status.HTTP_403_PERMISSON_DENIED,
-        )
-    if rent.rent_end is not None:
-        return Response(
-            {"error": "rent was already finished"}, status=status.HTTP_410_GONE
-        )
-
-    end_position = None
-    if lat and lng:
-        loc = Location.objects.create(bike=rent.bike, source="US", reported_at=now())
-        loc.geo = Point(float(lng), float(lat), srid=4326)
-        loc.save()
-        end_position = loc.geo
-
-    rent.end(end_position)
-
-    return Response({"success": True})
-
-
 class UserDetailsView(generics.RetrieveAPIView):
     """Reads UserModel fields Accepts GET method.
 
@@ -238,16 +190,49 @@ class UserDetailsView(generics.RetrieveAPIView):
         return get_user_model().objects.none()
 
 
-"""
-return the configured social login providers
-"""
-
-
 @permission_classes([AllowAny])
 class LoginProviderViewSet(
-    viewsets.ModelViewSet, mixins.ListModelMixin, generics.GenericAPIView
+    mixins.ListModelMixin, viewsets.GenericViewSet,
 ):
+    """return the configured social login providers."""
+
     serializer_class = SocialAppSerializer
 
     def get_queryset(self):
         return SocialApp.objects.filter(sites__id=get_current_site(self.request).id)
+
+
+def custom_exception_handler(exc, context):
+    response = exception_handler(exc, context)
+    if response is None:
+        return None
+
+    headers = {}
+    if isinstance(exc, exceptions.APIException):
+        if getattr(exc, "auth_header", None):
+            headers["WWW-Authenticate"] = exc.auth_header
+
+    errors = []
+    if getattr(exc, "detail", None):
+        if isinstance(exc.detail, list):
+            errors.append({"detail": exc.detail})
+        elif isinstance(exc.detail, dict):
+            for key, value in exc.detail.items():
+                if isinstance(value, list):
+                    for item in value:
+                        errors.append({"detail": item, "source": key})
+                else:
+                    errors.append({"detail": value, "source": key})
+        else:
+            errors.append({"detail": exc.detail})
+    else:
+        errors.append({"detail": str(exc)})
+
+    messages = []
+    for item in errors:
+        if getattr(item["detail"], "code", None):
+            item["code"] = item["detail"].code
+        messages.append(item["detail"])
+
+    data = {"errors": errors, "message": "\n".join(messages)}
+    return Response(data, status=response.status_code, headers=headers)

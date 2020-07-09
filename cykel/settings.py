@@ -162,6 +162,7 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.TokenAuthentication",
     ],
+    "EXCEPTION_HANDLER": "api.views.custom_exception_handler",
 }
 
 AUTHENTICATION_BACKENDS = (
