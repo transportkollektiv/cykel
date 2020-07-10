@@ -61,7 +61,9 @@ class BikeAdmin(LeafletGeoAdmin, admin.ModelAdmin):
         accuracy = ""
         if geolocation.accuracy:
             accuracy = ", accuracy: " + str(geolocation.accuracy) + "m"
-        timestamp = ", reported at: " + formats.localize(timezone.template_localtime(geolocation.reported_at))
+        timestamp = ", reported at: " + formats.localize(
+            timezone.template_localtime(geolocation.reported_at)
+        )
         source = ""
         if geolocation.tracker:
             tracker = geolocation.tracker
@@ -72,7 +74,14 @@ class BikeAdmin(LeafletGeoAdmin, admin.ModelAdmin):
                 device_id=tracker.device_id,
             )
         url = OSM_URL.format(lat=lat, lng=lng)
-        return "<a href='%s'>%s, %s</a>%s%s%s" % (url, lat, lng, accuracy, timestamp, source)
+        return "<a href='%s'>%s, %s</a>%s%s%s" % (
+            url,
+            lat,
+            lng,
+            accuracy,
+            timestamp,
+            source,
+        )
 
     location.allow_tags = True
 
