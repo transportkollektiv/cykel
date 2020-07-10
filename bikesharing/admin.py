@@ -35,8 +35,8 @@ class BikeAdmin(LeafletGeoAdmin, admin.ModelAdmin):
         "last_reported",
     )
     list_filter = ("bike_type", "availability_status", "state")
-    search_fields = ("bike_number",)
-    readonly_fields = ["location"]
+    search_fields = ("bike_number", "non_static_bike_uuid")
+    readonly_fields = ("location", "non_static_bike_uuid")
     ordering = ["bike_number"]
 
     @mark_safe
