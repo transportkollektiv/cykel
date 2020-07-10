@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.urls import reverse
+from django.utils import formats, timezone
 from django.utils.safestring import mark_safe
 from leaflet.admin import LeafletGeoAdmin
 from preferences.admin import PreferencesAdmin
@@ -60,6 +61,7 @@ class BikeAdmin(LeafletGeoAdmin, admin.ModelAdmin):
         accuracy = ""
         if geolocation.accuracy:
             accuracy = ", accuracy: " + str(geolocation.accuracy) + "m"
+        timestamp = ", reported at: " + formats.localize(timezone.template_localtime(geolocation.reported_at))
         source = ""
         if geolocation.tracker:
             tracker = geolocation.tracker
@@ -70,7 +72,7 @@ class BikeAdmin(LeafletGeoAdmin, admin.ModelAdmin):
                 device_id=tracker.device_id,
             )
         url = OSM_URL.format(lat=lat, lng=lng)
-        return "<a href='%s'>%s, %s</a>%s%s" % (url, lat, lng, accuracy, source)
+        return "<a href='%s'>%s, %s</a>%s%s%s" % (url, lat, lng, accuracy, timestamp, source)
 
     location.allow_tags = True
 
