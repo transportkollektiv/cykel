@@ -88,10 +88,20 @@ class BikeAdmin(LeafletGeoAdmin, admin.ModelAdmin):
 
 @admin.register(Rent)
 class RentAdmin(LeafletGeoAdmin, admin.ModelAdmin):
-    list_display = ("bike", "user", "rent_start", "rent_end")
     list_filter = ("rent_start", "rent_end")
     search_fields = ("bike__bike_number", "user__username")
     actions = ["force_end"]
+
+    def get_list_display(self, request):
+        if request.user.has_perm("cykel.view_user"):
+            return ("bike", "user", "rent_start", "rent_end")
+        return ("bike", "rent_start", "rent_end")
+
+    def get_fields(self, request, obj=None):
+        default_fields = super(RentAdmin, self).get_fields(request, obj=obj)
+        if not request.user.has_perm("cykel.view_user"):
+            default_fields.remove("user")
+        return default_fields
 
     def force_end(self, request, queryset):
         for rent in queryset:
