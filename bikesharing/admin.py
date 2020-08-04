@@ -26,6 +26,16 @@ class LocationAdmin(LeafletGeoAdmin, admin.ModelAdmin):
     date_hierarchy = "reported_at"
 
 
+@admin.register(Lock)
+class LockAdmin(LeafletGeoAdmin, admin.ModelAdmin):
+    list_display = ("lock_id", "lock_type", "bike")
+    list_filter = ("lock_type", "bike")
+    readonly_fields = ("bike",)
+
+    def bike(self, obj):
+        return ",".join([k.bike_number for k in obj.bike_set.all()])
+
+
 @admin.register(Bike)
 class BikeAdmin(LeafletGeoAdmin, admin.ModelAdmin):
     list_display = (
@@ -138,6 +148,5 @@ class LocationTrackerAdmin(LeafletGeoAdmin, admin.ModelAdmin):
     location.allow_tags = True
 
 
-admin.site.register(Lock, LeafletGeoAdmin)
 admin.site.register(Station, LeafletGeoAdmin)
 admin.site.register(BikeSharePreferences, PreferencesAdmin)
