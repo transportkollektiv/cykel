@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils import formats, timezone
 from django.utils.safestring import mark_safe
@@ -146,6 +147,29 @@ class LocationTrackerAdmin(LeafletGeoAdmin, admin.ModelAdmin):
         return "<a href='%s'>%s, %s</a>" % (url, lat, lng)
 
     location.allow_tags = True
+
+    def get_urls(self):
+        from django.urls import path
+
+        urls = super().get_urls()
+        my_urls = [
+            path(
+                "by-device-id/<path:object_id>/",
+                self.admin_site.admin_view(self.redir_device_id),
+                name="locationtracker_device_id_redirect",
+            ),
+        ]
+        return my_urls + urls
+
+    def redir_device_id(self, request, object_id):
+        tracker = self.get_object(request, object_id, from_field="device_id")
+
+        if tracker is None:
+            opts = self.model._meta
+            return self._get_obj_does_not_exist_redirect(request, opts, object_id)
+
+        url = reverse("admin:bikesharing_locationtracker_change", args=(tracker.id,))
+        return HttpResponseRedirect(url)
 
 
 admin.site.register(Station, LeafletGeoAdmin)
