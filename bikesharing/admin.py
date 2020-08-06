@@ -18,6 +18,23 @@ from .models import (
 
 OSM_URL = "https://www.openstreetmap.org/?mlat={lat}&mlon={lng}#map=16/{lat}/{lng}"
 
+def format_geolocation_text(geolocation):
+    lat = str(geolocation.geo.y)
+    lng = str(geolocation.geo.x)
+    accuracy = ""
+    if geolocation.accuracy:
+        accuracy = ", accuracy: " + str(geolocation.accuracy) + "m"
+    timestamp = ", reported at: " + formats.localize(
+        timezone.template_localtime(geolocation.reported_at)
+    )
+    url = OSM_URL.format(lat=lat, lng=lng)
+    return "<a href='%s'>%s, %s</a>%s%s" % (
+        url,
+        lat,
+        lng,
+        accuracy,
+        timestamp,
+    )
 
 @admin.register(Location)
 class LocationAdmin(LeafletGeoAdmin, admin.ModelAdmin):
@@ -57,24 +74,16 @@ class BikeAdmin(LeafletGeoAdmin, admin.ModelAdmin):
         internal_info = ""
         if bike.public_geolocation():
             public_info = "Public: %s<br>" % (
-                self.format_geolocation_text(bike.public_geolocation())
+                self.format_geolocation_text_with_source(bike.public_geolocation())
             )
         if bike.internal_geolocation():
             internal_info = "Internal: %s" % (
-                self.format_geolocation_text(bike.internal_geolocation())
+                self.format_geolocation_text_with_source(bike.internal_geolocation())
             )
         return "%s %s" % (public_info, internal_info)
 
     @staticmethod
-    def format_geolocation_text(geolocation):
-        lat = str(geolocation.geo.y)
-        lng = str(geolocation.geo.x)
-        accuracy = ""
-        if geolocation.accuracy:
-            accuracy = ", accuracy: " + str(geolocation.accuracy) + "m"
-        timestamp = ", reported at: " + formats.localize(
-            timezone.template_localtime(geolocation.reported_at)
-        )
+    def format_geolocation_text_with_source(geolocation):
         source = ""
         if geolocation.tracker:
             tracker = geolocation.tracker
@@ -84,13 +93,8 @@ class BikeAdmin(LeafletGeoAdmin, admin.ModelAdmin):
                 ),
                 device_id=tracker.device_id,
             )
-        url = OSM_URL.format(lat=lat, lng=lng)
-        return "<a href='%s'>%s, %s</a>%s%s%s" % (
-            url,
-            lat,
-            lng,
-            accuracy,
-            timestamp,
+        return "%s%s" % (
+            format_geolocation_text(geolocation),
             source,
         )
 
@@ -141,10 +145,7 @@ class LocationTrackerAdmin(LeafletGeoAdmin, admin.ModelAdmin):
     def location(self, obj):
         if obj is None or obj.current_geolocation() is None:
             return ""
-        lat = str(obj.current_geolocation().geo.y)
-        lng = str(obj.current_geolocation().geo.x)
-        url = OSM_URL.format(lat=lat, lng=lng)
-        return "<a href='%s'>%s, %s</a>" % (url, lat, lng)
+        return format_geolocation_text(obj.current_geolocation())
 
     location.allow_tags = True
 
