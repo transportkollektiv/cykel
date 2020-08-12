@@ -24,6 +24,8 @@ ALLOWED_HOSTS=lvh.me,localhost
 UI_SITE_URL=http://lvh.me:1234/
 # CORS origins to whitelist, i.e. the frontend URL (with scheme, without path)
 CORS_ORIGIN_WHITELIST=http://lvh.me:1234
+# Set to true if cykel runs behind a reverse proxy, so the `X-Forwarded-Proto` header gets interpreted and URLs are built correctly with https
+USE_X_FORWARDED_PROTO=true
 ```
 
 Install the required packages using `pip install -r requirements.txt`. It is recommended to use a virtualenv with your choice of tool, e.g. `pipenv`, in which case you can run `pipenv install` (and `pipenv shell` or prefix `pipenv run` to run commands).

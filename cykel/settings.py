@@ -17,7 +17,8 @@ from sentry_sdk.integrations.django import DjangoIntegration
 
 env = environ.Env(
     # set casting, default value
-    DEBUG=(bool, False)
+    DEBUG=(bool, False),
+    USE_X_FORWARDED_PROTO=(bool, False),
 )
 # reading .env file
 environ.Env.read_env()
@@ -179,6 +180,10 @@ CSRF_COOKIE_SAMESITE = None
 SESSION_COOKIE_SAMESITE = None
 LOGIN_REDIRECT_URL = "/bikesharing/redirect/"
 UI_URL = env("UI_SITE_URL")
+
+USE_X_FORWARDED_PROTO = env("USE_X_FORWARDED_PROTO")
+if USE_X_FORWARDED_PROTO:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 AUTH_USER_MODEL = "cykel.User"
 
