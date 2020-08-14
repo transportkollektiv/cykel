@@ -47,7 +47,7 @@ class LockAdmin(LeafletGeoAdmin, admin.ModelAdmin):
     readonly_fields = ("bike",)
 
     def bike(self, obj):
-        return ",".join([k.bike_number for k in obj.bike_set.all()])
+        return ", ".join([k.bike_number for k in obj.bike_set.all()])
 
 
 @admin.register(Bike)
@@ -166,5 +166,13 @@ class LocationTrackerAdmin(LeafletGeoAdmin, admin.ModelAdmin):
         return HttpResponseRedirect(url)
 
 
-admin.site.register(Station, LeafletGeoAdmin)
+@admin.register(Station)
+class StationAdmin(LeafletGeoAdmin, admin.ModelAdmin):
+    list_display = ("station_name", "status", "max_bikes", "bikes")
+    readonly_fields = ("bikes",)
+
+    def bikes(self, obj):
+        return ", ".join([k.bike_number for k in obj.bike_set.all()])
+
+
 admin.site.register(BikeSharePreferences, PreferencesAdmin)
