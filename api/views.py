@@ -173,7 +173,7 @@ def updatebikelocation(request):
 
 
 @api_view(["GET"])
-@permission_classes([AllowAny]) #TODO only for Maintenance/Superusers
+@permission_classes([AllowAny])  # TODO only for Maintenance/Superusers
 def getMaintenanceMapData(request):
     bikes = Bike.objects.filter(location__isnull=False).distinct()
     serializer = MaintenanceBikeSerializer(bikes, many=True)

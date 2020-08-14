@@ -163,17 +163,26 @@ class UserDetailsSerializer(serializers.ModelSerializer):
         model = get_user_model()
         fields = ("pk", "username", "can_rent_bike")
 
+
 class MaintenanceBikeSerializer(serializers.HyperlinkedModelSerializer):
     bike_id = serializers.CharField(source="non_static_bike_uuid", read_only=True)
 
     class Meta:
         model = Bike
-        fields = ("bike_id", "bike_number", "state", "availability_status", "internal_note")
+        fields = (
+            "bike_id",
+            "bike_number",
+            "state",
+            "availability_status",
+            "internal_note",
+        )
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
 
-        trackerserializer = MaintenanceTrackerSerializer(instance.locationtracker_set.all(), many=True)
+        trackerserializer = MaintenanceTrackerSerializer(
+            instance.locationtracker_set.all(), many=True
+        )
         representation["trackers"] = trackerserializer.data
         lockserializer = MaintenanceLockSerializer(instance.lock)
         representation["lock"] = lockserializer.data
@@ -183,13 +192,22 @@ class MaintenanceBikeSerializer(serializers.HyperlinkedModelSerializer):
             pos = public_geolocation.geo
             if pos and pos.x and pos.y:
                 representation["lat"] = pos.y
-                representation["lon"] = pos.x
+                representation["lng"] = pos.x
         return representation  # only return bikes with public geolocation
+
 
 class MaintenanceTrackerSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = LocationTracker
-        fields = ("device_id", "battery_voltage", "internal", "last_reported", "tracker_type", "tracker_status")
+        fields = (
+            "device_id",
+            "battery_voltage",
+            "internal",
+            "last_reported",
+            "tracker_type",
+            "tracker_status",
+        )
+
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         current_location = instance.current_geolocation()
@@ -200,6 +218,7 @@ class MaintenanceTrackerSerializer(serializers.HyperlinkedModelSerializer):
                 representation["lat"] = current_geolocation.y
                 representation["lng"] = current_geolocation.x
         return representation
+
 
 class MaintenanceLockSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
