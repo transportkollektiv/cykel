@@ -10,10 +10,14 @@ from bikesharing.models import Bike, Station, VehicleType
 
 class GbfsFreeBikeStatusSerializer(serializers.HyperlinkedModelSerializer):
     bike_id = serializers.CharField(source="non_static_bike_uuid", read_only=True)
+    vehicle_type_id = serializers.CharField(read_only=True)
 
     class Meta:
         model = Bike
-        fields = ("bike_id",)
+        fields = (
+            "bike_id",
+            "vehicle_type_id",
+        )
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
