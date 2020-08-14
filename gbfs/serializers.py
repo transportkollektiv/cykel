@@ -3,9 +3,9 @@ from datetime import timedelta
 from django.db.models import Max
 from django.utils.timezone import now
 from preferences import preferences
-from rest_framework import serializers
+from rest_framework import fields, serializers
 
-from bikesharing.models import Bike, Station
+from bikesharing.models import Bike, Station, VehicleType
 
 
 class GbfsFreeBikeStatusSerializer(serializers.HyperlinkedModelSerializer):
@@ -97,3 +97,54 @@ class GbfsStationStatusSerializer(serializers.HyperlinkedModelSerializer):
         representation["is_renting"] = status
         representation["is_returning"] = status
         return representation
+
+
+class EnumFieldSerializer(fields.CharField):
+    def __init__(self, *args, **kwargs):
+        self.mapping = kwargs.pop("mapping", {})
+        super().__init__(*args, **kwargs)
+
+    def to_representation(self, value):
+        if value in self.mapping:
+            return self.mapping[value]
+        return value
+
+
+class GbfsVehicleTypeSerializer(serializers.HyperlinkedModelSerializer):
+    vehicle_type_id = serializers.CharField(source="id", read_only=True)
+    form_factor = EnumFieldSerializer(
+        read_only=True,
+        mapping={
+            "BI": "bike",
+            "ES": "scooter",
+            "CA": "car",
+            "MO": "moped",
+            "OT": "other",
+        },
+    )
+    propulsion_type = EnumFieldSerializer(
+        read_only=True,
+        mapping={
+            "HU": "human",
+            "EA": "electric_assist",
+            "EL": "electric",
+            "CO": "combustion",
+        },
+    )
+
+    def to_representation(self, instance):
+        data = super(GbfsVehicleTypeSerializer, self).to_representation(instance)
+        # defined by GBFS 2.1: Only if the vehicle has a motor the field is required
+        if data["propulsion_type"] == "human":
+            data.pop("max_range_meters")
+        return data
+
+    class Meta:
+        model = VehicleType
+        fields = (
+            "vehicle_type_id",
+            "form_factor",
+            "propulsion_type",
+            "max_range_meters",
+            "name",
+        )

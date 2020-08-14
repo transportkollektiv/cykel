@@ -21,6 +21,7 @@ from .views import (
     GbfsFreeBikeStatusViewSet,
     GbfsStationInformationViewSet,
     GbfsStationStatusViewSet,
+    GbfsVehicleTypeViewSet,
     gbfs,
     gbfsSystemInformation,
 )
@@ -35,4 +36,5 @@ urlpatterns = [
     path("free_bike_status.json", GbfsFreeBikeStatusViewSet.as_view()),
     path("station_information.json", GbfsStationInformationViewSet.as_view()),
     path("station_status.json", GbfsStationStatusViewSet.as_view()),
+    path("vehicle_types.json", GbfsVehicleTypeViewSet.as_view()),
 ]

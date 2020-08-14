@@ -10,12 +10,13 @@ from rest_framework import generics, mixins
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import AllowAny
 
-from bikesharing.models import Bike, Station
+from bikesharing.models import Bike, Station, VehicleType
 
 from .serializers import (
     GbfsFreeBikeStatusSerializer,
     GbfsStationInformationSerializer,
     GbfsStationStatusSerializer,
+    GbfsVehicleTypeSerializer,
 )
 
 
@@ -39,6 +40,10 @@ def gbfs(request):
                     {
                         "name": "free_bike_status",
                         "url": getGbfsRoot(request) + "free_bike_status.json",
+                    },
+                    {
+                        "name": "vehicle_types",
+                        "url": getGbfsRoot(request) + "vehicle_types.json",
                     },
                 ]
             }
@@ -99,6 +104,19 @@ class GbfsStationInformationViewSet(mixins.ListModelMixin, generics.GenericAPIVi
         serializer = GbfsStationInformationSerializer(stations, many=True)
         station_data = {"stations": serializer.data}
         data = getGbfsWithData(station_data)
+        return JsonResponse(data, safe=False)
+
+
+@permission_classes([AllowAny])
+class GbfsVehicleTypeViewSet(mixins.ListModelMixin, generics.GenericAPIView):
+    queryset = VehicleType.objects.all()  # FIXME: get only used
+    serializer_class = GbfsVehicleTypeSerializer
+
+    def get(self, request, *args, **kwargs):
+        vehicle_types = VehicleType.objects.all()
+        serializer = GbfsVehicleTypeSerializer(vehicle_types, many=True)
+        vehicle_type_data = {"vehicle_types": serializer.data}
+        data = getGbfsWithData(vehicle_type_data)
         return JsonResponse(data, safe=False)
 
 
