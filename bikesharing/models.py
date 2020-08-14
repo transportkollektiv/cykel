@@ -164,6 +164,11 @@ class Bike(models.Model):
         except ObjectDoesNotExist:
             return None
 
+    class Meta:
+        permissions = [
+            ("maintain", "Can use maintainance UI"),
+        ]
+
 
 class LocationTracker(models.Model):
     bike = models.ForeignKey("Bike", on_delete=models.PROTECT, null=True, blank=True)

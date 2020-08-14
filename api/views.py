@@ -56,6 +56,17 @@ class CanRentBikePermission(BasePermission):
         return request.user.has_perm("bikesharing.add_rent")
 
 
+class CanUseMaintainancePermission(BasePermission):
+    """The request is authenticated as a user and has maintenance
+    permission."""
+
+    def has_permission(self, request, view):
+        if not request.user or not request.user.is_authenticated:
+            return False
+
+        return request.user.has_perm("bikesharing.maintain")
+
+
 @permission_classes([IsAuthenticated, CanRentBikePermission])
 class RentViewSet(
     mixins.CreateModelMixin,
@@ -173,7 +184,7 @@ def updatebikelocation(request):
 
 
 @api_view(["GET"])
-@permission_classes([AllowAny])  # TODO only for Maintenance/Superusers
+@permission_classes([IsAuthenticated, CanUseMaintainancePermission])
 def getMaintenanceMapData(request):
     bikes = Bike.objects.filter(location__isnull=False).distinct()
     serializer = MaintenanceBikeSerializer(bikes, many=True)
