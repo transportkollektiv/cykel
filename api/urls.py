@@ -6,8 +6,8 @@ from .views import (
     LoginProviderViewSet,
     RentViewSet,
     UserDetailsView,
-    updatebikelocation,
     getMaintenanceMapData,
+    updatebikelocation,
 )
 
 router = routers.DefaultRouter(trailing_slash=False)

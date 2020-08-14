@@ -23,11 +23,11 @@ from .serializers import (
     BikeSerializer,
     CreateRentSerializer,
     LocationTrackerUpdateSerializer,
+    MaintenanceBikeSerializer,
     RentSerializer,
     SocialAppSerializer,
     StationSerializer,
     UserDetailsSerializer,
-    MaintenanceBikeSerializer,
 )
 
 
