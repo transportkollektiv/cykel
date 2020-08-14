@@ -71,6 +71,18 @@ INSTALLED_APPS = [
     "preferences",
 ]
 
+try:
+    import django_extensions  # noqa
+
+    INSTALLED_APPS.append("django_extensions")
+except ImportError:
+    pass
+
+SHELL_PLUS_IMPORTS = [
+    "from django.contrib.gis.geos import Point",
+    "from django.contrib.gis.measure import D, Distance, A, Area",
+]
+
 SITE_ID = 1
 
 MIDDLEWARE = [
