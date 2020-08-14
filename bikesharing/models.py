@@ -99,7 +99,6 @@ class Bike(models.Model):
     state = models.CharField(
         max_length=2, choices=bike_state_status_choices, default="US"
     )
-    bike_type = models.CharField(max_length=2, choices=bike_type_choices, default="BI")
     vehicle_type = models.ForeignKey(
         "VehicleType", on_delete=models.PROTECT, null=True, blank=True
     )
