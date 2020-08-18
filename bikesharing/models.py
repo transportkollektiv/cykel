@@ -28,10 +28,7 @@ bike_state_status_choices = (
 # These factors are defined by GBFS v2.1
 vehicle_form_factor_choices = (
     ("BI", "Bike"),
-    ("CB", "Cargo Bike"),  # deprecated
-    ("EB", "E-Bike"),  # deprecated
     ("ES", "E-Scooter"),
-    ("WH", "Wheelchair"),  # deprecated
     ("CA", "Car"),
     ("MO", "Moped"),
     ("OT", "Other"),
