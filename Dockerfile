@@ -1,4 +1,4 @@
-FROM  andrejreznik/python-gdal
+FROM andrejreznik/python-gdal
 
 # set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
