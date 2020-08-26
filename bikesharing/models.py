@@ -118,6 +118,20 @@ class Bike(models.Model):
         help_text="""A temporary ID used in public APIs,
         rotating it's value after each rent to protect users privacy.""",
     )
+    current_range_meters = models.FloatField(
+        default=None,
+        null=True,
+        blank=True,
+        help_text=dedent(
+            """\
+            If the corresponding vehicle_type definition for this vehicle
+            has a motor, then this field is required. This value represents
+            the furthest distance in meters that the vehicle can travel
+            without recharging or refueling with the vehicle's current
+            charge or fuel.
+            """
+        ),
+    )
 
     def __str__(self):
         return str(self.bike_number)
