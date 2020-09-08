@@ -11,6 +11,8 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RenameField(
-            model_name="location", old_name="internal_location", new_name="internal",
+            model_name="location",
+            old_name="internal_location",
+            new_name="internal",
         ),
     ]

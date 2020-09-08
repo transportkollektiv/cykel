@@ -10,7 +10,10 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(model_name="locationtracker", name="internal_only",),
+        migrations.RemoveField(
+            model_name="locationtracker",
+            name="internal_only",
+        ),
         migrations.AddField(
             model_name="locationtracker",
             name="internal",

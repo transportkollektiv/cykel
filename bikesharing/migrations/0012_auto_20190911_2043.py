@@ -11,7 +11,11 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AlterModelOptions(
-            name="location", options={"get_latest_by": "reported_at"},
+            name="location",
+            options={"get_latest_by": "reported_at"},
         ),
-        migrations.RemoveField(model_name="bike", name="current_position",),
+        migrations.RemoveField(
+            model_name="bike",
+            name="current_position",
+        ),
     ]

@@ -81,7 +81,9 @@ class User(AbstractBaseUser, PermissionsMixin):
             "Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only."
         ),
         validators=[username_validator],
-        error_messages={"unique": _("A user with that username already exists."),},
+        error_messages={
+            "unique": _("A user with that username already exists."),
+        },
     )
 
     is_staff = models.BooleanField(

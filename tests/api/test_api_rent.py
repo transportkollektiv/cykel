@@ -83,7 +83,9 @@ def inuse_bike(another_lock):
 @pytest.fixture
 def rent_jane_running(testuser_jane_canrent, inuse_bike):
     return Rent.objects.create(
-        rent_start=now(), user=testuser_jane_canrent, bike=inuse_bike,
+        rent_start=now(),
+        user=testuser_jane_canrent,
+        bike=inuse_bike,
     )
 
 
@@ -262,7 +264,8 @@ def test_end_rent_logged_in_with_renting_rights_and_location_from_client(
 
 @pytest.mark.django_db
 def test_end_rent_logged_out(
-    rent_jane_running, inuse_bike,
+    rent_jane_running,
+    inuse_bike,
 ):
     client = APIClient()
     data = {}
@@ -278,7 +281,8 @@ def test_end_rent_logged_out(
 
 @pytest.mark.django_db
 def test_end_rent_unknown_logged_in_with_renting_rights(
-    testuser_jane_canrent, user_client_jane_canrent_logged_in,
+    testuser_jane_canrent,
+    user_client_jane_canrent_logged_in,
 ):
     data = {}
     response = user_client_jane_canrent_logged_in.post(

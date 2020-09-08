@@ -30,7 +30,13 @@ def format_geolocation_text(geolocation):
         timezone.template_localtime(geolocation.reported_at)
     )
     url = OSM_URL.format(lat=lat, lng=lng)
-    return "<a href='%s'>%s, %s</a>%s%s" % (url, lat, lng, accuracy, timestamp,)
+    return "<a href='%s'>%s, %s</a>%s%s" % (
+        url,
+        lat,
+        lng,
+        accuracy,
+        timestamp,
+    )
 
 
 @admin.register(Location)
@@ -90,7 +96,10 @@ class BikeAdmin(LeafletGeoAdmin, admin.ModelAdmin):
                 ),
                 device_id=tracker.device_id,
             )
-        return "%s%s" % (format_geolocation_text(geolocation), source,)
+        return "%s%s" % (
+            format_geolocation_text(geolocation),
+            source,
+        )
 
     location.allow_tags = True
 

@@ -192,7 +192,8 @@ class UserDetailsView(generics.RetrieveAPIView):
 
 @permission_classes([AllowAny])
 class LoginProviderViewSet(
-    mixins.ListModelMixin, viewsets.GenericViewSet,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
 ):
     """return the configured social login providers."""
 

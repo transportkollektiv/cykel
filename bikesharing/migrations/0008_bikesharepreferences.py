@@ -30,6 +30,8 @@ class Migration(migrations.Migration):
                 ("station_match_max_distance", models.IntegerField(default=20)),
             ],
             bases=("preferences.preferences",),
-            managers=[("singleton", django.db.models.manager.Manager()),],
+            managers=[
+                ("singleton", django.db.models.manager.Manager()),
+            ],
         ),
     ]

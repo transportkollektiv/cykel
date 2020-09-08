@@ -108,6 +108,8 @@ class Migration(migrations.Migration):
                 "verbose_name_plural": "users",
                 "db_table": "auth_user",
             },
-            managers=[("objects", cykel.models.UserManager()),],
+            managers=[
+                ("objects", cykel.models.UserManager()),
+            ],
         ),
     ]
