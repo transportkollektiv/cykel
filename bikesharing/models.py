@@ -1,4 +1,5 @@
 import uuid
+from textwrap import dedent
 
 from django.conf import settings
 from django.contrib.gis.db import models as geomodels
@@ -24,12 +25,21 @@ bike_state_status_choices = (
     ("MI", "Missing"),
 )
 
-bike_type_choices = (
+# These factors are defined by GBFS v2.1
+vehicle_form_factor_choices = (
     ("BI", "Bike"),
-    ("CB", "Cargo Bike"),
-    ("EB", "E-Bike"),
     ("ES", "E-Scooter"),
-    ("WH", "Wheelchair"),
+    ("CA", "Car"),
+    ("MO", "Moped"),
+    ("OT", "Other"),
+)
+
+# These types are defined by GBFS v2.1
+vehicle_propulsion_type_choices = (
+    ("HU", "Human"),
+    ("EA", "Electric Assist"),
+    ("EL", "Electric"),
+    ("CO", "Combustion"),
 )
 
 lock_type_choices = (
@@ -52,6 +62,32 @@ tracker_status_choices = (
 )
 
 
+class VehicleType(models.Model):
+    name = models.CharField(default=None, null=True, blank=True, max_length=255)
+    form_factor = models.CharField(
+        max_length=2, choices=vehicle_form_factor_choices, default="BI"
+    )
+    propulsion_type = models.CharField(
+        max_length=2, choices=vehicle_propulsion_type_choices, default="HU"
+    )
+    max_range_meters = models.FloatField(
+        default=None,
+        null=True,
+        blank=True,
+        help_text=dedent(
+            """\
+            If the vehicle has a motor, the furthest distance in meters
+            that the vehicle can travel without recharging or refueling
+            when it has the maximum amount of energy potential
+            (for example a full battery or full tank of gas)."""
+        ),
+    )  # TODO: validation only positive values
+    internal_note = models.TextField(default=None, null=True, blank=True)
+
+    def __str__(self):
+        return str(self.name)
+
+
 class Bike(models.Model):
     bike_number = models.CharField(max_length=8)
     availability_status = models.CharField(
@@ -60,7 +96,9 @@ class Bike(models.Model):
     state = models.CharField(
         max_length=2, choices=bike_state_status_choices, default="US"
     )
-    bike_type = models.CharField(max_length=2, choices=bike_type_choices, default="BI")
+    vehicle_type = models.ForeignKey(
+        "VehicleType", on_delete=models.PROTECT, null=True, blank=True
+    )
     lock = models.ForeignKey("Lock", on_delete=models.PROTECT, null=True, blank=True)
     current_station = models.ForeignKey(
         "Station", on_delete=models.PROTECT, blank=True, null=True, default=None
@@ -79,6 +117,20 @@ class Bike(models.Model):
         unique=True,
         help_text="""A temporary ID used in public APIs,
         rotating it's value after each rent to protect users privacy.""",
+    )
+    current_range_meters = models.FloatField(
+        default=None,
+        null=True,
+        blank=True,
+        help_text=dedent(
+            """\
+            If the corresponding vehicle_type definition for this vehicle
+            has a motor, then this field is required. This value represents
+            the furthest distance in meters that the vehicle can travel
+            without recharging or refueling with the vehicle's current
+            charge or fuel.
+            """
+        ),
     )
 
     def __str__(self):

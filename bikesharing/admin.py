@@ -14,6 +14,7 @@ from .models import (
     Lock,
     Rent,
     Station,
+    VehicleType,
 )
 
 OSM_URL = "https://www.openstreetmap.org/?mlat={lat}&mlon={lng}#map=16/{lat}/{lng}"
@@ -54,12 +55,12 @@ class LockAdmin(LeafletGeoAdmin, admin.ModelAdmin):
 class BikeAdmin(LeafletGeoAdmin, admin.ModelAdmin):
     list_display = (
         "bike_number",
-        "bike_type",
+        "vehicle_type",
         "availability_status",
         "state",
         "last_reported",
     )
-    list_filter = ("bike_type", "availability_status", "state")
+    list_filter = ("vehicle_type", "availability_status", "state")
     search_fields = ("bike_number", "non_static_bike_uuid")
     readonly_fields = ("location", "non_static_bike_uuid")
     ordering = ["bike_number"]
@@ -175,4 +176,5 @@ class StationAdmin(LeafletGeoAdmin, admin.ModelAdmin):
         return ", ".join([k.bike_number for k in obj.bike_set.all()])
 
 
+admin.site.register(VehicleType, LeafletGeoAdmin)
 admin.site.register(BikeSharePreferences, PreferencesAdmin)
