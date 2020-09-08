@@ -53,7 +53,7 @@ def user_client_mary_maintain_logged_in(testuser_mary_maintain):
 def test_get_map_no_user():
     client = APIClient()
     response = client.get("/api/maintenance/mapdata")
-    assert response.status_code == 401
+    assert response.status_code == 403
 
 
 @pytest.mark.django_db
