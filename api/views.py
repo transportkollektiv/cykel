@@ -23,6 +23,7 @@ from .serializers import (
     BikeSerializer,
     CreateRentSerializer,
     LocationTrackerUpdateSerializer,
+    MaintenanceBikeSerializer,
     RentSerializer,
     SocialAppSerializer,
     StationSerializer,
@@ -53,6 +54,17 @@ class CanRentBikePermission(BasePermission):
             return True
 
         return request.user.has_perm("bikesharing.add_rent")
+
+
+class CanUseMaintainancePermission(BasePermission):
+    """The request is authenticated as a user and has maintenance
+    permission."""
+
+    def has_permission(self, request, view):
+        if not request.user or not request.user.is_authenticated:
+            return False
+
+        return request.user.has_perm("bikesharing.maintain")
 
 
 @permission_classes([IsAuthenticated, CanRentBikePermission])
@@ -169,6 +181,14 @@ def updatebikelocation(request):
         return Response({"success": True, "warning": "lat/lng missing"})
 
     return Response({"success": True})
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated, CanUseMaintainancePermission])
+def getMaintenanceMapData(request):
+    bikes = Bike.objects.filter(location__isnull=False).distinct()
+    serializer = MaintenanceBikeSerializer(bikes, many=True)
+    return Response(serializer.data)
 
 
 class UserDetailsView(generics.RetrieveAPIView):

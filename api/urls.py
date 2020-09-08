@@ -6,6 +6,7 @@ from .views import (
     LoginProviderViewSet,
     RentViewSet,
     UserDetailsView,
+    getMaintenanceMapData,
     updatebikelocation,
 )
 
@@ -15,6 +16,7 @@ router.register(r"rent", RentViewSet, basename="rent")
 urlpatterns = [
     url(r"^", include(router.urls)),
     path("bike/updatelocation", updatebikelocation),
+    path("maintenance/mapdata", getMaintenanceMapData),
     path("user", UserDetailsView.as_view()),
     path("config/loginproviders", LoginProviderViewSet.as_view({"get": "list"})),
 ]
