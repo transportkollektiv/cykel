@@ -6,7 +6,13 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.utils.timezone import now
 from preferences import preferences
 from rest_framework import exceptions, generics, mixins, status, viewsets
-from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication
+from rest_framework.decorators import (
+    action,
+    api_view,
+    authentication_classes,
+    permission_classes,
+)
 from rest_framework.permissions import (
     SAFE_METHODS,
     AllowAny,
@@ -184,6 +190,7 @@ def updatebikelocation(request):
 
 
 @api_view(["GET"])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated, CanUseMaintainancePermission])
 def getMaintenanceMapData(request):
     bikes = Bike.objects.filter(location__isnull=False).distinct()
