@@ -5,7 +5,7 @@ Basic backend for a mobility sharing service. First steps made at [CCCamp 2019](
 ## Prerequisites
 
 * Python (≥3.7)
-* A database that supports GIS extensions, for example PostGIS.
+* Postgres database with PostGIS extension. (MySQL and SQLite are not supported anymore)
 
 ### Configuration
 
@@ -17,7 +17,7 @@ SECRET_KEY=f2bf0a4e621a16d9eb8253aa7a540f75ed8787b5
 # set to 1 to enable DEBUG output, or 0 to disable
 DEBUG=1
 # configure your database in a format supported by https://github.com/jacobian/dj-database-url
-DATABASE_URL=spatialite:///cykel.sqlite
+DATABASE_URL=postgis://localhost/cykel
 # it is recommended to use a DNS alias for localhost, instead of "localhost", for CORS reasons
 ALLOWED_HOSTS=lvh.me,localhost
 # set the full URL to the frontend
