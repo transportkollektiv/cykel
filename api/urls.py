@@ -1,6 +1,7 @@
 from django.conf.urls import url
 from django.urls import include, path
 from rest_framework import routers
+from rest_framework.authtoken import views
 
 from .views import (
     LoginProviderViewSet,
@@ -19,4 +20,5 @@ urlpatterns = [
     path("maintenance/mapdata", getMaintenanceMapData),
     path("user", UserDetailsView.as_view()),
     path("config/loginproviders", LoginProviderViewSet.as_view({"get": "list"})),
+    path("auth/token", views.obtain_auth_token),
 ]
