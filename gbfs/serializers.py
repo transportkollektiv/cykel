@@ -29,7 +29,10 @@ class GbfsFreeBikeStatusSerializer(serializers.HyperlinkedModelSerializer):
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         # defined by GBFS 2.1: Only if the vehicle has a motor the field is required
-        if instance.vehicle_type.propulsion_type == "human":
+        if (
+            instance.vehicle_type is not None
+            and instance.vehicle_type.propulsion_type == "human"
+        ):
             representation.pop("current_range_meters")
         # Default to False TODO: maybe configuration later
         representation["is_reserved"] = False
