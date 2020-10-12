@@ -115,7 +115,12 @@ class GbfsStationStatusSerializer(serializers.HyperlinkedModelSerializer):
 
         if representation["num_bikes_available"] > 0:
             representation["last_reported"] = max(
-                vehicle["last_reported"] for vehicle in representation["vehicles"]
+                (
+                    vehicle["last_reported"]
+                    if vehicle["last_reported"] is not None
+                    else 0
+                )
+                for vehicle in representation["vehicles"]
             )
         else:
             # if no bike is at the station, last_report is the current time
