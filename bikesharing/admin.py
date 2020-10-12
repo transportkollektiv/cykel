@@ -53,9 +53,6 @@ class LockAdmin(LeafletGeoAdmin, admin.ModelAdmin):
     list_filter = ("lock_type", "bike")
     readonly_fields = ("bike",)
 
-    def bike(self, obj):
-        return ", ".join([k.bike_number for k in obj.bike_set.all()])
-
 
 @admin.register(Bike)
 class BikeAdmin(LeafletGeoAdmin, admin.ModelAdmin):

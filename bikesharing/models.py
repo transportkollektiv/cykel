@@ -99,7 +99,7 @@ class Bike(models.Model):
     vehicle_type = models.ForeignKey(
         "VehicleType", on_delete=models.PROTECT, null=True, blank=True
     )
-    lock = models.ForeignKey("Lock", on_delete=models.PROTECT, null=True, blank=True)
+    lock = models.OneToOneField("Lock", on_delete=models.PROTECT, null=True, blank=True)
     current_station = models.ForeignKey(
         "Station", on_delete=models.PROTECT, blank=True, null=True, default=None
     )
