@@ -236,6 +236,21 @@ class Rent(models.Model):
             rent_end=self.rent_end,
         )
 
+    def unlock(self):
+        if self.bike.lock is None:
+            return {}
+
+        lock = self.bike.lock
+        lock_type = lock.lock_type
+
+        if lock_type is None:
+            return {}
+
+        if lock_type.form_factor == "CL":
+            return {"unlock_key": self.bike.lock.unlock_key}
+
+        return {}
+
     def end(self, end_position=None):
         self.rent_end = now()
         if end_position is not None:

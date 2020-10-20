@@ -96,7 +96,7 @@ class RentViewSet(
             return resp
         # override output with RentSerializer
         rent = self.get_queryset().get(id=resp.data["id"])
-        serializer = RentSerializer(rent)
+        serializer = RentSerializer(rent, context={"request": request})
         headers = self.get_success_headers(serializer.data)
         return Response(
             serializer.data, status=status.HTTP_201_CREATED, headers=headers
@@ -131,6 +131,29 @@ class RentViewSet(
         rent.end(end_position)
 
         return Response({"success": True})
+
+    @action(detail=True, methods=["post"])
+    def unlock(self, request, pk=None):
+        rent = self.get_object()
+
+        if rent.user != request.user:
+            return Response(
+                {"error": "rent belongs to another user"},
+                status=status.HTTP_403_PERMISSON_DENIED,
+            )
+
+        if rent.rent_end is not None:
+            return Response(
+                {"error": "rent was already finished"}, status=status.HTTP_410_GONE
+            )
+
+        try:
+            data = rent.unlock()
+        except Exception as e:
+            print(e)
+            return Response({"success": False})
+
+        return Response({"success": True, "data": data})
 
 
 @api_view(["POST"])

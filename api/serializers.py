@@ -30,14 +30,11 @@ class LockSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class BikeSerializer(serializers.HyperlinkedModelSerializer):
-    lock = LockSerializer()
+    lock_type = serializers.ReadOnlyField(source="lock.lock_type.form_factor")
 
     class Meta:
         model = Bike
-        fields = (
-            "bike_number",
-            "lock",
-        )
+        fields = ("bike_number", "lock_type")
 
 
 class StationSerializer(serializers.HyperlinkedModelSerializer):
@@ -122,9 +119,12 @@ class CreateRentSerializer(serializers.HyperlinkedModelSerializer):
 class RentSerializer(serializers.HyperlinkedModelSerializer):
     bike = BikeSerializer(read_only=True)
 
+    finish_url = serializers.HyperlinkedIdentityField(view_name="rent-finish")
+    unlock_url = serializers.HyperlinkedIdentityField(view_name="rent-unlock")
+
     class Meta:
         model = Rent
-        fields = ["id", "bike", "rent_start"]
+        fields = ["url", "id", "bike", "rent_start", "finish_url", "unlock_url"]
 
 
 class SocialAppSerializer(serializers.HyperlinkedModelSerializer):
