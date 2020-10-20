@@ -1,6 +1,7 @@
 import uuid
 from textwrap import dedent
 
+import requests
 from django.conf import settings
 from django.contrib.gis.db import models as geomodels
 from django.contrib.gis.measure import D
@@ -248,6 +249,14 @@ class Rent(models.Model):
 
         if lock_type.form_factor == "CL":
             return {"unlock_key": self.bike.lock.unlock_key}
+
+        if lock_type.form_factor == "EL":
+            url = "{url}/{device_id}/unlock".format(
+                url=lock_type.endpoint_url, device_id=lock.lock_id
+            )
+            r = requests.post(url)
+            data = r.json()
+            return {"data": data}
 
         return {}
 

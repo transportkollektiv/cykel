@@ -8,5 +8,6 @@ django-leaflet==0.27.1
 django-allauth-fragdenstaat
 djangorestframework-api-key==1.4.1
 django-preferences==1.0.0
+requests==2.24.0
 sentry-sdk==0.14.4
 psycopg2
