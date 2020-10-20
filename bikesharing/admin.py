@@ -12,6 +12,7 @@ from .models import (
     Location,
     LocationTracker,
     Lock,
+    LockType,
     Rent,
     Station,
     VehicleType,
@@ -183,4 +184,5 @@ class StationAdmin(LeafletGeoAdmin, admin.ModelAdmin):
 
 
 admin.site.register(VehicleType, LeafletGeoAdmin)
+admin.site.register(LockType, admin.ModelAdmin)
 admin.site.register(BikeSharePreferences, PreferencesAdmin)

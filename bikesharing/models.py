@@ -8,7 +8,6 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.db.utils import IntegrityError
 from django.utils.timezone import now
-from macaddress.fields import MACAddressField
 from preferences import preferences
 from preferences.models import Preferences
 
@@ -275,10 +274,22 @@ class Rent(models.Model):
             pass
 
 
+class LockType(models.Model):
+    name = models.CharField(default=None, null=True, blank=True, max_length=255)
+    form_factor = models.CharField(
+        max_length=2, choices=lock_type_choices, default="CL"
+    )
+    endpoint_url = models.URLField(default=None, null=True, blank=True)
+
+    def __str__(self):
+        return str(self.name)
+
+
 class Lock(models.Model):
     lock_id = models.CharField(editable=True, max_length=255)
-    lock_type = models.CharField(max_length=2, choices=lock_type_choices, default="CL")
-    mac_address = MACAddressField(null=True, blank=True)
+    lock_type = models.ForeignKey(
+        "LockType", on_delete=models.PROTECT, null=True, blank=True
+    )
     unlock_key = models.CharField(editable=True, max_length=255, blank=True)
 
     def __str__(self):
@@ -287,11 +298,9 @@ class Lock(models.Model):
         )
 
     def __repr__(self):
-        return """#{lock_id} ({lock_type})
-         mac_address={mac_address} unlock_key={unlock_key}""".format(
+        return """#{lock_id} ({lock_type}) unlock_key={unlock_key}""".format(
             lock_id=self.lock_id,
             lock_type=self.lock_type,
-            mac_address=self.mac_address,
             unlock_key=self.unlock_key,
         )
 

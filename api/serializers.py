@@ -4,13 +4,29 @@ from django.contrib.gis.geos import Point
 from django.utils.timezone import now
 from rest_framework import serializers
 
-from bikesharing.models import Bike, Location, LocationTracker, Lock, Rent, Station
+from bikesharing.models import (
+    Bike,
+    Location,
+    LocationTracker,
+    Lock,
+    LockType,
+    Rent,
+    Station,
+)
+
+
+class LockTypeSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = LockType
+        fields = ("name",)
 
 
 class LockSerializer(serializers.HyperlinkedModelSerializer):
+    form_factor = serializers.ReadOnlyField(source="lock_type.form_factor")
+
     class Meta:
         model = Lock
-        fields = ("mac_address", "unlock_key", "lock_type")
+        fields = ("unlock_key", "form_factor")
 
 
 class BikeSerializer(serializers.HyperlinkedModelSerializer):
@@ -223,4 +239,4 @@ class MaintenanceTrackerSerializer(serializers.HyperlinkedModelSerializer):
 class MaintenanceLockSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Lock
-        fields = ("mac_address", "unlock_key", "lock_type", "lock_id")
+        fields = ("unlock_key", "lock_type", "lock_id")

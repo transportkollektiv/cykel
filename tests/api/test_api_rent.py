@@ -5,7 +5,7 @@ from django.utils.timezone import now
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
-from bikesharing.models import Bike, Location, Lock, Rent
+from bikesharing.models import Bike, Location, Lock, LockType, Rent
 
 
 @pytest.fixture
@@ -54,13 +54,18 @@ def user_client_mary_canrent_logged_in(testuser_mary_canrent):
 
 
 @pytest.fixture
-def lock():
-    return Lock.objects.create(unlock_key="000000")
+def lock_type_combination():
+    return LockType.objects.create(form_factor="CL")
 
 
 @pytest.fixture
-def another_lock():
-    return Lock.objects.create(unlock_key="000000")
+def lock(lock_type_combination):
+    return Lock.objects.create(unlock_key="000000", lock_type=lock_type_combination)
+
+
+@pytest.fixture
+def another_lock(lock_type_combination):
+    return Lock.objects.create(unlock_key="000000", lock_type=lock_type_combination)
 
 
 @pytest.fixture
