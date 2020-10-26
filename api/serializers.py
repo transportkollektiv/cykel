@@ -180,7 +180,7 @@ class UserDetailsSerializer(serializers.ModelSerializer):
         fields = ("pk", "username", "can_rent_bike")
 
 
-class MaintenanceBikeSerializer(serializers.HyperlinkedModelSerializer):
+class MaintenanceBikeSerializer(serializers.ModelSerializer):
     bike_id = serializers.CharField(source="non_static_bike_uuid", read_only=True)
 
     class Meta:
@@ -212,7 +212,7 @@ class MaintenanceBikeSerializer(serializers.HyperlinkedModelSerializer):
         return representation  # only return bikes with public geolocation
 
 
-class MaintenanceTrackerSerializer(serializers.HyperlinkedModelSerializer):
+class MaintenanceTrackerSerializer(serializers.ModelSerializer):
     class Meta:
         model = LocationTracker
         fields = (
@@ -236,7 +236,15 @@ class MaintenanceTrackerSerializer(serializers.HyperlinkedModelSerializer):
         return representation
 
 
-class MaintenanceLockSerializer(serializers.HyperlinkedModelSerializer):
+class MaintenanceLockTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LockType
+        fields = ("name",)
+
+
+class MaintenanceLockSerializer(serializers.ModelSerializer):
+    lock_type = MaintenanceLockTypeSerializer()
+
     class Meta:
         model = Lock
         fields = ("unlock_key", "lock_type", "lock_id")

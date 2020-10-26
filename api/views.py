@@ -212,13 +212,14 @@ def updatebikelocation(request):
     return Response({"success": True})
 
 
-@api_view(["GET"])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
-def getMaintenanceMapData(request):
-    bikes = Bike.objects.filter(location__isnull=False).distinct()
-    serializer = MaintenanceBikeSerializer(bikes, many=True)
-    return Response(serializer.data)
 @permission_classes([IsAuthenticated, CanUseMaintenancePermission])
+class MaintenanceViewSet(viewsets.ViewSet):
+    @action(detail=False, methods=["GET"])
+    def mapdata(self, request):
+        bikes = Bike.objects.filter(location__isnull=False).distinct()
+        serializer = MaintenanceBikeSerializer(bikes, many=True)
+        return Response(serializer.data)
 
 
 class UserDetailsView(generics.RetrieveAPIView):

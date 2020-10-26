@@ -5,19 +5,19 @@ from rest_framework.authtoken import views
 
 from .views import (
     LoginProviderViewSet,
+    MaintenanceViewSet,
     RentViewSet,
     UserDetailsView,
-    getMaintenanceMapData,
     updatebikelocation,
 )
 
 router = routers.DefaultRouter(trailing_slash=False)
 router.register(r"rent", RentViewSet, basename="rent")
+router.register(r"maintenance", MaintenanceViewSet, basename="maintenance")
 
 urlpatterns = [
     url(r"^", include(router.urls)),
     path("bike/updatelocation", updatebikelocation),
-    path("maintenance/mapdata", getMaintenanceMapData),
     path("user", UserDetailsView.as_view()),
     path("config/loginproviders", LoginProviderViewSet.as_view({"get": "list"})),
     path("auth/token", views.obtain_auth_token),
