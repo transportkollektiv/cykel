@@ -2,34 +2,6 @@ from django.db import migrations, models
 import django.db.models.deletion
 
 
-def create_and_assign_lock_types(apps, schema_editor):
-    Lock = apps.get_model("bikesharing", "Lock")
-    LockType = apps.get_model("bikesharing", "LockType")
-    used_lock_types = []
-    for lock in Lock.objects.order_by("form_factor").distinct("form_factor"):
-        used_lock_types.append(lock.lock_type)
-    if len(used_lock_types) == 0:
-        used_lock_types = ["CL"]
-    if "CL" in used_lock_types:
-        lt = LockType.objects.create(name="Combination Lock", form_factor="CL")
-        lt.save()
-        Lock.objects.filter(form_factor="CL").update(form_factor=None, lock_type=lt)
-    if "EL" in used_lock_types:
-        lt = LockType.objects.create(name="Electronic Lock", form_factor="EL")
-        lt.save()
-        Lock.objects.filter(form_factor="EL").update(form_factor=None, lock_type=lt)
-
-
-def remove_lock_types(apps, schema_editor):
-    Lock = apps.get_model("bikesharing", "Lock")
-    LockType = apps.get_model("bikesharing", "LockType")
-    for lt in LockType.objects.all():
-        Lock.objects.filter(lock_type=lt).update(
-            form_factor=lt.form_factor, lock_type=None
-        )
-        lt.delete()
-
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -81,5 +53,4 @@ class Migration(migrations.Migration):
                 to="bikesharing.LockType",
             ),
         ),
-        migrations.RunPython(create_and_assign_lock_types, remove_lock_types),
     ]

@@ -4,7 +4,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("bikesharing", "0038_auto_20201020_1037"),
+        ("bikesharing", "0039_move_lock_types_20201020_1040"),
     ]
 
     operations = [
