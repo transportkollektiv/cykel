@@ -166,7 +166,7 @@ class Bike(models.Model):
 
     class Meta:
         permissions = [
-            ("maintain", "Can use maintainance UI"),
+            ("maintain", "Can use maintenance UI"),
         ]
 
 

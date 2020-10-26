@@ -62,7 +62,7 @@ class CanRentBikePermission(BasePermission):
         return request.user.has_perm("bikesharing.add_rent")
 
 
-class CanUseMaintainancePermission(BasePermission):
+class CanUseMaintenancePermission(BasePermission):
     """The request is authenticated as a user and has maintenance
     permission."""
 
@@ -214,11 +214,11 @@ def updatebikelocation(request):
 
 @api_view(["GET"])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
-@permission_classes([IsAuthenticated, CanUseMaintainancePermission])
 def getMaintenanceMapData(request):
     bikes = Bike.objects.filter(location__isnull=False).distinct()
     serializer = MaintenanceBikeSerializer(bikes, many=True)
     return Response(serializer.data)
+@permission_classes([IsAuthenticated, CanUseMaintenancePermission])
 
 
 class UserDetailsView(generics.RetrieveAPIView):

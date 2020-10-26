@@ -20,7 +20,7 @@ def testuser_jane_canrent(django_user_model):
 @pytest.fixture
 def testuser_mary_maintain(django_user_model):
     mary = django_user_model.objects.create(username="mary", password="maintain")
-    can_maintain_permission = Permission.objects.get(name="Can use maintainance UI")
+    can_maintain_permission = Permission.objects.get(name="Can use maintenance UI")
     mary.user_permissions.add(can_maintain_permission)
     return mary
 
