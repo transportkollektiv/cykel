@@ -31,7 +31,8 @@ class GbfsFreeBikeStatusSerializer(serializers.HyperlinkedModelSerializer):
         # defined by GBFS 2.1: Only if the vehicle has a motor the field is required
         if (
             instance.vehicle_type is not None
-            and instance.vehicle_type.propulsion_type == "human"
+            and instance.vehicle_type.propulsion_type
+            == VehicleType.PropulsionType.HUMAN
         ):
             representation.pop("current_range_meters")
         # Default to False TODO: maybe configuration later
@@ -92,12 +93,14 @@ class GbfsStationStatusSerializer(serializers.HyperlinkedModelSerializer):
         bsp = preferences.BikeSharePreferences
         if bsp.gbfs_hide_bikes_after_location_report_silence:
             available_bikes = obj.bike_set.filter(
-                availability_status="AV",
+                availability_status=Bike.Availability.AVAILABLE,
                 last_reported__gte=now()
                 - timedelta(hours=bsp.gbfs_hide_bikes_after_location_report_hours),
             )
         else:
-            available_bikes = obj.bike_set.filter(availability_status="AV")
+            available_bikes = obj.bike_set.filter(
+                availability_status=Bike.Availability.AVAILABLE
+            )
         vehicles = GbfsVehicleOnStationSerializer(available_bikes, many=True).data
         return list(filter(lambda val: val is not None, vehicles))
 
@@ -140,7 +143,7 @@ class GbfsStationStatusSerializer(serializers.HyperlinkedModelSerializer):
             map(drop_last_reported, representation["vehicles"])
         )
 
-        status = (instance.status == "AC") or False
+        status = (instance.status == Station.Status.ACTIVE) or False
         representation["is_installed"] = status
         representation["is_renting"] = status
         representation["is_returning"] = status
@@ -163,27 +166,27 @@ class GbfsVehicleTypeSerializer(serializers.HyperlinkedModelSerializer):
     form_factor = EnumFieldSerializer(
         read_only=True,
         mapping={
-            "BI": "bike",
-            "ES": "scooter",
-            "CA": "car",
-            "MO": "moped",
-            "OT": "other",
+            VehicleType.FormFactor.BIKE: "bike",
+            VehicleType.FormFactor.ESCOOTER: "scooter",
+            VehicleType.FormFactor.CAR: "car",
+            VehicleType.FormFactor.MOPED: "moped",
+            VehicleType.FormFactor.OTHER: "other",
         },
     )
     propulsion_type = EnumFieldSerializer(
         read_only=True,
         mapping={
-            "HU": "human",
-            "EA": "electric_assist",
-            "EL": "electric",
-            "CO": "combustion",
+            VehicleType.PropulsionType.HUMAN: "human",
+            VehicleType.PropulsionType.ELECTRIC_ASSIST: "electric_assist",
+            VehicleType.PropulsionType.ELECTRIC: "electric",
+            VehicleType.PropulsionType.COMBUSTION: "combustion",
         },
     )
 
     def to_representation(self, instance):
         data = super(GbfsVehicleTypeSerializer, self).to_representation(instance)
         # defined by GBFS 2.1: Only if the vehicle has a motor the field is required
-        if data["propulsion_type"] == "human":
+        if data["propulsion_type"] == VehicleType.PropulsionType.HUMAN:
             data.pop("max_range_meters")
         return data
 

@@ -9,66 +9,35 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.db.utils import IntegrityError
 from django.utils.timezone import now
+from django.utils.translation import gettext_lazy as _
 from preferences import preferences
 from preferences.models import Preferences
 
-bike_availability_status_choices = (
-    ("DI", "Disabled"),
-    ("IU", "In Use"),
-    ("AV", "Available"),
-)
-
-bike_state_status_choices = (
-    ("US", "Usable"),
-    ("BR", "Broken"),
-    ("IR", "In Repair"),
-    ("MI", "Missing"),
-)
-
-# These factors are defined by GBFS v2.1
-vehicle_form_factor_choices = (
-    ("BI", "Bike"),
-    ("ES", "E-Scooter"),
-    ("CA", "Car"),
-    ("MO", "Moped"),
-    ("OT", "Other"),
-)
-
-# These types are defined by GBFS v2.1
-vehicle_propulsion_type_choices = (
-    ("HU", "Human"),
-    ("EA", "Electric Assist"),
-    ("EL", "Electric"),
-    ("CO", "Combustion"),
-)
-
-lock_type_choices = (
-    ("CL", "Combination lock"),
-    ("EL", "Electronic Lock"),
-)
-
-station_status_choices = (
-    ("DI", "Disabled"),
-    ("AC", "Active"),
-)
-
-location_source_choices = (("LO", "Lock"), ("TR", "Tracker"), ("US", "User"))
-
-tracker_status_choices = (
-    ("AC", "Active"),
-    ("IN", "Inactive"),
-    ("MI", "Missing"),
-    ("DE", "Decommissioned"),
-)
-
 
 class VehicleType(models.Model):
+    class FormFactor(models.TextChoices):
+        """These factors are defined by GBFS v2.1."""
+
+        BIKE = "BI", _("Bike")
+        ESCOOTER = "ES", _("E-Scooter")
+        CAR = "CA", _("Car")
+        MOPED = "MO", _("Moped")
+        OTHER = "OT", _("Other")
+
+    class PropulsionType(models.TextChoices):
+        """These factors are defined by GBFS v2.1."""
+
+        HUMAN = "HU", _("Human")
+        ELECTRIC_ASSIST = "EA", _("Electric Assist")
+        ELECTRIC = "EL", _("Electric")
+        COMBUSTION = "CO", _("Combustion")
+
     name = models.CharField(default=None, null=True, blank=True, max_length=255)
     form_factor = models.CharField(
-        max_length=2, choices=vehicle_form_factor_choices, default="BI"
+        max_length=2, choices=FormFactor.choices, default=FormFactor.BIKE
     )
     propulsion_type = models.CharField(
-        max_length=2, choices=vehicle_propulsion_type_choices, default="HU"
+        max_length=2, choices=PropulsionType.choices, default=PropulsionType.HUMAN
     )
     max_range_meters = models.FloatField(
         default=None,
@@ -89,13 +58,22 @@ class VehicleType(models.Model):
 
 
 class Bike(models.Model):
+    class Availability(models.TextChoices):
+        DISABLED = "DI", _("Disabled")
+        IN_USE = "IU", _("In Use")
+        AVAILABLE = "AV", _("Available")
+
+    class State(models.TextChoices):
+        USABLE = "US", _("Usable")
+        BROKEN = "BR", _("Broken")
+        IN_REPAIR = "IR", _("In Repair")
+        MISSING = "MI", _("Missing")
+
     bike_number = models.CharField(max_length=8)
     availability_status = models.CharField(
-        max_length=2, choices=bike_availability_status_choices, default="DI"
+        max_length=2, choices=Availability.choices, default=Availability.DISABLED
     )
-    state = models.CharField(
-        max_length=2, choices=bike_state_status_choices, default="US"
-    )
+    state = models.CharField(max_length=2, choices=State.choices, default=State.USABLE)
     vehicle_type = models.ForeignKey(
         "VehicleType", on_delete=models.PROTECT, null=True, blank=True
     )
@@ -171,13 +149,19 @@ class Bike(models.Model):
 
 
 class LocationTracker(models.Model):
+    class Status(models.TextChoices):
+        ACTIVE = "AC", _("Active")
+        INACTIVE = "IN", _("Inactive")
+        MISSING = "MI", _("Missing")
+        DECOMMISSIONED = "DE", _("Decommissioned")
+
     bike = models.ForeignKey("Bike", on_delete=models.PROTECT, null=True, blank=True)
     device_id = models.CharField(default=None, null=False, blank=True, max_length=255)
     last_reported = models.DateTimeField(default=None, null=True, blank=True)
     battery_voltage = models.FloatField(default=None, null=True, blank=True)
     tracker_type = models.CharField(default=None, null=True, blank=True, max_length=255)
     tracker_status = models.CharField(
-        max_length=2, choices=tracker_status_choices, default="IN"
+        max_length=2, choices=Status.choices, default=Status.INACTIVE
     )
     internal = models.BooleanField(
         default=False,
@@ -197,6 +181,41 @@ class LocationTracker(models.Model):
 
     def __str__(self):
         return str(self.device_id)
+
+
+class LockType(models.Model):
+    class FormFactor(models.TextChoices):
+        COMBINATION_LOCK = "CL", _("Combination lock")
+        ELECTRONIC_LOCK = "EL", _("Electronic Lock")
+
+    name = models.CharField(default=None, null=True, blank=True, max_length=255)
+    form_factor = models.CharField(
+        max_length=2, choices=FormFactor.choices, default=FormFactor.COMBINATION_LOCK
+    )
+    endpoint_url = models.URLField(default=None, null=True, blank=True)
+
+    def __str__(self):
+        return str(self.name)
+
+
+class Lock(models.Model):
+    lock_id = models.CharField(editable=True, max_length=255)
+    lock_type = models.ForeignKey(
+        "LockType", on_delete=models.PROTECT, null=True, blank=True
+    )
+    unlock_key = models.CharField(editable=True, max_length=255, blank=True)
+
+    def __str__(self):
+        return "#{lock_id} ({lock_type})".format(
+            lock_id=self.lock_id, lock_type=self.lock_type
+        )
+
+    def __repr__(self):
+        return """#{lock_id} ({lock_type}) unlock_key={unlock_key}""".format(
+            lock_id=self.lock_id,
+            lock_type=self.lock_type,
+            unlock_key=self.unlock_key,
+        )
 
 
 class Rent(models.Model):
@@ -247,10 +266,10 @@ class Rent(models.Model):
         if lock_type is None:
             return {}
 
-        if lock_type.form_factor == "CL":
+        if lock_type.form_factor == LockType.FormFactor.COMBINATION_LOCK:
             return {"unlock_key": self.bike.lock.unlock_key}
 
-        if lock_type.form_factor == "EL":
+        if lock_type.form_factor == LockType.FormFactor.ELECTRONIC_LOCK:
             url = "{url}/{device_id}/unlock".format(
                 url=lock_type.endpoint_url, device_id=lock.lock_id
             )
@@ -274,7 +293,7 @@ class Rent(models.Model):
             max_distance = preferences.BikeSharePreferences.station_match_max_distance
             station_closer_than_Xm = Station.objects.filter(
                 location__distance_lte=(self.end_position, D(m=max_distance)),
-                status="AC",
+                status=Station.Status.ACTIVE,
             ).first()
             if station_closer_than_Xm:
                 self.bike.current_station = station_closer_than_Xm
@@ -284,7 +303,7 @@ class Rent(models.Model):
                 self.bike.current_station = None
 
         # set Bike status back to available
-        self.bike.availability_status = "AV"
+        self.bike.availability_status = Bike.Availability.AVAILABLE
         self.bike.save()
         try:
             # set new non static bike ID, so for GBFS observers can not track this bike
@@ -298,40 +317,13 @@ class Rent(models.Model):
             pass
 
 
-class LockType(models.Model):
-    name = models.CharField(default=None, null=True, blank=True, max_length=255)
-    form_factor = models.CharField(
-        max_length=2, choices=lock_type_choices, default="CL"
-    )
-    endpoint_url = models.URLField(default=None, null=True, blank=True)
-
-    def __str__(self):
-        return str(self.name)
-
-
-class Lock(models.Model):
-    lock_id = models.CharField(editable=True, max_length=255)
-    lock_type = models.ForeignKey(
-        "LockType", on_delete=models.PROTECT, null=True, blank=True
-    )
-    unlock_key = models.CharField(editable=True, max_length=255, blank=True)
-
-    def __str__(self):
-        return "#{lock_id} ({lock_type})".format(
-            lock_id=self.lock_id, lock_type=self.lock_type
-        )
-
-    def __repr__(self):
-        return """#{lock_id} ({lock_type}) unlock_key={unlock_key}""".format(
-            lock_id=self.lock_id,
-            lock_type=self.lock_type,
-            unlock_key=self.unlock_key,
-        )
-
-
 class Station(models.Model):
+    class Status(models.TextChoices):
+        DISABLED = "DI", _("Disabled")
+        ACTIVE = "AC", _("Active")
+
     status = models.CharField(
-        max_length=2, choices=station_status_choices, default="DI"
+        max_length=2, choices=Status.choices, default=Status.DISABLED
     )
     station_name = models.CharField(max_length=255)
     location = geomodels.PointField(default=None, null=True)
@@ -367,6 +359,11 @@ class BikeSharePreferences(Preferences):
 
 
 class Location(models.Model):
+    class Source(models.TextChoices):
+        LOCK = "LO", _("Lock")
+        TRACKER = "TR", _("Tracker")
+        USER = "US", _("User")
+
     bike = models.ForeignKey(
         "Bike", blank=True, null=True, default=None, on_delete=models.PROTECT
     )
@@ -374,9 +371,7 @@ class Location(models.Model):
         "LocationTracker", blank=True, null=True, default=None, on_delete=models.PROTECT
     )
     geo = geomodels.PointField(default=None, null=True, blank=True)
-    source = models.CharField(
-        max_length=2, choices=location_source_choices, default="LO"
-    )
+    source = models.CharField(max_length=2, choices=Source.choices, default=Source.LOCK)
     reported_at = models.DateTimeField(default=None, null=False, blank=False)
     accuracy = models.FloatField(default=None, null=True, blank=True)
     internal = models.BooleanField(

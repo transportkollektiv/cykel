@@ -11,7 +11,9 @@ from bikesharing.models import Bike, Location, LocationTracker, Station
 @pytest.fixture
 def available_bike():
     return Bike.objects.create(
-        availability_status="AV", bike_number="1337", last_reported=now()
+        availability_status=Bike.Availability.AVAILABLE,
+        bike_number="1337",
+        last_reported=now(),
     )
 
 
@@ -26,7 +28,7 @@ def location_of_available_bike(available_bike, tracker):
         bike=available_bike,
         tracker=tracker,
         internal=False,
-        source="TR",
+        source=Location.Source.TRACKER,
         reported_at=now(),
     )
     loc.geo = Point(9.95000, 48.35000, srid=4326)  # point is _not_ near a station
@@ -37,7 +39,7 @@ def location_of_available_bike(available_bike, tracker):
 @pytest.fixture
 def active_station():
     return Station.objects.create(
-        status="AC",
+        status=Station.Status.ACTIVE,
         station_name="Station McStationface",
         location=Point(9.99024, 48.39662, srid=4326),
         max_bikes=5,
