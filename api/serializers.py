@@ -13,7 +13,7 @@ from bikesharing.models import (
     Rent,
     Station,
 )
-from cykel.serializers import EnumFieldSerializer
+from cykel.serializers import MappedChoiceField
 
 
 class LockTypeSerializer(serializers.HyperlinkedModelSerializer):
@@ -183,23 +183,8 @@ class UserDetailsSerializer(serializers.ModelSerializer):
 
 class MaintenanceBikeSerializer(serializers.ModelSerializer):
     bike_id = serializers.CharField(source="non_static_bike_uuid", read_only=True)
-    availability_status = EnumFieldSerializer(
-        read_only=True,
-        mapping={
-            Bike.Availability.AVAILABLE: "available",
-            Bike.Availability.IN_USE: "in_use",
-            Bike.Availability.DISABLED: "disabled",
-        },
-    )
-    state = EnumFieldSerializer(
-        read_only=True,
-        mapping={
-            Bike.State.USABLE: "usable",
-            Bike.State.BROKEN: "broken",
-            Bike.State.IN_REPAIR: "in_repair",
-            Bike.State.MISSING: "missing",
-        },
-    )
+    availability_status = MappedChoiceField(choices=Bike.Availability)
+    state = MappedChoiceField(choices=Bike.State)
 
     class Meta:
         model = Bike
@@ -231,15 +216,7 @@ class MaintenanceBikeSerializer(serializers.ModelSerializer):
 
 
 class MaintenanceTrackerSerializer(serializers.ModelSerializer):
-    tracker_status = EnumFieldSerializer(
-        read_only=True,
-        mapping={
-            LocationTracker.Status.ACTIVE: "active",
-            LocationTracker.Status.INACTIVE: "inactive",
-            LocationTracker.Status.MISSING: "missing",
-            LocationTracker.Status.DECOMMISSIONED: "decommissioned",
-        },
-    )
+    tracker_status = MappedChoiceField(choices=LocationTracker.Status)
 
     class Meta:
         model = LocationTracker
@@ -265,13 +242,7 @@ class MaintenanceTrackerSerializer(serializers.ModelSerializer):
 
 
 class MaintenanceLockTypeSerializer(serializers.ModelSerializer):
-    form_factor = EnumFieldSerializer(
-        read_only=True,
-        mapping={
-            LockType.FormFactor.COMBINATION_LOCK: "combination",
-            LockType.FormFactor.ELECTRONIC_LOCK: "electronic",
-        },
-    )
+    form_factor = MappedChoiceField(choices=LockType.FormFactor)
 
     class Meta:
         model = LockType
