@@ -16,6 +16,8 @@ known_first_party = "api,bikesharing,cykel,eventphone_auth,gbfs,owncloud_auth"
 # look into the .flake8 file instead
 # [tool.flake8]
 
-# not yet there: https://github.com/pytest-dev/pytest/issues/1556
-# look into the setup.cfg file instead
-# [tool.pytest]
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "cykel.settings"
+filterwarnings = [
+    "ignore:.*ugettext_lazy\\(\\) is deprecated:django.utils.deprecation.RemovedInDjango40Warning:macaddress",
+]
