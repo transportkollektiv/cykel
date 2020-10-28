@@ -72,7 +72,7 @@ class CreateRentSerializer(serializers.HyperlinkedModelSerializer):
         super().save(**kwargs)
         # FIXME: This method contains too much self.instance. doesn't feel good.
         # Should this stuff go into the model?
-        self.instance.bike.availability_status = "IU"
+        self.instance.bike.availability_status = Bike.Availability.IN_USE
         self.instance.bike.save()
 
         if (
@@ -87,7 +87,7 @@ class CreateRentSerializer(serializers.HyperlinkedModelSerializer):
             self.instance.start_position = pos
 
             loc = Location.objects.create(
-                bike=self.instance.bike, source="US", reported_at=now()
+                bike=self.instance.bike, source=Location.Source.USER, reported_at=now()
             )
             loc.geo = pos
             loc.save()
@@ -104,7 +104,7 @@ class CreateRentSerializer(serializers.HyperlinkedModelSerializer):
     def validate_bike(self, value):
         # seems there is no way to get the already validated and expanded bike obj
         bike = Bike.objects.get(bike_number=value)
-        if bike.availability_status != "AV":
+        if bike.availability_status != Bike.Availability.AVAILABLE:
             raise serializers.ValidationError("bike is not available")
         return value
 

@@ -18,13 +18,15 @@ def tracker_client_with_apikey():
 
 @pytest.fixture
 def available_bike():
-    return Bike.objects.create(availability_status="AV", bike_number="1337")
+    return Bike.objects.create(
+        availability_status=Bike.Availability.AVAILABLE, bike_number="1337"
+    )
 
 
 @pytest.fixture
 def active_station():
     return Station.objects.create(
-        status="AC",
+        status=Station.Status.ACTIVE,
         station_name="Station McStationface",
         location=Point(9.99024, 48.39662, srid=4326),
     )

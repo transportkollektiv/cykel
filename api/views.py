@@ -122,7 +122,7 @@ class RentViewSet(
         end_position = None
         if lat and lng:
             loc = Location.objects.create(
-                bike=rent.bike, source="US", reported_at=now()
+                bike=rent.bike, source=Location.Source.USER, reported_at=now()
             )
             loc.geo = Point(float(lng), float(lat), srid=4326)
             loc.save()
@@ -179,7 +179,7 @@ def updatebikelocation(request):
     loc = None
 
     if lat and lng:
-        loc = Location.objects.create(source="TR", reported_at=now())
+        loc = Location.objects.create(source=Location.Source.TRACKER, reported_at=now())
         if tracker.bike:
             loc.bike = tracker.bike
         loc.geo = Point(float(lng), float(lat), srid=4326)
@@ -197,7 +197,8 @@ def updatebikelocation(request):
             # distance ist configured in prefernces
             max_distance = preferences.BikeSharePreferences.station_match_max_distance
             station_closer_than_Xm = Station.objects.filter(
-                location__distance_lte=(loc.geo, D(m=max_distance)), status="AC"
+                location__distance_lte=(loc.geo, D(m=max_distance)),
+                status=Station.Status.ACTIVE,
             ).first()
             if station_closer_than_Xm:
                 bike.current_station = station_closer_than_Xm
