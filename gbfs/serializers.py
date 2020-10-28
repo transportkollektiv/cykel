@@ -5,6 +5,7 @@ from preferences import preferences
 from rest_framework import fields, serializers
 
 from bikesharing.models import Bike, Station, VehicleType
+from cykel.serializers import EnumFieldSerializer
 
 
 class TimestampSerializer(fields.CharField):
@@ -148,17 +149,6 @@ class GbfsStationStatusSerializer(serializers.HyperlinkedModelSerializer):
         representation["is_renting"] = status
         representation["is_returning"] = status
         return representation
-
-
-class EnumFieldSerializer(fields.CharField):
-    def __init__(self, *args, **kwargs):
-        self.mapping = kwargs.pop("mapping", {})
-        super().__init__(*args, **kwargs)
-
-    def to_representation(self, value):
-        if value in self.mapping:
-            return self.mapping[value]
-        return value
 
 
 class GbfsVehicleTypeSerializer(serializers.HyperlinkedModelSerializer):
