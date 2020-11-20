@@ -7,7 +7,6 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
-import os
 from pathlib import Path
 
 import environ
@@ -163,8 +162,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
-PROJECT_ROOT = Path(__file__).resolve().parent
-STATIC_ROOT = os.path.abspath(os.path.join(PROJECT_ROOT, "..", "public"))
+STATIC_ROOT = BASE_DIR / "public"
 
 STATIC_URL = "/static/"
 
@@ -218,7 +216,7 @@ if OWNCLOUD_URL is not None:
 AUTOENROLLMENT_PROVIDERS = env.list("AUTOENROLLMENT_PROVIDERS", default=[])
 
 MEDIA_URL = "/media/"
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+MEDIA_ROOT = BASE_DIR / "media"
 
 SENTRY_DSN = env("SENTRY_DSN", default=None)
 if SENTRY_DSN is not None:
