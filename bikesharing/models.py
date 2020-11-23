@@ -148,6 +148,15 @@ class Bike(models.Model):
         ]
 
 
+class LocationTrackerType(models.Model):
+    name = models.CharField(default=None, null=True, blank=True, max_length=255)
+    battery_voltage_warning = models.FloatField(default=None, null=True, blank=True)
+    battery_voltage_critical = models.FloatField(default=None, null=True, blank=True)
+
+    def __str__(self):
+        return str(self.name)
+
+
 class LocationTracker(models.Model):
     class Status(models.TextChoices):
         ACTIVE = "AC", _("Active")
@@ -159,7 +168,9 @@ class LocationTracker(models.Model):
     device_id = models.CharField(default=None, null=False, blank=True, max_length=255)
     last_reported = models.DateTimeField(default=None, null=True, blank=True)
     battery_voltage = models.FloatField(default=None, null=True, blank=True)
-    tracker_type = models.CharField(default=None, null=True, blank=True, max_length=255)
+    tracker_type = models.ForeignKey(
+        "LocationTrackerType", on_delete=models.PROTECT, null=True, blank=True
+    )
     tracker_status = models.CharField(
         max_length=2, choices=Status.choices, default=Status.INACTIVE
     )

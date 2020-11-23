@@ -11,6 +11,7 @@ from .models import (
     BikeSharePreferences,
     Location,
     LocationTracker,
+    LocationTrackerType,
     Lock,
     LockType,
     Rent,
@@ -137,7 +138,10 @@ class LocationTrackerAdmin(LeafletGeoAdmin, admin.ModelAdmin):
         "battery_voltage",
         "tracker_status",
     )
-    list_filter = ("tracker_type", "tracker_status")
+    list_filter = (
+        "tracker_type",
+        "tracker_status",
+    )
     search_fields = ("device_id", "bike__bike_number")
     readonly_fields = ["location"]
     ordering = ["device_id"]
@@ -184,5 +188,6 @@ class StationAdmin(LeafletGeoAdmin, admin.ModelAdmin):
 
 
 admin.site.register(VehicleType, LeafletGeoAdmin)
+admin.site.register(LocationTrackerType, admin.ModelAdmin)
 admin.site.register(LockType, admin.ModelAdmin)
 admin.site.register(BikeSharePreferences, PreferencesAdmin)

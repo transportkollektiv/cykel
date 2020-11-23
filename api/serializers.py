@@ -217,6 +217,7 @@ class MaintenanceBikeSerializer(serializers.ModelSerializer):
 
 class MaintenanceTrackerSerializer(serializers.ModelSerializer):
     tracker_status = MappedChoiceField(choices=LocationTracker.Status)
+    tracker_type = serializers.StringRelatedField()
 
     class Meta:
         model = LocationTracker
