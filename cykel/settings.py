@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     "fragdenstaat_auth",
     "eventphone_auth",
     "allauth.socialaccount.providers.slack",
+    "admin_override",
     "gbfs",
     "corsheaders",
     "leaflet",
