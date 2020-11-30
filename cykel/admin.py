@@ -4,10 +4,10 @@ from django.utils.translation import gettext_lazy as _
 
 from .models import User
 
-
 admin.site.site_header = "openbike"
 admin.site.site_title = "openbike"
 admin.site.index_title = "openbike configuration"
+
 
 class CykelUserAdmin(UserAdmin):
     """Fork of UserAdmin, with all references to first_name, last_name and
