@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.humanize.templatetags.humanize import naturaltime
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils import formats, timezone
@@ -64,6 +65,7 @@ class BikeAdmin(LeafletGeoAdmin, admin.ModelAdmin):
         "availability_status",
         "state",
         "last_reported",
+        "last_rent",
     )
     list_filter = ("vehicle_type", "availability_status", "state")
     search_fields = ("bike_number", "non_static_bike_uuid")
@@ -84,6 +86,24 @@ class BikeAdmin(LeafletGeoAdmin, admin.ModelAdmin):
             )
         return "%s %s" % (public_info, internal_info)
 
+    location.allow_tags = True
+
+    @mark_safe
+    def last_rent(self, bike):
+        rent = bike.rent_set.last()
+        if rent is None:
+            return "-"
+        ts = rent.rent_end
+        if ts is None:
+            ts = rent.rent_start
+        if ts is None:
+            return "-"
+        return "<time datetime='{}' title='{}'>{}</time>".format(
+            ts, ts, naturaltime(ts)
+        )
+
+    last_rent.allow_tags = True
+
     @staticmethod
     def format_geolocation_text_with_source(geolocation):
         source = ""
@@ -99,8 +119,6 @@ class BikeAdmin(LeafletGeoAdmin, admin.ModelAdmin):
             format_geolocation_text(geolocation),
             source,
         )
-
-    location.allow_tags = True
 
 
 @admin.register(Rent)
