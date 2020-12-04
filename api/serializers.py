@@ -85,7 +85,6 @@ class CreateRentSerializer(serializers.HyperlinkedModelSerializer):
                 float(self.validated_data.get("lat")),
                 srid=4326,
             )
-            self.instance.start_position = pos
 
             loc = Location.objects.create(
                 bike=self.instance.bike, source=Location.Source.USER, reported_at=now()
@@ -95,9 +94,7 @@ class CreateRentSerializer(serializers.HyperlinkedModelSerializer):
             self.instance.start_location = loc
         else:
             if self.instance.bike.public_geolocation():
-                pub = self.instance.bike.public_geolocation()
-                self.instance.start_position = pub.geo
-                self.instance.start_location = pub
+                self.instance.start_location = self.instance.bike.public_geolocation()
             if self.instance.bike.current_station:
                 self.instance.start_station = self.instance.bike.current_station
 

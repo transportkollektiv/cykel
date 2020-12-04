@@ -204,9 +204,9 @@ def test_start_rent_logged_in_with_renting_rights_and_location_from_client(
     assert available_bike.availability_status == Bike.Availability.IN_USE
 
     rent = Rent.objects.get(id=rent_id)
-    assert rent.start_position is not None
-    assert rent.start_position.x == -89.99
-    assert rent.start_position.y == -99.99
+    assert rent.start_location is not None
+    assert rent.start_location.geo.x == -89.99
+    assert rent.start_location.geo.y == -99.99
 
 
 @pytest.mark.django_db
@@ -251,8 +251,9 @@ def test_end_rent_logged_in_with_renting_rights_and_location_from_bike(
 
     rent_jane_running.refresh_from_db()
     assert rent_jane_running.rent_end is not None
-    assert rent_jane_running.end_position.x == -89.99
-    assert rent_jane_running.end_position.y == -99.99
+    assert rent_jane_running.end_location is not None
+    assert rent_jane_running.end_location.geo.x == -89.99
+    assert rent_jane_running.end_location.geo.y == -99.99
 
     inuse_bike.refresh_from_db()
     assert inuse_bike.availability_status == Bike.Availability.AVAILABLE
@@ -277,8 +278,9 @@ def test_end_rent_logged_in_with_renting_rights_and_location_from_client(
 
     rent_jane_running.refresh_from_db()
     assert rent_jane_running.rent_end is not None
-    assert rent_jane_running.end_position.x == -89.99
-    assert rent_jane_running.end_position.y == -99.99
+    assert rent_jane_running.end_location is not None
+    assert rent_jane_running.end_location.geo.x == -89.99
+    assert rent_jane_running.end_location.geo.y == -99.99
 
     inuse_bike.refresh_from_db()
     assert inuse_bike.availability_status == Bike.Availability.AVAILABLE

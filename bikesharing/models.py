@@ -240,7 +240,6 @@ class Rent(models.Model):
         blank=True,
         related_name="%(class)s_start_location",
     )
-    start_position = geomodels.PointField(default=None, null=True)
     start_station = models.ForeignKey(
         "Station",
         default=None,
@@ -257,7 +256,6 @@ class Rent(models.Model):
         blank=True,
         related_name="%(class)s_end_location",
     )
-    end_position = geomodels.PointField(default=None, null=True)
     end_station = models.ForeignKey(
         "Station",
         default=None,
@@ -270,15 +268,16 @@ class Rent(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
 
     def __repr__(self):
-        return """Bike {bike} for User '{user}'\n  rented {rent_start}
-            from {start_position}/{start_station}\n  return {rent_end}
-            at {end_position}/{end_station}""".format(
+        return """Rent #{id}: Bike {bike} for User '{user}'\n  rented {rent_start}
+            from {start_location}/{start_station}\n  return {rent_end}
+            at {end_location}/{end_station}""".format(
+            id=self.id,
             bike=self.bike,
             user=self.user,
-            start_position=self.start_position,
+            start_location=self.start_location,
             start_station=self.start_station,
             rent_start=self.rent_start,
-            end_position=self.end_position,
+            end_location=self.end_location,
             end_station=self.end_station,
             rent_end=self.rent_end,
         )
@@ -306,28 +305,21 @@ class Rent(models.Model):
 
         return {}
 
-    def end(self, end_position=None):
+    def end(self, end_location=None):
         self.rent_end = now()
-        # deprecated:
-        if end_position is not None:
-            self.end_position = end_position.geo
-        elif self.bike.public_geolocation():
-            self.end_position = self.bike.public_geolocation().geo
-
-        # new:
-        if end_position:
-            self.end_location = end_position
+        if end_location:
+            self.end_location = end_location
         elif self.bike.public_geolocation():
             self.end_location = self.bike.public_geolocation()
 
         self.save()
 
-        if self.end_position:
+        if self.end_location:
             # attach bike to station if location is closer than X meters
             # distance is configured in preferences
             max_distance = preferences.BikeSharePreferences.station_match_max_distance
             station_closer_than_Xm = Station.objects.filter(
-                location__distance_lte=(self.end_position, D(m=max_distance)),
+                location__distance_lte=(self.end_location.geo, D(m=max_distance)),
                 status=Station.Status.ACTIVE,
             ).first()
             if station_closer_than_Xm:
@@ -398,6 +390,7 @@ class Location(models.Model):
         LOCK = "LO", _("Lock")
         TRACKER = "TR", _("Tracker")
         USER = "US", _("User")
+        SYSTEM = "SY", _("System")
 
     bike = models.ForeignKey(
         "Bike", blank=True, null=True, default=None, on_delete=models.PROTECT

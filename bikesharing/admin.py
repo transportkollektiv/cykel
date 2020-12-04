@@ -124,8 +124,6 @@ class RentAdmin(LeafletGeoAdmin, admin.ModelAdmin):
     list_filter = ("rent_start", "rent_end")
     search_fields = ("bike__bike_number", "user__username")
     readonly_fields = (
-        "start_position",
-        "end_position",
         "start_location_str",
         "end_location_str",
     )
