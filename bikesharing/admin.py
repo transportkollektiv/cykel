@@ -153,7 +153,7 @@ class LocationTrackerAdmin(LeafletGeoAdmin, admin.ModelAdmin):
         "tracker_type",
         "bike",
         "last_reported",
-        "battery_voltage",
+        "battery_voltage_status",
         "tracker_status",
     )
     list_filter = (
@@ -171,6 +171,31 @@ class LocationTrackerAdmin(LeafletGeoAdmin, admin.ModelAdmin):
         return format_geolocation_text(obj.current_geolocation())
 
     location.allow_tags = True
+
+    @mark_safe
+    def battery_voltage_status(self, obj):
+        if obj.battery_voltage is None:
+            return "-"
+        if obj.tracker_type is None:
+            return obj.battery_voltage
+        cssclass = ""
+        if (
+            obj.tracker_type.battery_voltage_critical is not None
+            and obj.tracker_type.battery_voltage_critical >= obj.battery_voltage
+        ):
+            cssclass = "critical"
+        elif (
+            obj.tracker_type.battery_voltage_warning is not None
+            and obj.tracker_type.battery_voltage_warning >= obj.battery_voltage
+        ):
+            cssclass = "warning"
+        if cssclass != "":
+            cssclass = "battery_voltage--" + cssclass
+        return "<span class='{}'>{}</span>".format(cssclass, obj.battery_voltage)
+
+    battery_voltage_status.allow_tags = True
+    battery_voltage_status.admin_order_field = "battery_voltage"
+    battery_voltage_status.short_description = "Battery Voltage"
 
     def get_urls(self):
         from django.urls import path
