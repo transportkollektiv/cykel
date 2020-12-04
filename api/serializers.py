@@ -1,7 +1,8 @@
 from allauth.socialaccount.models import SocialApp
+from django.contrib.admin.options import get_content_type_for_model
 from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import Point
-from django.utils.timezone import now
+from django.utils.timezone import now, timedelta
 from rest_framework import serializers
 
 from bikesharing.models import (
@@ -13,6 +14,7 @@ from bikesharing.models import (
     Rent,
     Station,
 )
+from cykel.models import CykelLogEntry
 from cykel.serializers import MappedChoiceField
 
 
@@ -154,6 +156,36 @@ class LocationTrackerUpdateSerializer(serializers.ModelSerializer):
     def save(self):
         self.instance.last_reported = now()
         super().save()
+
+        if (
+            self.instance.battery_voltage is not None
+            and self.instance.tracker_type is not None
+        ):
+            action_type = None
+            if (
+                self.instance.battery_voltage
+                <= self.instance.tracker_type.battery_voltage_critical
+            ):
+                action_type = "cykel.tracker.battery.critical"
+            elif (
+                self.instance.battery_voltage
+                <= self.instance.tracker_type.battery_voltage_warning
+            ):
+                action_type = "cykel.tracker.battery.warning"
+
+            if action_type is not None:
+                somehoursago = now() - timedelta(hours=48)
+                if not CykelLogEntry.objects.filter(
+                    content_type=get_content_type_for_model(self.instance),
+                    object_id=self.instance.pk,
+                    action_type=action_type,
+                    timestamp__gte=somehoursago,
+                ).exists():
+                    CykelLogEntry.objects.create(
+                        content_object=self.instance,
+                        action_type=action_type,
+                        data={"battery_voltage": self.instance.battery_voltage},
+                    )
 
     def validate(self, data):
         if (data.get("lat") is None and data.get("lng") is not None) or (
