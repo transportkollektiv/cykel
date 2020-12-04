@@ -5,6 +5,8 @@ from django.contrib.auth.models import (
     PermissionsMixin,
 )
 from django.contrib.auth.validators import UnicodeUsernameValidator
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -113,3 +115,26 @@ class User(AbstractBaseUser, PermissionsMixin):
         db_table = "auth_user"
         verbose_name = _("user")
         verbose_name_plural = _("users")
+
+
+class CykelLogEntry(models.Model):
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField(db_index=True)
+    content_object = GenericForeignKey("content_type", "object_id")
+    timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
+    action_type = models.CharField(max_length=200)
+    data = models.JSONField(null=True, blank=True)
+
+    class Meta:
+        ordering = ("-timestamp",)
+        verbose_name = "Log Entry"
+        verbose_name_plural = "Log Entries"
+
+    def delete(self, using=None, keep_parents=False):
+        raise TypeError("Logs cannot be deleted.")
+
+    def __str__(self):
+        return (
+            f"CykelLogEntry(content_object={self.content_object}, "
+            + f"action_type={self.action_type}, timestamp={self.timestamp})"
+        )

@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils.translation import gettext_lazy as _
 
-from .models import User
+from .models import CykelLogEntry, User
 
 admin.site.site_header = "openbike"
 admin.site.site_title = "openbike"
@@ -34,3 +34,15 @@ class CykelUserAdmin(UserAdmin):
 
 
 admin.site.register(User, CykelUserAdmin)
+
+
+@admin.register(CykelLogEntry)
+class CykelLogEntryAdmin(admin.ModelAdmin):
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
