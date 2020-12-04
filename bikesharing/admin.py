@@ -65,14 +65,14 @@ class LocationAdmin(LeafletGeoAdmin, admin.ModelAdmin):
 
 
 @admin.register(Lock)
-class LockAdmin(LeafletGeoAdmin, admin.ModelAdmin):
+class LockAdmin(admin.ModelAdmin):
     list_display = ("lock_id", "lock_type", "bike")
     list_filter = ("lock_type", "bike")
     readonly_fields = ("bike",)
 
 
 @admin.register(Bike)
-class BikeAdmin(LeafletGeoAdmin, admin.ModelAdmin):
+class BikeAdmin(admin.ModelAdmin):
     list_display = (
         "bike_number",
         "vehicle_type",
@@ -120,7 +120,7 @@ class BikeAdmin(LeafletGeoAdmin, admin.ModelAdmin):
 
 
 @admin.register(Rent)
-class RentAdmin(LeafletGeoAdmin, admin.ModelAdmin):
+class RentAdmin(admin.ModelAdmin):
     list_filter = ("rent_start", "rent_end")
     search_fields = ("bike__bike_number", "user__username")
     readonly_fields = (
@@ -164,7 +164,7 @@ class RentAdmin(LeafletGeoAdmin, admin.ModelAdmin):
 
 
 @admin.register(LocationTracker)
-class LocationTrackerAdmin(LeafletGeoAdmin, admin.ModelAdmin):
+class LocationTrackerAdmin(admin.ModelAdmin):
     list_display = (
         "device_id",
         "tracker_type",
@@ -247,7 +247,7 @@ class StationAdmin(LeafletGeoAdmin, admin.ModelAdmin):
         return ", ".join([k.bike_number for k in obj.bike_set.all()])
 
 
-admin.site.register(VehicleType, LeafletGeoAdmin)
+admin.site.register(VehicleType, admin.ModelAdmin)
 admin.site.register(LocationTrackerType, admin.ModelAdmin)
 admin.site.register(LockType, admin.ModelAdmin)
 admin.site.register(BikeSharePreferences, PreferencesAdmin)
