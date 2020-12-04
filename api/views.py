@@ -122,10 +122,11 @@ class RentViewSet(
         end_location = None
         if lat and lng:
             end_location = Location.objects.create(
-                bike=rent.bike, source=Location.Source.USER, reported_at=now()
+                bike=rent.bike,
+                source=Location.Source.USER,
+                reported_at=now(),
+                geo=Point(float(lng), float(lat), srid=4326),
             )
-            end_location.geo = Point(float(lng), float(lat), srid=4326)
-            end_location.save()
 
         rent.end(end_location)
 
@@ -178,11 +179,14 @@ def updatebikelocation(request):
     loc = None
 
     if lat and lng:
-        loc = Location.objects.create(source=Location.Source.TRACKER, reported_at=now())
+        loc = Location(
+            source=Location.Source.TRACKER,
+            reported_at=now(),
+            tracker=tracker,
+            geo=Point(float(lng), float(lat), srid=4326),
+        )
         if tracker.bike:
             loc.bike = tracker.bike
-        loc.geo = Point(float(lng), float(lat), srid=4326)
-        loc.tracker = tracker
         if accuracy:
             loc.accuracy = accuracy
         loc.save()

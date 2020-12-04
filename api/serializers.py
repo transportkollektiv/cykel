@@ -87,10 +87,11 @@ class CreateRentSerializer(serializers.HyperlinkedModelSerializer):
             )
 
             loc = Location.objects.create(
-                bike=self.instance.bike, source=Location.Source.USER, reported_at=now()
+                bike=self.instance.bike,
+                source=Location.Source.USER,
+                reported_at=now(),
+                geo=pos,
             )
-            loc.geo = pos
-            loc.save()
             self.instance.start_location = loc
         else:
             if self.instance.bike.public_geolocation():
