@@ -8,10 +8,13 @@ from django.contrib.gis.measure import D
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.db.utils import IntegrityError
+from django.dispatch import receiver
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from preferences import preferences
 from preferences.models import Preferences
+
+from cykel.models import CykelLogEntry
 
 
 class VehicleType(models.Model):
@@ -305,7 +308,7 @@ class Rent(models.Model):
 
         return {}
 
-    def end(self, end_location=None):
+    def end(self, end_location=None, force=False):
         self.rent_end = now()
         if end_location:
             self.end_location = end_location
@@ -342,6 +345,58 @@ class Rent(models.Model):
             # So we catch this error here, but don't handle it.
             # because don't rotating a uuid every 18,446,744,073,709,551,615 rents is ok
             pass
+
+        if self.end_station:
+            CykelLogEntry.objects.create(
+                content_object=self.bike,
+                action_type="cykel.bike.rent.finished.station",
+                data={
+                    "rent_id": self.id,
+                    "trip_duration": int(
+                        (self.rent_end - self.rent_start).total_seconds()
+                    ),
+                    "station_id": self.end_station.id,
+                    **({"forced": True} if force else {}),
+                },
+            )
+        else:
+            CykelLogEntry.objects.create(
+                content_object=self.bike,
+                action_type="cykel.bike.rent.finished.freefloat",
+                data={
+                    "rent_id": self.id,
+                    "trip_duration": int(
+                        (self.rent_end - self.rent_start).total_seconds()
+                    ),
+                    "location_id": getattr(self.end_location, "id", None),
+                    **({"forced": True} if force else {}),
+                },
+            )
+
+
+@receiver(models.signals.post_save, sender=Rent)
+def rent_started(sender, instance, created, *args, **kwargs):
+    # only interested in the first save
+    if not created:
+        return
+    if instance.start_station:
+        CykelLogEntry.objects.create(
+            content_object=instance.bike,
+            action_type="cykel.bike.rent.started.station",
+            data={
+                "rent_id": instance.id,
+                "station_id": instance.start_station.id,
+            },
+        )
+    else:
+        CykelLogEntry.objects.create(
+            content_object=instance.bike,
+            action_type="cykel.bike.rent.started.freefloat",
+            data={
+                "rent_id": instance.id,
+                "location_id": getattr(instance.start_location, "id", None),
+            },
+        )
 
 
 class Station(models.Model):

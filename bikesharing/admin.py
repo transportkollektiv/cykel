@@ -157,7 +157,7 @@ class RentAdmin(admin.ModelAdmin):
 
     def force_end(self, request, queryset):
         for rent in queryset:
-            rent.end()
+            rent.end(force=True)
 
     force_end.short_description = "Force end selected rents"
     force_end.allowed_permissions = ("change",)
