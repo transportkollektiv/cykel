@@ -1,9 +1,10 @@
 from allauth.socialaccount.models import SocialApp
+from django.contrib.admin.options import get_content_type_for_model
 from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import D
 from django.contrib.sites.shortcuts import get_current_site
-from django.utils.timezone import now
+from django.utils.timezone import now, timedelta
 from preferences import preferences
 from rest_framework import exceptions, generics, mixins, status, viewsets
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
@@ -24,6 +25,7 @@ from rest_framework.views import exception_handler
 from rest_framework_api_key.permissions import HasAPIKey
 
 from bikesharing.models import Bike, Location, LocationTracker, Rent, Station
+from cykel.models import CykelLogEntry
 
 from .serializers import (
     BikeSerializer,
@@ -209,6 +211,35 @@ def updatebikelocation(request):
                 bike.current_station = None
 
         bike.save()
+
+    someminutesago = now() - timedelta(minutes=15)
+    data = {}
+    if loc:
+        data = {"location_id": loc.id}
+
+    if tracker.tracker_status == LocationTracker.Status.MISSING:
+        action_type = "cykel.tracker.missing_reporting"
+        if not CykelLogEntry.objects.filter(
+            content_type=get_content_type_for_model(tracker),
+            object_id=tracker.pk,
+            action_type=action_type,
+            timestamp__gte=someminutesago,
+        ).exists():
+            CykelLogEntry.objects.create(
+                content_object=tracker, action_type=action_type, data=data
+            )
+
+    if tracker.bike and tracker.bike.state == Bike.State.MISSING:
+        action_type = "cykel.bike.missing_reporting"
+        if not CykelLogEntry.objects.filter(
+            content_type=get_content_type_for_model(tracker.bike),
+            object_id=tracker.bike.pk,
+            action_type=action_type,
+            timestamp__gte=someminutesago,
+        ).exists():
+            CykelLogEntry.objects.create(
+                content_object=tracker.bike, action_type=action_type, data=data
+            )
 
     if not loc:
         return Response({"success": True, "warning": "lat/lng missing"})
