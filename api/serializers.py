@@ -92,11 +92,12 @@ class CreateRentSerializer(serializers.HyperlinkedModelSerializer):
             )
             loc.geo = pos
             loc.save()
+            self.instance.start_location = loc
         else:
             if self.instance.bike.public_geolocation():
-                self.instance.start_position = (
-                    self.instance.bike.public_geolocation().geo
-                )
+                pub = self.instance.bike.public_geolocation()
+                self.instance.start_position = pub.geo
+                self.instance.start_location = pub
             if self.instance.bike.current_station:
                 self.instance.start_station = self.instance.bike.current_station
 

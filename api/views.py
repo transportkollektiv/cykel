@@ -119,16 +119,15 @@ class RentViewSet(
                 {"error": "rent was already finished"}, status=status.HTTP_410_GONE
             )
 
-        end_position = None
+        end_location = None
         if lat and lng:
-            loc = Location.objects.create(
+            end_location = Location.objects.create(
                 bike=rent.bike, source=Location.Source.USER, reported_at=now()
             )
-            loc.geo = Point(float(lng), float(lat), srid=4326)
-            loc.save()
-            end_position = loc.geo
+            end_location.geo = Point(float(lng), float(lat), srid=4326)
+            end_location.save()
 
-        rent.end(end_position)
+        rent.end(end_location)
 
         return Response({"success": True})
 

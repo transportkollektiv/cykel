@@ -42,6 +42,20 @@ def format_geolocation_text(geolocation):
     )
 
 
+def format_geolocation_text_with_source(geolocation):
+    source = ""
+    if geolocation.tracker:
+        tracker = geolocation.tracker
+        source = " (source: <a href='{url}'>tracker {device_id}</a>)".format(
+            url=reverse("admin:bikesharing_locationtracker_change", args=(tracker.id,)),
+            device_id=tracker.device_id,
+        )
+    return "%s%s" % (
+        format_geolocation_text(geolocation),
+        source,
+    )
+
+
 @admin.register(Location)
 class LocationAdmin(LeafletGeoAdmin, admin.ModelAdmin):
     list_display = ("bike", "tracker", "geo", "source", "reported_at")
@@ -78,11 +92,11 @@ class BikeAdmin(LeafletGeoAdmin, admin.ModelAdmin):
         internal_info = ""
         if bike.public_geolocation():
             public_info = "Public: %s<br>" % (
-                self.format_geolocation_text_with_source(bike.public_geolocation())
+                format_geolocation_text_with_source(bike.public_geolocation())
             )
         if bike.internal_geolocation():
             internal_info = "Internal: %s" % (
-                self.format_geolocation_text_with_source(bike.internal_geolocation())
+                format_geolocation_text_with_source(bike.internal_geolocation())
             )
         return "%s %s" % (public_info, internal_info)
 
@@ -104,27 +118,18 @@ class BikeAdmin(LeafletGeoAdmin, admin.ModelAdmin):
 
     last_rent.allow_tags = True
 
-    @staticmethod
-    def format_geolocation_text_with_source(geolocation):
-        source = ""
-        if geolocation.tracker:
-            tracker = geolocation.tracker
-            source = " (source: <a href='{url}'>tracker {device_id}</a>)".format(
-                url=reverse(
-                    "admin:bikesharing_locationtracker_change", args=(tracker.id,)
-                ),
-                device_id=tracker.device_id,
-            )
-        return "%s%s" % (
-            format_geolocation_text(geolocation),
-            source,
-        )
-
 
 @admin.register(Rent)
 class RentAdmin(LeafletGeoAdmin, admin.ModelAdmin):
     list_filter = ("rent_start", "rent_end")
     search_fields = ("bike__bike_number", "user__username")
+    readonly_fields = (
+        "start_position",
+        "end_position",
+        "start_location_str",
+        "end_location_str",
+    )
+    exclude = ("start_location", "end_location")
     actions = ["force_end"]
 
     def get_list_display(self, request):
@@ -137,6 +142,20 @@ class RentAdmin(LeafletGeoAdmin, admin.ModelAdmin):
         if not request.user.has_perm("cykel.view_user"):
             default_fields.remove("user")
         return default_fields
+
+    @mark_safe
+    def start_location_str(self, obj):
+        return format_geolocation_text_with_source(obj.start_location)
+
+    start_location_str.allow_tags = True
+    start_location_str.short_description = "Start location"
+
+    @mark_safe
+    def end_location_str(self, obj):
+        return format_geolocation_text_with_source(obj.end_location)
+
+    end_location_str.allow_tags = True
+    end_location_str.short_description = "End location"
 
     def force_end(self, request, queryset):
         for rent in queryset:

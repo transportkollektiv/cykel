@@ -232,6 +232,14 @@ class Lock(models.Model):
 class Rent(models.Model):
     rent_start = models.DateTimeField()
     rent_end = models.DateTimeField(default=None, null=True, blank=True)
+    start_location = models.ForeignKey(
+        "Location",
+        default=None,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="%(class)s_start_location",
+    )
     start_position = geomodels.PointField(default=None, null=True)
     start_station = models.ForeignKey(
         "Station",
@@ -240,6 +248,14 @@ class Rent(models.Model):
         null=True,
         blank=True,
         related_name="%(class)s_start_station",
+    )
+    end_location = models.ForeignKey(
+        "Location",
+        default=None,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="%(class)s_end_location",
     )
     end_position = geomodels.PointField(default=None, null=True)
     end_station = models.ForeignKey(
@@ -292,10 +308,18 @@ class Rent(models.Model):
 
     def end(self, end_position=None):
         self.rent_end = now()
+        # deprecated:
         if end_position is not None:
-            self.end_position = end_position
+            self.end_position = end_position.geo
         elif self.bike.public_geolocation():
             self.end_position = self.bike.public_geolocation().geo
+
+        # new:
+        if end_position:
+            self.end_location = end_position
+        elif self.bike.public_geolocation():
+            self.end_location = self.bike.public_geolocation()
+
         self.save()
 
         if self.end_position:
