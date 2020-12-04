@@ -36,6 +36,10 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={'ordering': ('-timestamp',), 'verbose_name': 'Log Entry', 'verbose_name_plural': 'Log Entries'},
+            options={
+                "ordering": ("-timestamp",),
+                "verbose_name": "Log Entry",
+                "verbose_name_plural": "Log Entries",
+            },
         ),
     ]
