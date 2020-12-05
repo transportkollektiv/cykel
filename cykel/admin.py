@@ -38,6 +38,9 @@ admin.site.register(User, CykelUserAdmin)
 
 @admin.register(CykelLogEntry)
 class CykelLogEntryAdmin(admin.ModelAdmin):
+    list_display_links = None
+    list_display = ("timestamp", "content_type", "content_object", "action_type", "data")
+
     def has_add_permission(self, request):
         return False
 
