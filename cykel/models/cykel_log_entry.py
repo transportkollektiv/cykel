@@ -6,27 +6,32 @@ from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
+# log texts that only contain {object}
 LOG_TEXTS_BASIC = {
-    "cykel.bike.rent.unlock": _("has been unlocked"),
-    "cykel.bike.missing_reporting": _("(missing) reported its status again!"),
-    "cykel.tracker.missing_reporting": _("(missing) reported its status again!"),
+    "cykel.bike.rent.unlock": _("{object} has been unlocked"),
+    "cykel.bike.missing_reporting": _("{object} (missing) reported its status again!"),
+    "cykel.tracker.missing_reporting": _(
+        "{object} (missing) reported its status again!"
+    ),
 }
 
 LOG_TEXTS = {
     "cykel.bike.rent.finished.station": _(
-        "finished rent at Station {station} with rent {rent}"
+        "{object} finished rent at Station {station} with rent {rent}"
     ),
     "cykel.bike.rent.finished.freefloat": _(
-        "finished rent freefloating at {location} with rent {rent}"
+        "{object} finished rent freefloating at {location} with rent {rent}"
     ),
     "cykel.bike.rent.started.station": _(
-        "began rent at Station {station} with rent {rent}"
+        "{object} began rent at Station {station} with rent {rent}"
     ),
     "cykel.bike.rent.started.freefloat": _(
-        "began rent freefloating at {location} with rent {rent}"
+        "{object} began rent freefloating at {location} with rent {rent}"
     ),
-    "cykel.tracker.battery.critical": _("had critical battery voltage {voltage} V"),
-    "cykel.tracker.battery.warning": _("had low battery voltage {voltage} V"),
+    "cykel.tracker.battery.critical": _(
+        "{object} had critical battery voltage {voltage} V"
+    ),
+    "cykel.tracker.battery.warning": _("{object} had low battery voltage {voltage} V"),
 }
 
 
@@ -62,6 +67,7 @@ class CykelLogEntry(models.Model):
 
         text = None
         data = None
+
         if isinstance(co, Bike):
             text = _("Bike {ref}")
             data = {
@@ -71,6 +77,7 @@ class CykelLogEntry(models.Model):
                 ),
                 "ref": co.bike_number,
             }
+
         if isinstance(co, LocationTracker):
             text = _("Tracker {ref}")
             data = {
@@ -80,6 +87,7 @@ class CykelLogEntry(models.Model):
                 ),
                 "ref": co.device_id,
             }
+
         if text and data:
             data["ref"] = format_html('<a href="{url}">{ref}</a>', **data)
             return format_html(text, **data)
@@ -91,11 +99,13 @@ class CykelLogEntry(models.Model):
         from bikesharing.models import Location
 
         if self.action_type in LOG_TEXTS_BASIC:
-            return LOG_TEXTS_BASIC[self.action_type]
+            return format_html(
+                LOG_TEXTS_BASIC[self.action_type], object=self.display_object()
+            )
 
         if self.action_type in LOG_TEXTS:
             fmt = LOG_TEXTS[self.action_type]
-            data = {}
+            data = {"object": self.display_object()}
 
             if self.action_type.startswith("cykel.tracker.battery."):
                 data["voltage"] = self.data["voltage"]

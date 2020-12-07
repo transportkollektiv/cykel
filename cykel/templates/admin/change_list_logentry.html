@@ -20,7 +20,7 @@
       <tbody>
         {% for result in cl.result_list %}
           <tr>
-            <td>{{ result.display_object }} {{ result.display }}</td>
+            <td>{{ result.display }}</td>
             <td><time datetime="{{ result.timestamp | date:'c' }}">{{ result.timestamp | naturaltime }}</time></td>
           </tr>
         {% endfor %}
