@@ -184,7 +184,7 @@ class LocationTrackerUpdateSerializer(serializers.ModelSerializer):
                     CykelLogEntry.objects.create(
                         content_object=self.instance,
                         action_type=action_type,
-                        data={"battery_voltage": self.instance.battery_voltage},
+                        data={"voltage": self.instance.battery_voltage},
                     )
 
     def validate(self, data):
