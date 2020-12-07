@@ -9,7 +9,7 @@ class CykelLogEntry(models.Model):
     content_object = GenericForeignKey("content_type", "object_id")
     timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
     action_type = models.CharField(max_length=200)
-    data = models.JSONField(null=True, blank=True)
+    data = models.JSONField(default=dict)
 
     class Meta:
         ordering = ("-timestamp",)

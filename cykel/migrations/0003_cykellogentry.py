@@ -27,7 +27,7 @@ class Migration(migrations.Migration):
                 ("object_id", models.PositiveIntegerField(db_index=True)),
                 ("timestamp", models.DateTimeField(auto_now_add=True, db_index=True)),
                 ("action_type", models.CharField(max_length=200)),
-                ("data", models.JSONField(blank=True, null=True)),
+                ("data", models.JSONField(default=dict)),
                 (
                     "content_type",
                     models.ForeignKey(
