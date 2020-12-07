@@ -1,6 +1,33 @@
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+from django.urls import reverse
+from django.utils.html import format_html
+from django.utils.translation import gettext_lazy as _
+
+LOG_TEXTS_BASIC = {
+    "cykel.bike.rent.unlock": _("has been unlocked"),
+    "cykel.bike.missing_reporting": _("(missing) reported its status again!"),
+    "cykel.tracker.missing_reporting": _("(missing) reported its status again!"),
+}
+
+LOG_TEXTS = {
+    "cykel.bike.rent.finished.station": _(
+        "finished rent at Station {station} with rent {rent}"
+    ),
+    "cykel.bike.rent.finished.freefloat": _(
+        "finished rent freefloating at {location} with rent {rent}"
+    ),
+    "cykel.bike.rent.started.station": _(
+        "began rent at Station {station} with rent {rent}"
+    ),
+    "cykel.bike.rent.started.freefloat": _(
+        "began rent freefloating at {location} with rent {rent}"
+    ),
+    "cykel.tracker.battery.critical": _("had critical battery voltage {voltage} V"),
+    "cykel.tracker.battery.warning": _("had low battery voltage {voltage} V"),
+}
 
 
 class CykelLogEntry(models.Model):
@@ -24,3 +51,93 @@ class CykelLogEntry(models.Model):
             f"CykelLogEntry(content_object={self.content_object}, "
             + f"action_type={self.action_type}, timestamp={self.timestamp})"
         )
+
+    def display_object(self):
+        from bikesharing.models import Bike, LocationTracker
+
+        try:
+            co = self.content_object
+        except ObjectDoesNotExist:
+            return ""
+
+        text = None
+        data = None
+        if isinstance(co, Bike):
+            text = _("Bike {ref}")
+            data = {
+                "url": reverse(
+                    "admin:%s_%s_change" % (co._meta.app_label, co._meta.model_name),
+                    args=[co.id],
+                ),
+                "ref": co.bike_number,
+            }
+        if isinstance(co, LocationTracker):
+            text = _("Tracker {ref}")
+            data = {
+                "url": reverse(
+                    "admin:%s_%s_change" % (co._meta.app_label, co._meta.model_name),
+                    args=[co.id],
+                ),
+                "ref": co.device_id,
+            }
+        if text and data:
+            data["ref"] = format_html('<a href="{url}">{ref}</a>', **data)
+            return format_html(text, **data)
+        elif text:
+            return text
+        return ""
+
+    def display(self):
+        from bikesharing.models import Location
+
+        if self.action_type in LOG_TEXTS_BASIC:
+            return LOG_TEXTS_BASIC[self.action_type]
+
+        if self.action_type in LOG_TEXTS:
+            fmt = LOG_TEXTS[self.action_type]
+            data = {}
+
+            if self.action_type.startswith("cykel.tracker.battery."):
+                data["voltage"] = self.data["voltage"]
+
+            if self.action_type.startswith("cykel.bike.rent."):
+                rent_id = self.data["rent_id"]
+                rent_url = reverse("admin:bikesharing_rent_change", args=[rent_id])
+                data["rent"] = format_html(
+                    '<a href="{url}">{ref}</a>', url=rent_url, ref=rent_id
+                )
+
+            if self.action_type.startswith(
+                "cykel.bike.rent."
+            ) and self.action_type.endswith(".station"):
+                station_id = self.data["station_id"]
+                station_url = reverse(
+                    "admin:bikesharing_station_change", args=[station_id]
+                )
+                data["station"] = format_html(
+                    '<a href="{url}">{ref}</a>', url=station_url, ref=station_id
+                )
+
+            if self.action_type.startswith(
+                "cykel.bike.rent."
+            ) and self.action_type.endswith(".freefloat"):
+                location_id = self.data["location_id"]
+                if location_id:
+                    try:
+                        loc = Location.objects.get(pk=location_id)
+                        ref = "{}, {}".format(loc.geo.y, loc.geo.x)
+                    except ObjectDoesNotExist:
+                        ref = location_id
+
+                    location_url = reverse(
+                        "admin:bikesharing_location_change", args=[location_id]
+                    )
+                    data["location"] = format_html(
+                        '<a href="{url}">{ref}</a>', url=location_url, ref=ref
+                    )
+                else:
+                    data["location"] = "[unknown]"
+
+            return format_html(fmt, **data)
+
+        return self.action_type

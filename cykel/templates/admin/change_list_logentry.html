@@ -1,0 +1,33 @@
+{% extends "admin/change_list.html" %}
+{% load i18n admin_urls static admin_list humanize %}
+
+{% block content %}
+<div id="content-main">
+  {% block result_list %}
+    <table id="result_list">
+      <thead>
+        <tr>
+          <th scope="col" class="sortable column-timestamp sorted descending">
+            <div class="text">Log Entry</div>
+            <div class="clear"></div>
+          </th>
+          <th scope="col" class="sortable column-content_type">
+            <div class="text">Timestamp</div>
+            <div class="clear"></div>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for result in cl.result_list %}
+          <tr>
+            <td>{{ result.display_object }} {{ result.display }}</td>
+            <td><time datetime="{{ result.timestamp | date:'c' }}">{{ result.timestamp | naturaltime }}</time></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endblock %}
+
+  {% block pagination %}{% pagination cl %}{% endblock %}
+</div>
+{% endblock %}

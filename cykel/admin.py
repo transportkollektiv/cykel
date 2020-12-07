@@ -38,6 +38,8 @@ admin.site.register(User, CykelUserAdmin)
 
 @admin.register(CykelLogEntry)
 class CykelLogEntryAdmin(admin.ModelAdmin):
+    change_list_template = "admin/change_list_logentry.html"
+
     list_display_links = None
     list_display = (
         "timestamp",
