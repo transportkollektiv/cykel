@@ -28,6 +28,12 @@ LOG_TEXTS = {
     "cykel.bike.rent.started.freefloat": _(
         "{object} began rent freefloating at {location} with rent {rent}"
     ),
+    "cykel.bike.tracker.battery.critical": _(
+        "{object} (on Bike {bike}) had critical battery voltage {voltage} V"
+    ),
+    "cykel.bike.tracker.battery.warning": _(
+        "{object} (on Bike {bike}) had low battery voltage {voltage} V"
+    ),
     "cykel.tracker.battery.critical": _(
         "{object} had critical battery voltage {voltage} V"
     ),
@@ -96,7 +102,7 @@ class CykelLogEntry(models.Model):
         return ""
 
     def display(self):
-        from bikesharing.models import Location
+        from bikesharing.models import Bike, Location
 
         if self.action_type in LOG_TEXTS_BASIC:
             return format_html(
@@ -107,8 +113,22 @@ class CykelLogEntry(models.Model):
             fmt = LOG_TEXTS[self.action_type]
             data = {"object": self.display_object()}
 
-            if self.action_type.startswith("cykel.tracker.battery."):
+            if self.action_type.startswith(
+                "cykel.bike.tracker.battery."
+            ) or self.action_type.startswith("cykel.tracker.battery."):
                 data["voltage"] = self.data["voltage"]
+
+            if self.action_type.startswith("cykel.bike.tracker."):
+                bike_id = self.data["bike_id"]
+                try:
+                    bike = Bike.objects.get(pk=bike_id)
+                    ref = bike.bike_number
+                except ObjectDoesNotExist:
+                    ref = bike_id
+                bike_url = reverse("admin:bikesharing_bike_change", args=[bike_id])
+                data["bike"] = format_html(
+                    '<a href="{url}">{ref}</a>', url=bike_url, ref=ref
+                )
 
             if self.action_type.startswith("cykel.bike.rent."):
                 rent_id = self.data["rent_id"]

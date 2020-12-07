@@ -161,19 +161,27 @@ class LocationTrackerUpdateSerializer(serializers.ModelSerializer):
             self.instance.battery_voltage is not None
             and self.instance.tracker_type is not None
         ):
+            data = {"voltage": self.instance.battery_voltage}
             action_type = None
+            action_type_prefix = "cykel.tracker"
+
+            if self.instance.bike:
+                data["bike_id"] = self.instance.bike.pk
+                action_type_prefix = "cykel.bike.tracker"
+
             if (
                 self.instance.battery_voltage
                 <= self.instance.tracker_type.battery_voltage_critical
             ):
-                action_type = "cykel.tracker.battery.critical"
+                action_type = "battery.critical"
             elif (
                 self.instance.battery_voltage
                 <= self.instance.tracker_type.battery_voltage_warning
             ):
-                action_type = "cykel.tracker.battery.warning"
+                action_type = "battery.warning"
 
             if action_type is not None:
+                action_type = "{}.{}".format(action_type_prefix, action_type)
                 somehoursago = now() - timedelta(hours=48)
                 if not CykelLogEntry.objects.filter(
                     content_type=get_content_type_for_model(self.instance),
@@ -182,9 +190,7 @@ class LocationTrackerUpdateSerializer(serializers.ModelSerializer):
                     timestamp__gte=somehoursago,
                 ).exists():
                     CykelLogEntry.objects.create(
-                        content_object=self.instance,
-                        action_type=action_type,
-                        data={"voltage": self.instance.battery_voltage},
+                        content_object=self.instance, action_type=action_type, data=data
                     )
 
     def validate(self, data):
