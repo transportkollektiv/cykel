@@ -170,12 +170,14 @@ class LocationTrackerUpdateSerializer(serializers.ModelSerializer):
                 action_type_prefix = "cykel.bike.tracker"
 
             if (
-                self.instance.battery_voltage
+                self.instance.tracker_type.battery_voltage_critical is not None
+                and self.instance.battery_voltage
                 <= self.instance.tracker_type.battery_voltage_critical
             ):
                 action_type = "battery.critical"
             elif (
-                self.instance.battery_voltage
+                self.instance.tracker_type.battery_voltage_warning is not None
+                and self.instance.battery_voltage
                 <= self.instance.tracker_type.battery_voltage_warning
             ):
                 action_type = "battery.warning"
