@@ -36,6 +36,8 @@ from .serializers import (
     UserDetailsSerializer,
 )
 
+from django.http import  JsonResponse
+from bikesharing.models import Station
 
 class BikeViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Bike.objects.all()
@@ -252,7 +254,7 @@ class LoginProviderViewSet(
     serializer_class = SocialAppSerializer
 
     def get_queryset(self):
-        return SocialApp.objects.filter(sites__id=get_current_site(self.request).id)
+        return  SocialApp.objects.filter(sites__id=get_current_site(self.request).id)
 
 
 def custom_exception_handler(exc, context):
@@ -289,3 +291,19 @@ def custom_exception_handler(exc, context):
 
     data = {"errors": errors, "message": "\n".join(messages)}
     return Response(data, status=response.status_code, headers=headers)
+
+
+@api_view(["POST"])
+@permission_classes([])
+def get_station_locations(request):
+    query = Station.objects.values_list('station_name', 'location')
+    locations = []
+    for station in query:
+        locations.append({
+            'name': station[0], 
+            'location' : 
+                {'lng' : station[1][0], 'lat' : station[1][1]}
+        })
+
+    response = JsonResponse(locations, safe=False)
+    return response
