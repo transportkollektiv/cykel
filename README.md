@@ -2,6 +2,8 @@
 
 Basic backend for a mobility sharing service. First steps made at [CCCamp 2019](https://events.ccc.de/camp/2019/wiki/Main_Page), now developed, daily used and tested in [the City of Ulm](https://ulm.dev/projects/openbike/).
 
+OpenBike consists of more parts than just cykel - you might want to have a look into the whole [OpenBike Project Documentation](https://docs.openbike.ulm.dev), which also contains installation guidelines for the other parts and operator documentation for running an OpenBike based sharing system.
+
 ## Prerequisites
 
 * Python (≥3.7)
