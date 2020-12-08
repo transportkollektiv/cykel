@@ -127,6 +127,9 @@ DATABASES = {
     )
 }
 
+# Celery / Redis
+
+CELERY_BROKER_URL = env.str("REDIS_URL", default="redis://localhost:6379/0")
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators

@@ -8,6 +8,8 @@ services:
     environment:
       - POSTGRES_DB=cykel
       - POSTGRES_PASSWORD=password
+  redis:
+    image: redis
   cykel:
     build: .
     command: python manage.py runserver 0.0.0.0:8000
@@ -20,8 +22,10 @@ services:
       - ALLOWED_HOSTS=0.0.0.0,localhost
       - DEBUG=1
       - DATABASE_URL=postgis://postgres:password@db:5432/cykel
+      - REDIS_URL=redis://redis:6379/0
     depends_on:
       - db
+      - redis
   voorwiel:
     image: stadtulm/voorwiel
     ports:
