@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.humanize.templatetags.humanize import naturaltime
+from django.db.models import Max
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils import formats, timezone
@@ -86,6 +87,11 @@ class BikeAdmin(admin.ModelAdmin):
     readonly_fields = ("location", "non_static_bike_uuid")
     ordering = ["bike_number"]
 
+    def get_queryset(self, request):
+        qs = super(BikeAdmin, self).get_queryset(request)
+        qs = qs.annotate(last_rent_end=Max("rent__rent_end"))
+        return qs
+
     @mark_safe
     def location(self, bike):
         public_info = ""
@@ -104,18 +110,14 @@ class BikeAdmin(admin.ModelAdmin):
 
     @mark_safe
     def last_rent(self, bike):
-        rent = bike.rent_set.last()
-        if rent is None:
-            return "-"
-        ts = rent.rent_end
-        if ts is None:
-            ts = rent.rent_start
+        ts = bike.last_rent_end
         if ts is None:
             return "-"
         return "<time datetime='{}' title='{}'>{}</time>".format(
             ts, ts, naturaltime(ts)
         )
 
+    last_rent.admin_order_field = "last_rent_end"
     last_rent.allow_tags = True
 
 
