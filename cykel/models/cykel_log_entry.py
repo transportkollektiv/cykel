@@ -1,3 +1,4 @@
+from django.contrib.admin.options import get_content_type_for_model
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
@@ -62,6 +63,18 @@ class CykelLogEntry(models.Model):
             f"CykelLogEntry(content_object={self.content_object}, "
             + f"action_type={self.action_type}, timestamp={self.timestamp})"
         )
+
+    @staticmethod
+    def create_unless_time(timefilter, **kwargs):
+        obj = kwargs["content_object"]
+        action_type = kwargs["action_type"]
+        if not CykelLogEntry.objects.filter(
+            content_type=get_content_type_for_model(obj),
+            object_id=obj.pk,
+            action_type=action_type,
+            timestamp__gte=timefilter,
+        ).exists():
+            CykelLogEntry.objects.create(**kwargs)
 
     def display_object(self):
         from bikesharing.models import Bike, LocationTracker

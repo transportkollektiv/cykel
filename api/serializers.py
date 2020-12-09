@@ -1,5 +1,4 @@
 from allauth.socialaccount.models import SocialApp
-from django.contrib.admin.options import get_content_type_for_model
 from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import Point
 from django.utils.timezone import now, timedelta
@@ -185,15 +184,12 @@ class LocationTrackerUpdateSerializer(serializers.ModelSerializer):
             if action_type is not None:
                 action_type = "{}.{}".format(action_type_prefix, action_type)
                 somehoursago = now() - timedelta(hours=48)
-                if not CykelLogEntry.objects.filter(
-                    content_type=get_content_type_for_model(self.instance),
-                    object_id=self.instance.pk,
+                CykelLogEntry.create_unless_time(
+                    somehoursago,
+                    content_object=self.instance,
                     action_type=action_type,
-                    timestamp__gte=somehoursago,
-                ).exists():
-                    CykelLogEntry.objects.create(
-                        content_object=self.instance, action_type=action_type, data=data
-                    )
+                    data=data,
+                )
 
     def validate(self, data):
         if (data.get("lat") is None and data.get("lng") is not None) or (

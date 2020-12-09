@@ -1,5 +1,4 @@
 from allauth.socialaccount.models import SocialApp
-from django.contrib.admin.options import get_content_type_for_model
 from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import D
@@ -219,27 +218,18 @@ def updatebikelocation(request):
 
     if tracker.tracker_status == LocationTracker.Status.MISSING:
         action_type = "cykel.tracker.missing_reporting"
-        if not CykelLogEntry.objects.filter(
-            content_type=get_content_type_for_model(tracker),
-            object_id=tracker.pk,
-            action_type=action_type,
-            timestamp__gte=someminutesago,
-        ).exists():
-            CykelLogEntry.objects.create(
-                content_object=tracker, action_type=action_type, data=data
-            )
+        CykelLogEntry.create_unless_time(
+            someminutesago, content_object=tracker, action_type=action_type, data=data
+        )
 
     if tracker.bike and tracker.bike.state == Bike.State.MISSING:
         action_type = "cykel.bike.missing_reporting"
-        if not CykelLogEntry.objects.filter(
-            content_type=get_content_type_for_model(tracker.bike),
-            object_id=tracker.bike.pk,
+        CykelLogEntry.create_unless_time(
+            someminutesago,
+            content_object=tracker.bike,
             action_type=action_type,
-            timestamp__gte=someminutesago,
-        ).exists():
-            CykelLogEntry.objects.create(
-                content_object=tracker.bike, action_type=action_type, data=data
-            )
+            data=data,
+        )
 
     if not loc:
         return Response({"success": True, "warning": "lat/lng missing"})
