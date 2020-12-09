@@ -11,6 +11,7 @@ from pathlib import Path
 
 import environ
 import sentry_sdk
+from django.utils.timezone import timedelta
 from sentry_sdk.integrations.django import DjangoIntegration
 
 env = environ.Env(
@@ -130,6 +131,17 @@ DATABASES = {
 # Celery / Redis
 
 CELERY_BROKER_URL = env.str("REDIS_URL", default="redis://localhost:6379/0")
+
+CELERY_BEAT_SCHEDULE = {
+    "log_long_running_rents": {
+        "task": "bikesharing.tasks.log_long_running_rents",
+        "schedule": timedelta(minutes=5),
+    },
+    "log_unused_bikes": {
+        "task": "bikesharing.tasks.log_unused_bikes",
+        "schedule": timedelta(hours=3),
+    },
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators

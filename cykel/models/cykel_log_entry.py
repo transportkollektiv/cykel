@@ -10,6 +10,8 @@ from django.utils.translation import gettext_lazy as _
 # log texts that only contain {object}
 LOG_TEXTS_BASIC = {
     "cykel.bike.rent.unlock": _("{object} has been unlocked"),
+    "cykel.bike.rent.longterm": _("{object} had a long running rent"),
+    "cykel.bike.forsaken": _("{object} had no rent in some time"),
     "cykel.bike.missing_reporting": _("{object} (missing) reported its status again!"),
     "cykel.tracker.missing_reporting": _(
         "{object} (missing) reported its status again!"
