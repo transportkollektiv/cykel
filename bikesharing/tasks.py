@@ -4,7 +4,7 @@ from django.utils.timezone import now, timedelta
 
 from cykel.models import CykelLogEntry
 
-from .models import Bike, Rent
+from .models import Bike, LocationTracker, Rent
 
 
 @shared_task
@@ -38,4 +38,20 @@ def log_unused_bikes():
         donotremindin = now() - timedelta(days=3)
         CykelLogEntry.create_unless_time(
             donotremindin, content_object=bike, action_type="cykel.bike.forsaken"
+        )
+
+
+@shared_task
+def log_missing_tracker_updates():
+    twohours = now() - timedelta(hours=2)
+    trackers_missing = LocationTracker.objects.filter(
+        tracker_status=LocationTracker.Status.ACTIVE, last_reported__lte=twohours
+    )
+
+    for tracker in trackers_missing:
+        eighthours = now() - timedelta(hours=8)
+        CykelLogEntry.create_unless_time(
+            eighthours,
+            content_object=tracker,
+            action_type="cykel.tracker.missed_checkin",
         )

@@ -16,6 +16,7 @@ LOG_TEXTS_BASIC = {
     "cykel.tracker.missing_reporting": _(
         "{object} (missing) reported its status again!"
     ),
+    "cykel.tracker.missed_checkin": _("{object} missed its periodic checkin"),
 }
 
 LOG_TEXTS = {
