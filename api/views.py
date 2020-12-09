@@ -293,7 +293,6 @@ def custom_exception_handler(exc, context):
     return Response(data, status=response.status_code, headers=headers)
 
 
-# todo change to get
 @api_view(["GET"])
 @permission_classes([])
 def get_station_locations(request):
