@@ -7,6 +7,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
+import tempfile
 from pathlib import Path
 
 import environ
@@ -142,6 +143,11 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": timedelta(hours=3),
     },
 }
+
+# move celery beat last run time storage into temp dir
+CELERY_BEAT_SCHEDULE_FILENAME = str(
+    Path(tempfile.gettempdir()).resolve() / "celerybeat-schedule"
+)
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
