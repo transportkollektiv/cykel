@@ -56,8 +56,5 @@ def log_missing_tracker_updates():
             data["bike_id"] = tracker.bike.pk
         eighthours = now() - timedelta(hours=8)
         CykelLogEntry.create_unless_time(
-            eighthours,
-            content_object=tracker,
-            action_type=action_type,
-            data=data
+            eighthours, content_object=tracker, action_type=action_type, data=data
         )
