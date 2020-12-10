@@ -71,36 +71,34 @@ class CreateRentSerializer(serializers.HyperlinkedModelSerializer):
         return Rent.objects.create(**data)
 
     def save(self, **kwargs):
-        super().save(**kwargs)
-        # FIXME: This method contains too much self.instance. doesn't feel good.
-        # Should this stuff go into the model?
-        self.instance.bike.availability_status = Bike.Availability.IN_USE
-        self.instance.bike.save()
-
+        bike = self.validated_data["bike"]
         if (
             self.validated_data.get("lat") is not None
             and self.validated_data.get("lng") is not None
         ):
             pos = Point(
-                float(self.validated_data.get("lng")),
-                float(self.validated_data.get("lat")),
+                float(self.validated_data["lng"]),
+                float(self.validated_data["lat"]),
                 srid=4326,
             )
 
             loc = Location.objects.create(
-                bike=self.instance.bike,
+                bike=bike,
                 source=Location.Source.USER,
                 reported_at=now(),
                 geo=pos,
             )
-            self.instance.start_location = loc
+            self.validated_data["start_location"] = loc
         else:
-            if self.instance.bike.public_geolocation():
-                self.instance.start_location = self.instance.bike.public_geolocation()
-            if self.instance.bike.current_station:
-                self.instance.start_station = self.instance.bike.current_station
+            if bike.public_geolocation():
+                self.validated_data["start_location"] = bike.public_geolocation()
+            if bike.current_station:
+                self.validated_data["start_station"] = bike.current_station
 
-        self.instance.save()
+        super().save(**kwargs)
+
+        bike.availability_status = Bike.Availability.IN_USE
+        bike.save()
 
     def validate_bike(self, value):
         # seems there is no way to get the already validated and expanded bike obj
