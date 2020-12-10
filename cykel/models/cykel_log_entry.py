@@ -113,6 +113,16 @@ class CykelLogEntry(models.Model):
                 "ref": co.device_id,
             }
 
+        if isinstance(co, Rent):
+            text = _("Rent {ref}")
+            data = {
+                "url": reverse(
+                    "admin:%s_%s_change" % (co._meta.app_label, co._meta.model_name),
+                    args=[co.id],
+                ),
+                "ref": co.id,
+            }
+
         if text and data:
             data["ref"] = format_html('<a href="{url}">{ref}</a>', **data)
             return format_html(text, **data)
