@@ -59,4 +59,5 @@ def log_missing_tracker_updates():
             eighthours,
             content_object=tracker,
             action_type=action_type,
+            data=data
         )
