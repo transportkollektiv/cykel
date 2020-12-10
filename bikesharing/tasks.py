@@ -53,7 +53,7 @@ def log_missing_tracker_updates():
         data = {}
         if tracker.bike:
             action_type = "cykel.bike.tracker.missed_checkin"
-            data['bike_id'] = tracker.bike.pk
+            data["bike_id"] = tracker.bike.pk
         eighthours = now() - timedelta(hours=8)
         CykelLogEntry.create_unless_time(
             eighthours,
