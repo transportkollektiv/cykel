@@ -131,7 +131,7 @@ class CykelLogEntry(models.Model):
         return ""
 
     def display(self):
-        from bikesharing.models import Bike, Location
+        from bikesharing.models import Bike, Location, Station
 
         if self.action_type in LOG_TEXTS_BASIC:
             return format_html(
@@ -181,11 +181,16 @@ class CykelLogEntry(models.Model):
             ) and self.action_type.endswith(".station"):
                 station_id = self.data.get("station_id")
                 if station_id:
+                    try:
+                        station = Station.objects.get(pk=station_id)
+                        ref = station.station_name
+                    except ObjectDoesNotExist:
+                        ref = station_id
                     station_url = reverse(
                         "admin:bikesharing_station_change", args=[station_id]
                     )
                     data["station"] = format_html(
-                        '<a href="{url}">{ref}</a>', url=station_url, ref=station_id
+                        '<a href="{url}">{ref}</a>', url=station_url, ref=ref
                     )
                 else:
                     data["station"] = "[unknown]"
