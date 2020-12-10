@@ -83,7 +83,7 @@ class CykelLogEntry(models.Model):
             CykelLogEntry.objects.create(**kwargs)
 
     def display_object(self):
-        from bikesharing.models import Bike, LocationTracker
+        from bikesharing.models import Bike, LocationTracker, Rent
 
         try:
             co = self.content_object
