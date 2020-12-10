@@ -145,42 +145,55 @@ class CykelLogEntry(models.Model):
             if self.action_type.startswith(
                 "cykel.bike.tracker.battery."
             ) or self.action_type.startswith("cykel.tracker.battery."):
-                data["voltage"] = self.data["voltage"]
+                voltage = self.data.get("voltage")
+                if voltage:
+                    data["voltage"] = voltage
+                else:
+                    data["voltage"] = "[unknown]"
 
             if self.action_type.startswith("cykel.bike.tracker."):
-                bike_id = self.data["bike_id"]
-                try:
-                    bike = Bike.objects.get(pk=bike_id)
-                    ref = bike.bike_number
-                except ObjectDoesNotExist:
-                    ref = bike_id
-                bike_url = reverse("admin:bikesharing_bike_change", args=[bike_id])
-                data["bike"] = format_html(
-                    '<a href="{url}">{ref}</a>', url=bike_url, ref=ref
-                )
+                bike_id = self.data.get("bike_id")
+                if bike_id:
+                    try:
+                        bike = Bike.objects.get(pk=bike_id)
+                        ref = bike.bike_number
+                    except ObjectDoesNotExist:
+                        ref = bike_id
+                    bike_url = reverse("admin:bikesharing_bike_change", args=[bike_id])
+                    data["bike"] = format_html(
+                        '<a href="{url}">{ref}</a>', url=bike_url, ref=ref
+                    )
+                else:
+                    data["bike"] = "[unknown]"
 
             if self.action_type.startswith("cykel.bike.rent."):
-                rent_id = self.data["rent_id"]
-                rent_url = reverse("admin:bikesharing_rent_change", args=[rent_id])
-                data["rent"] = format_html(
-                    '<a href="{url}">{ref}</a>', url=rent_url, ref=rent_id
-                )
+                rent_id = self.data.get("rent_id")
+                if rent_id:
+                    rent_url = reverse("admin:bikesharing_rent_change", args=[rent_id])
+                    data["rent"] = format_html(
+                        '<a href="{url}">{ref}</a>', url=rent_url, ref=rent_id
+                    )
+                else:
+                    data["rent"] = "[unknown]"
 
             if self.action_type.startswith(
                 "cykel.bike.rent."
             ) and self.action_type.endswith(".station"):
-                station_id = self.data["station_id"]
-                station_url = reverse(
-                    "admin:bikesharing_station_change", args=[station_id]
-                )
-                data["station"] = format_html(
-                    '<a href="{url}">{ref}</a>', url=station_url, ref=station_id
-                )
+                station_id = self.data.get("station_id")
+                if station_id:
+                    station_url = reverse(
+                        "admin:bikesharing_station_change", args=[station_id]
+                    )
+                    data["station"] = format_html(
+                        '<a href="{url}">{ref}</a>', url=station_url, ref=station_id
+                    )
+                else:
+                    data["station"] = "[unknown]"
 
             if self.action_type.startswith(
                 "cykel.bike.rent."
             ) and self.action_type.endswith(".freefloat"):
-                location_id = self.data["location_id"]
+                location_id = self.data.get("location_id")
                 if location_id:
                     try:
                         loc = Location.objects.get(pk=location_id)
