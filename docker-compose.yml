@@ -18,7 +18,7 @@ services:
     environment:
       - SECRET_KEY=fooooo
       - ALLOWED_HOSTS=0.0.0.0,localhost
-      - DEBUG=0
+      - DEBUG=1
       - DATABASE_URL=postgis://postgres:password@db:5432/cykel
     depends_on:
       - db
