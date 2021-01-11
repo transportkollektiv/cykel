@@ -4,7 +4,9 @@ from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import D
 from django.contrib.sites.shortcuts import get_current_site
 from django.contrib.syndication.views import Feed
+from django.core.paginator import Paginator
 from django.urls import reverse
+from django.utils.feedgenerator import Rss201rev2Feed
 from django.utils.timezone import now, timedelta
 from preferences import preferences
 from rest_framework import exceptions, generics, mixins, status, viewsets
@@ -286,7 +288,54 @@ class LoginProviderViewSet(
         return SocialApp.objects.filter(sites__id=get_current_site(self.request).id)
 
 
+class RSS20PaginatedFeed(Rss201rev2Feed):
+    def add_root_elements(self, handler):
+        super(Rss201rev2Feed, self).add_root_elements(handler)
+
+        if self.feed["page"] > 1:
+            handler.addQuickElement(
+                "link",
+                "",
+                {
+                    "rel": "first",
+                    "href": self.feed["feed_url"],
+                },
+            )
+
+        if self.feed["page"] < self.feed["last_page"]:
+            handler.addQuickElement(
+                "link",
+                "",
+                {
+                    "rel": "last",
+                    "href": (f"{self.feed['feed_url']}?page={self.feed['last_page']}"),
+                },
+            )
+
+        if self.feed["page"] > 1:
+            handler.addQuickElement(
+                "link",
+                "",
+                {
+                    "rel": "previous",
+                    "href": (f"{self.feed['feed_url']}?page={self.feed['page'] - 1}"),
+                },
+            )
+
+        if self.feed["page"] < self.feed["last_page"]:
+            handler.addQuickElement(
+                "link",
+                "",
+                {
+                    "rel": "next",
+                    "href": (f"{self.feed['feed_url']}?page={self.feed['page'] + 1}"),
+                },
+            )
+
+
 class LogEntryFeed(Feed):
+    feed_type = RSS20PaginatedFeed
+
     def title(self):
         return f"Maintenance Events of {preferences.BikeSharePreferences.system_name}"
 
@@ -299,8 +348,20 @@ class LogEntryFeed(Feed):
             % (CykelLogEntry._meta.app_label, CykelLogEntry._meta.model_name)
         )
 
-    def items(self):
-        return CykelLogEntry.objects.order_by("-timestamp")[:5]
+    def get_object(self, request):
+        page = int(request.GET.get("page", 1))
+        entries = CykelLogEntry.objects.order_by("-timestamp").all()
+        paginator = Paginator(entries, 25)
+        return {"page": page, "paginator": paginator}
+
+    def items(self, obj):
+        return obj["paginator"].get_page(obj["page"])
+
+    def feed_extra_kwargs(self, obj):
+        context = super().feed_extra_kwargs(obj)
+        context["page"] = obj["page"]
+        context["last_page"] = obj["paginator"].num_pages
+        return context
 
     def item_title(self, item):
         return item.display()
