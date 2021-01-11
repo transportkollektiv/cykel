@@ -3,6 +3,8 @@ from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import D
 from django.contrib.sites.shortcuts import get_current_site
+from django.contrib.syndication.views import Feed
+from django.urls import reverse
 from django.utils.timezone import now, timedelta
 from preferences import preferences
 from rest_framework import exceptions, generics, mixins, status, viewsets
@@ -246,6 +248,11 @@ class MaintenanceViewSet(viewsets.ViewSet):
         serializer = MaintenanceBikeSerializer(bikes, many=True)
         return Response(serializer.data)
 
+    @action(detail=False, methods=["GET"])
+    def logentryfeed(self, request):
+        feed = LogEntryFeed()
+        return feed(request)
+
 
 class UserDetailsView(generics.RetrieveAPIView):
     """Reads UserModel fields Accepts GET method.
@@ -277,6 +284,41 @@ class LoginProviderViewSet(
 
     def get_queryset(self):
         return SocialApp.objects.filter(sites__id=get_current_site(self.request).id)
+
+
+class LogEntryFeed(Feed):
+    def title(self):
+        return f"Maintenance Events of {preferences.BikeSharePreferences.system_name}"
+
+    def description(self):
+        return self.title()
+
+    def link(self):
+        return reverse(
+            "admin:%s_%s_changelist"
+            % (CykelLogEntry._meta.app_label, CykelLogEntry._meta.model_name)
+        )
+
+    def items(self):
+        return CykelLogEntry.objects.order_by("-timestamp")[:5]
+
+    def item_title(self, item):
+        return item.display()
+
+    def item_pubdate(self, item):
+        return item.timestamp
+
+    def item_updateddate(self, item):
+        return item.timestamp
+
+    def item_description(self, item):
+        return self.item_title(item)
+
+    def item_link(self, item):
+        return reverse(
+            "admin:%s_%s_change" % (item._meta.app_label, item._meta.model_name),
+            args=[item.id],
+        )
 
 
 def custom_exception_handler(exc, context):
