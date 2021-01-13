@@ -30,6 +30,7 @@ from rest_framework_api_key.permissions import HasAPIKey
 from bikesharing.models import Bike, Location, LocationTracker, Rent, Station
 from cykel.models import CykelLogEntry
 
+from .authentication import BasicTokenAuthentication
 from .serializers import (
     BikeSerializer,
     CreateRentSerializer,
@@ -241,7 +242,9 @@ def updatebikelocation(request):
     return Response({"success": True})
 
 
-@authentication_classes([SessionAuthentication, TokenAuthentication])
+@authentication_classes(
+    [SessionAuthentication, TokenAuthentication, BasicTokenAuthentication]
+)
 @permission_classes([IsAuthenticated, CanUseMaintenancePermission])
 class MaintenanceViewSet(viewsets.ViewSet):
     @action(detail=False, methods=["GET"])

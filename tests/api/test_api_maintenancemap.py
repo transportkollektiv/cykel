@@ -1,5 +1,6 @@
 import pytest
 from django.contrib.auth.models import Permission
+from requests.auth import _basic_auth_str
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
@@ -49,6 +50,14 @@ def user_client_mary_maintain_logged_in(testuser_mary_maintain):
     return client
 
 
+@pytest.fixture
+def user_client_mary_maintain_logged_in_basic(testuser_mary_maintain):
+    client = APIClient()
+    token, _ = Token.objects.get_or_create(user=testuser_mary_maintain)
+    client.credentials(HTTP_AUTHORIZATION=_basic_auth_str("", token.key))
+    return client
+
+
 @pytest.mark.django_db
 def test_get_map_no_user():
     client = APIClient()
@@ -75,4 +84,12 @@ def test_get_map_logged_in_default_user_with_maintain_rights(
     user_client_mary_maintain_logged_in,
 ):
     response = user_client_mary_maintain_logged_in.get("/api/maintenance/mapdata")
+    assert response.status_code == 200
+
+
+@pytest.mark.django_db
+def test_get_map_logged_in_default_user_with_maintain_rights_basic_auth(
+    user_client_mary_maintain_logged_in_basic,
+):
+    response = user_client_mary_maintain_logged_in_basic.get("/api/maintenance/mapdata")
     assert response.status_code == 200
