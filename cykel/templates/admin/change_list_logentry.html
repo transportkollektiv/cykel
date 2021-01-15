@@ -3,6 +3,18 @@
 
 {% block content %}
 <div id="content-main">
+
+  {% block object-tools %}
+  <ul class="object-tools">
+    {% block object-tools-items %}
+    {% endblock %}
+    <li>
+      <a href="{% url 'maintenance-logentryfeed' %}">{% translate "RSS Feed" %}</a>
+    </li>
+  </ul>
+  {% endblock %}
+
+
   {% block result_list %}
     <table id="result_list">
       <thead>
