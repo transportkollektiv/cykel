@@ -33,7 +33,11 @@
         {% for result in cl.result_list %}
           <tr>
             <td>{{ result.display }}</td>
-            <td><time datetime="{{ result.timestamp | date:'c' }}">{{ result.timestamp | naturaltime }}</time></td>
+            <td>
+              <a href="{% url opts|admin_urlname:'change' result.pk|admin_urlquote %}">
+                <time datetime="{{ result.timestamp | date:'c' }}">{{ result.timestamp | naturaltime }}</time>
+              </a>
+            </td>
           </tr>
         {% endfor %}
       </tbody>
