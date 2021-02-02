@@ -155,7 +155,8 @@ class LocationTrackerUpdateSerializer(serializers.ModelSerializer):
         super().save()
 
         if (
-            self.instance.battery_voltage is not None
+            self.instance.tracker_status == LocationTracker.Status.ACTIVE
+            and self.instance.battery_voltage is not None
             and self.instance.tracker_type is not None
         ):
             data = {"voltage": self.instance.battery_voltage}
