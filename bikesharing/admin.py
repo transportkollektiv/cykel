@@ -8,6 +8,8 @@ from django.utils.safestring import mark_safe
 from leaflet.admin import LeafletGeoAdmin
 from preferences.admin import PreferencesAdmin
 
+from cykel.models import CykelLogEntry
+
 from .models import (
     Bike,
     BikeSharePreferences,
@@ -182,6 +184,7 @@ class LocationTrackerAdmin(admin.ModelAdmin):
     search_fields = ("device_id", "bike__bike_number")
     readonly_fields = ["location"]
     ordering = ["device_id"]
+    actions = ["mark_as_charged"]
 
     @mark_safe
     def location(self, obj):
@@ -238,6 +241,17 @@ class LocationTrackerAdmin(admin.ModelAdmin):
 
         url = reverse("admin:bikesharing_locationtracker_change", args=(tracker.id,))
         return HttpResponseRedirect(url)
+
+    def mark_as_charged(self, request, queryset):
+        for tracker in queryset:
+            CykelLogEntry.objects.create(
+                content_object=tracker,
+                action_type="cykel.tracker.battery.charged",
+                data={"voltage": tracker.battery_voltage},
+            )
+
+    mark_as_charged.short_description = "Mark this tracker(s) as charged"
+    mark_as_charged.allowed_permissions = ("change",)
 
 
 @admin.register(Station)

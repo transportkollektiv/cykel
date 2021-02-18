@@ -42,6 +42,9 @@ LOG_TEXTS = {
         "{object} had critical battery voltage {voltage} V"
     ),
     "cykel.tracker.battery.warning": _("{object} had low battery voltage {voltage} V"),
+    "cykel.tracker.battery.charged": _(
+        "{object} has been charged fully to {voltage} V"
+    ),
     "cykel.bike.tracker.missed_checkin": _(
         "{object} (on Bike {bike}) missed its periodic checkin"
     ),
