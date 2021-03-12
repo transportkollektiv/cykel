@@ -3,6 +3,7 @@ version: '3'
 services:
   db:
     image: mdillon/postgis
+    restart: always
     volumes:
       - data:/var/lib/postgresql/data
     environment:
@@ -10,6 +11,7 @@ services:
       - POSTGRES_PASSWORD=password
   cykel:
     build: .
+    restart: always
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/code
