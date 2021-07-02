@@ -176,7 +176,7 @@ class GbfsVehicleTypeSerializer(serializers.HyperlinkedModelSerializer):
     def to_representation(self, instance):
         data = super(GbfsVehicleTypeSerializer, self).to_representation(instance)
         # defined by GBFS 2.1: Only if the vehicle has a motor the field is required
-        if data["propulsion_type"] == VehicleType.PropulsionType.HUMAN:
+        if instance.propulsion_type == VehicleType.PropulsionType.HUMAN:
             data.pop("max_range_meters")
         return data
 
