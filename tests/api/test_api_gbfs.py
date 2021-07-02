@@ -6,6 +6,7 @@ from preferences import preferences
 from rest_framework.test import APIClient
 
 from bikesharing.models import Bike, Location, LocationTracker, Station
+from gbfs.views import languageCode
 
 
 @pytest.fixture
@@ -52,7 +53,7 @@ def test_gbfs_overview(active_station):
     response = client.get("/gbfs/gbfs.json")
     assert response.status_code == 200
     assert response.json()["version"] == "2.0"
-    lang = str(translation.get_language())
+    lang = languageCode()
     feeds = response.json()["data"][lang]["feeds"]
     assert len(feeds) > 0
     sysinfofeed = [x for x in feeds if x["name"] == "system_information"][0]
@@ -64,7 +65,7 @@ def test_gbfs_overview_urls(active_station):
     client = APIClient()
     response = client.get("/gbfs/gbfs.json")
     assert response.status_code == 200
-    lang = str(translation.get_language())
+    lang = languageCode()
     feeds = response.json()["data"][lang]["feeds"]
     assert len(feeds) > 0
     for feed in feeds:
@@ -77,7 +78,8 @@ def test_gbfs_system_information():
     client = APIClient()
     response = client.get("/gbfs/system_information.json")
     assert response.status_code == 200
-    assert response.json()["data"]["language"] == translation.get_language()
+    assert response.json()["data"]["language"].lower() == translation.get_language().lower()
+    assert response.json()["data"]["language"] == languageCode()
 
 
 @pytest.mark.django_db

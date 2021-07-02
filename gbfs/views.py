@@ -23,7 +23,7 @@ from .serializers import (
 def gbfs(request):
     if request.method == "GET":
         data = {
-            translation.get_language(): {
+            languageCode(): {
                 "feeds": [
                     {
                         "name": "system_information",
@@ -57,7 +57,7 @@ def gbfsSystemInformation(request):
         data = {
             "system_id": bsp.gbfs_system_id,
             "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
-            "language": translation.get_language(),
+            "language": languageCode(),
             "name": bsp.system_name,
             "short_name": bsp.system_short_name,
             "timezone": settings.TIME_ZONE,
@@ -141,3 +141,17 @@ def getGbfsRoot(request):
 
 def getGbfsWithData(data):
     return {"ttl": 0, "last_updated": int(time.time()), "data": data, "version": "2.0"}
+
+def languageCode():
+    """
+    gbfs requires that local part of the language code (using IETF BCP 47)
+    is uppercased.
+    djangos language code is fully lowercased, see
+    https://docs.djangoproject.com/en/3.1/topics/i18n/
+    """
+    lang = translation.get_language()
+    if '-' in lang:
+        l = lang.split('-')
+        l[-1] = l[-1].upper()
+        lang = '-'.join(l)
+    return lang
