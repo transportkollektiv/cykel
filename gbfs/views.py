@@ -142,16 +142,17 @@ def getGbfsRoot(request):
 def getGbfsWithData(data):
     return {"ttl": 0, "last_updated": int(time.time()), "data": data, "version": "2.0"}
 
+
 def languageCode():
-    """
-    gbfs requires that local part of the language code (using IETF BCP 47)
+    """gbfs requires that local part of the language code (using IETF BCP 47)
     is uppercased.
+
     djangos language code is fully lowercased, see
     https://docs.djangoproject.com/en/3.1/topics/i18n/
     """
     lang = translation.get_language()
-    if '-' in lang:
-        l = lang.split('-')
-        l[-1] = l[-1].upper()
-        lang = '-'.join(l)
+    if "-" in lang:
+        parts = lang.split("-")
+        parts[-1] = parts[-1].upper()
+        lang = "-".join(parts)
     return lang

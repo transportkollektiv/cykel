@@ -78,7 +78,10 @@ def test_gbfs_system_information():
     client = APIClient()
     response = client.get("/gbfs/system_information.json")
     assert response.status_code == 200
-    assert response.json()["data"]["language"].lower() == translation.get_language().lower()
+    assert (
+        response.json()["data"]["language"].lower()
+        == translation.get_language().lower()
+    )
     assert response.json()["data"]["language"] == languageCode()
 
 
