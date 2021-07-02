@@ -140,7 +140,7 @@ def getGbfsRoot(request):
 
 
 def getGbfsWithData(data):
-    return {"ttl": 0, "last_updated": int(time.time()), "data": data, "version": "2.0"}
+    return {"ttl": 0, "last_updated": int(time.time()), "data": data, "version": "2.1"}
 
 
 def languageCode():

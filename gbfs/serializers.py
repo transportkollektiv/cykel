@@ -156,7 +156,7 @@ class GbfsVehicleTypeSerializer(serializers.HyperlinkedModelSerializer):
     form_factor = EnumFieldSerializer(
         read_only=True,
         mapping={
-            VehicleType.FormFactor.BIKE: "bike",
+            VehicleType.FormFactor.BIKE: "bicycle",
             VehicleType.FormFactor.ESCOOTER: "scooter",
             VehicleType.FormFactor.CAR: "car",
             VehicleType.FormFactor.MOPED: "moped",

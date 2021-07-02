@@ -52,7 +52,7 @@ def test_gbfs_overview(active_station):
     client = APIClient()
     response = client.get("/gbfs/gbfs.json")
     assert response.status_code == 200
-    assert response.json()["version"] == "2.0"
+    assert response.json()["version"] == "2.1"
     lang = languageCode()
     feeds = response.json()["data"][lang]["feeds"]
     assert len(feeds) > 0
