@@ -2,7 +2,11 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils.translation import gettext_lazy as _
 
-from .models import User
+from .models import CykelLogEntry, User
+
+admin.site.site_header = "openbike"
+admin.site.site_title = "openbike"
+admin.site.index_title = "openbike configuration"
 
 
 class CykelUserAdmin(UserAdmin):
@@ -30,3 +34,27 @@ class CykelUserAdmin(UserAdmin):
 
 
 admin.site.register(User, CykelUserAdmin)
+
+
+@admin.register(CykelLogEntry)
+class CykelLogEntryAdmin(admin.ModelAdmin):
+    change_list_template = "admin/change_list_logentry.html"
+    change_form_template = "admin/change_form_logentry.html"
+
+    list_display_links = None
+    list_display = (
+        "timestamp",
+        "content_type",
+        "content_object",
+        "action_type",
+        "data",
+    )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False

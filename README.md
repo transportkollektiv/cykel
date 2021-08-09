@@ -2,10 +2,13 @@
 
 Basic backend for a mobility sharing service. First steps made at [CCCamp 2019](https://events.ccc.de/camp/2019/wiki/Main_Page), now developed, daily used and tested in [the City of Ulm](https://ulm.dev/projects/openbike/).
 
+OpenBike consists of more parts than just cykel - you might want to have a look into the whole [OpenBike Project Documentation](https://docs.openbike.ulm.dev), which also contains installation guidelines for the other parts and operator documentation for running an OpenBike based sharing system.
+
 ## Prerequisites
 
 * Python (≥3.7)
 * Postgres database with PostGIS extension. (MySQL and SQLite are not supported anymore)
+* Redis
 
 ### Configuration
 
@@ -18,6 +21,8 @@ SECRET_KEY=f2bf0a4e621a16d9eb8253aa7a540f75ed8787b5
 DEBUG=1
 # configure your database in a format supported by https://github.com/jacobian/dj-database-url
 DATABASE_URL=postgis://localhost/cykel
+# redis connection, you may only have to change this if your redis doesn't live on the same host
+REDIS_URL=redis://localhost:6379/0
 # it is recommended to use a DNS alias for localhost, instead of "localhost", for CORS reasons
 ALLOWED_HOSTS=lvh.me,localhost
 # set the full URL to the frontend
@@ -89,7 +94,7 @@ Docker Compose runs cykel and [voorwiel](https://github.com/stadtulm/voorwiel) (
 
 ## Contributing
 
-We welcome [issues](https://github.com/stadtulm/cykel/issues) and pull requests for new features, bugs or problems you encountered when setting it up. More Documentation or simply small typo fixes are also very appreciated. If you found a vulnerability or other security relevant issue, notify us at `openbike @ ulm.dev`
+We welcome [issues](https://github.com/stadtulm/cykel/issues) and pull requests for new features, bugs or problems you encountered when setting it up. More [Documentation](https://docs.openbike.ulm.dev) or simply small typo fixes are also very appreciated. If you found a vulnerability or other security relevant issue, notify us at `openbike @ ulm.dev`
 
 For general discussion, feel free to hop into the [public matrix channel](https://matrix.to/#/!ghOLficeAycydtkZtA:matrix.org?via=matrix.org) for openbike and related projects.
 

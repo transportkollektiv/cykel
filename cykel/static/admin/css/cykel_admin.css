@@ -1,0 +1,17 @@
+.battery_voltage--critical::after,
+.battery_voltage--warning::after {
+    content: '';
+    display: inline-block;
+    width: 0.5em;
+    height: 0.5em;
+    vertical-align: middle;
+    border-radius: 100%;
+    margin-left: 0.25em;
+}
+
+.battery_voltage--critical::after {
+    background: red;
+}
+.battery_voltage--warning::after {
+    background: orange;
+}

@@ -1,10 +1,14 @@
 from django.contrib import admin
+from django.contrib.humanize.templatetags.humanize import naturaltime
+from django.db.models import Max
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils import formats, timezone
 from django.utils.safestring import mark_safe
 from leaflet.admin import LeafletGeoAdmin
 from preferences.admin import PreferencesAdmin
+
+from cykel.models import CykelLogEntry
 
 from .models import (
     Bike,
@@ -41,6 +45,20 @@ def format_geolocation_text(geolocation):
     )
 
 
+def format_geolocation_text_with_source(geolocation):
+    source = ""
+    if geolocation.tracker:
+        tracker = geolocation.tracker
+        source = " (source: <a href='{url}'>tracker {device_id}</a>)".format(
+            url=reverse("admin:bikesharing_locationtracker_change", args=(tracker.id,)),
+            device_id=tracker.device_id,
+        )
+    return "%s%s" % (
+        format_geolocation_text(geolocation),
+        source,
+    )
+
+
 @admin.register(Location)
 class LocationAdmin(LeafletGeoAdmin, admin.ModelAdmin):
     list_display = ("bike", "tracker", "geo", "source", "reported_at")
@@ -50,25 +68,31 @@ class LocationAdmin(LeafletGeoAdmin, admin.ModelAdmin):
 
 
 @admin.register(Lock)
-class LockAdmin(LeafletGeoAdmin, admin.ModelAdmin):
+class LockAdmin(admin.ModelAdmin):
     list_display = ("lock_id", "lock_type", "bike")
     list_filter = ("lock_type", "bike")
     readonly_fields = ("bike",)
 
 
 @admin.register(Bike)
-class BikeAdmin(LeafletGeoAdmin, admin.ModelAdmin):
+class BikeAdmin(admin.ModelAdmin):
     list_display = (
         "bike_number",
         "vehicle_type",
         "availability_status",
         "state",
         "last_reported",
+        "last_rent",
     )
     list_filter = ("vehicle_type", "availability_status", "state")
     search_fields = ("bike_number", "non_static_bike_uuid")
     readonly_fields = ("location", "non_static_bike_uuid")
     ordering = ["bike_number"]
+
+    def get_queryset(self, request):
+        qs = super(BikeAdmin, self).get_queryset(request)
+        qs = qs.annotate(last_rent_end=Max("rent__rent_end"))
+        return qs
 
     @mark_safe
     def location(self, bike):
@@ -76,37 +100,38 @@ class BikeAdmin(LeafletGeoAdmin, admin.ModelAdmin):
         internal_info = ""
         if bike.public_geolocation():
             public_info = "Public: %s<br>" % (
-                self.format_geolocation_text_with_source(bike.public_geolocation())
+                format_geolocation_text_with_source(bike.public_geolocation())
             )
         if bike.internal_geolocation():
             internal_info = "Internal: %s" % (
-                self.format_geolocation_text_with_source(bike.internal_geolocation())
+                format_geolocation_text_with_source(bike.internal_geolocation())
             )
         return "%s %s" % (public_info, internal_info)
 
-    @staticmethod
-    def format_geolocation_text_with_source(geolocation):
-        source = ""
-        if geolocation.tracker:
-            tracker = geolocation.tracker
-            source = " (source: <a href='{url}'>tracker {device_id}</a>)".format(
-                url=reverse(
-                    "admin:bikesharing_locationtracker_change", args=(tracker.id,)
-                ),
-                device_id=tracker.device_id,
-            )
-        return "%s%s" % (
-            format_geolocation_text(geolocation),
-            source,
+    location.allow_tags = True
+
+    @mark_safe
+    def last_rent(self, bike):
+        ts = bike.last_rent_end
+        if ts is None:
+            return "-"
+        return "<time datetime='{}' title='{}'>{}</time>".format(
+            ts, ts, naturaltime(ts)
         )
 
-    location.allow_tags = True
+    last_rent.admin_order_field = "last_rent_end"
+    last_rent.allow_tags = True
 
 
 @admin.register(Rent)
-class RentAdmin(LeafletGeoAdmin, admin.ModelAdmin):
+class RentAdmin(admin.ModelAdmin):
     list_filter = ("rent_start", "rent_end")
     search_fields = ("bike__bike_number", "user__username")
+    readonly_fields = (
+        "start_location_str",
+        "end_location_str",
+    )
+    exclude = ("start_location", "end_location")
     actions = ["force_end"]
 
     def get_list_display(self, request):
@@ -120,22 +145,36 @@ class RentAdmin(LeafletGeoAdmin, admin.ModelAdmin):
             default_fields.remove("user")
         return default_fields
 
+    @mark_safe
+    def start_location_str(self, obj):
+        return format_geolocation_text_with_source(obj.start_location)
+
+    start_location_str.allow_tags = True
+    start_location_str.short_description = "Start location"
+
+    @mark_safe
+    def end_location_str(self, obj):
+        return format_geolocation_text_with_source(obj.end_location)
+
+    end_location_str.allow_tags = True
+    end_location_str.short_description = "End location"
+
     def force_end(self, request, queryset):
         for rent in queryset:
-            rent.end()
+            rent.end(force=True)
 
     force_end.short_description = "Force end selected rents"
     force_end.allowed_permissions = ("change",)
 
 
 @admin.register(LocationTracker)
-class LocationTrackerAdmin(LeafletGeoAdmin, admin.ModelAdmin):
+class LocationTrackerAdmin(admin.ModelAdmin):
     list_display = (
         "device_id",
         "tracker_type",
         "bike",
         "last_reported",
-        "battery_voltage",
+        "battery_voltage_status",
         "tracker_status",
     )
     list_filter = (
@@ -145,6 +184,7 @@ class LocationTrackerAdmin(LeafletGeoAdmin, admin.ModelAdmin):
     search_fields = ("device_id", "bike__bike_number")
     readonly_fields = ["location"]
     ordering = ["device_id"]
+    actions = ["mark_as_charged"]
 
     @mark_safe
     def location(self, obj):
@@ -153,6 +193,31 @@ class LocationTrackerAdmin(LeafletGeoAdmin, admin.ModelAdmin):
         return format_geolocation_text(obj.current_geolocation())
 
     location.allow_tags = True
+
+    @mark_safe
+    def battery_voltage_status(self, obj):
+        if obj.battery_voltage is None:
+            return "-"
+        if obj.tracker_type is None:
+            return obj.battery_voltage
+        cssclass = ""
+        if (
+            obj.tracker_type.battery_voltage_critical is not None
+            and obj.tracker_type.battery_voltage_critical >= obj.battery_voltage
+        ):
+            cssclass = "critical"
+        elif (
+            obj.tracker_type.battery_voltage_warning is not None
+            and obj.tracker_type.battery_voltage_warning >= obj.battery_voltage
+        ):
+            cssclass = "warning"
+        if cssclass != "":
+            cssclass = "battery_voltage--" + cssclass
+        return "<span class='{}'>{}</span>".format(cssclass, obj.battery_voltage)
+
+    battery_voltage_status.allow_tags = True
+    battery_voltage_status.admin_order_field = "battery_voltage"
+    battery_voltage_status.short_description = "Battery Voltage"
 
     def get_urls(self):
         from django.urls import path
@@ -177,6 +242,17 @@ class LocationTrackerAdmin(LeafletGeoAdmin, admin.ModelAdmin):
         url = reverse("admin:bikesharing_locationtracker_change", args=(tracker.id,))
         return HttpResponseRedirect(url)
 
+    def mark_as_charged(self, request, queryset):
+        for tracker in queryset:
+            CykelLogEntry.objects.create(
+                content_object=tracker,
+                action_type="cykel.tracker.battery.charged",
+                data={"voltage": tracker.battery_voltage},
+            )
+
+    mark_as_charged.short_description = "Mark this tracker(s) as charged"
+    mark_as_charged.allowed_permissions = ("change",)
+
 
 @admin.register(Station)
 class StationAdmin(LeafletGeoAdmin, admin.ModelAdmin):
@@ -187,7 +263,7 @@ class StationAdmin(LeafletGeoAdmin, admin.ModelAdmin):
         return ", ".join([k.bike_number for k in obj.bike_set.all()])
 
 
-admin.site.register(VehicleType, LeafletGeoAdmin)
+admin.site.register(VehicleType, admin.ModelAdmin)
 admin.site.register(LocationTrackerType, admin.ModelAdmin)
 admin.site.register(LockType, admin.ModelAdmin)
 admin.site.register(BikeSharePreferences, PreferencesAdmin)

@@ -7,10 +7,12 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
+import tempfile
 from pathlib import Path
 
 import environ
 import sentry_sdk
+from django.utils.timezone import timedelta
 from sentry_sdk.integrations.django import DjangoIntegration
 
 env = environ.Env(
@@ -44,6 +46,7 @@ INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
+    "django.contrib.humanize",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
@@ -61,6 +64,7 @@ INSTALLED_APPS = [
     "fragdenstaat_auth",
     "eventphone_auth",
     "allauth.socialaccount.providers.slack",
+    "admin_override",
     "gbfs",
     "corsheaders",
     "leaflet",
@@ -125,6 +129,29 @@ DATABASES = {
     )
 }
 
+# Celery / Redis
+
+CELERY_BROKER_URL = env.str("REDIS_URL", default="redis://localhost:6379/0")
+
+CELERY_BEAT_SCHEDULE = {
+    "log_long_running_rents": {
+        "task": "bikesharing.tasks.log_long_running_rents",
+        "schedule": timedelta(minutes=5),
+    },
+    "log_unused_bikes": {
+        "task": "bikesharing.tasks.log_unused_bikes",
+        "schedule": timedelta(hours=3),
+    },
+    "log_missing_tracker_updates": {
+        "task": "bikesharing.tasks.log_missing_tracker_updates",
+        "schedule": timedelta(minutes=15),
+    },
+}
+
+# move celery beat last run time storage into temp dir
+CELERY_BEAT_SCHEDULE_FILENAME = str(
+    Path(tempfile.gettempdir()).resolve() / "celerybeat-schedule"
+)
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators

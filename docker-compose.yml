@@ -9,18 +9,34 @@ services:
     environment:
       - POSTGRES_DB=cykel
       - POSTGRES_PASSWORD=password
-  cykel:
+
+  redis:
+    image: redis
+
+  cykel-worker: &default
     build: .
-    restart: always
-    command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/code
-    ports:
-      - "8000:8000"
     environment:
       - SECRET_KEY=fooooo
       - DATABASE_URL=postgis://postgres:password@db:5432/cykel
+      - REDIS_URL=redis://redis:6379/0
     depends_on:
       - db
+      - redis
+    command: celery -A cykel worker -l INFO -B
+
+  cykel:
+    <<: *default
+    restart: always
+    command: python manage.py runserver 0.0.0.0:8000
+    ports:
+      - "8000:8000"
+
+  voorwiel:
+    image: stadtulm/voorwiel
+    ports:
+      - "8080:80"
+
 volumes:
   data:

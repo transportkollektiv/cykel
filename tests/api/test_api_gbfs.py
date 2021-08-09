@@ -5,7 +5,27 @@ from django.utils.timezone import now
 from preferences import preferences
 from rest_framework.test import APIClient
 
-from bikesharing.models import Bike, Location, LocationTracker, Station
+from bikesharing.models import Bike, Location, LocationTracker, Station, VehicleType
+from gbfs.views import languageCode
+
+
+@pytest.fixture
+def vehicle_type_tandem():
+    return VehicleType.objects.create(
+        name="Tandem",
+        form_factor=VehicleType.FormFactor.BIKE,
+        propulsion_type=VehicleType.PropulsionType.HUMAN,
+    )
+
+
+@pytest.fixture
+def vehicle_type_ebike():
+    return VehicleType.objects.create(
+        name="E-Bike",
+        form_factor=VehicleType.FormFactor.BIKE,
+        propulsion_type=VehicleType.PropulsionType.ELECTRIC_ASSIST,
+        max_range_meters=2000,
+    )
 
 
 @pytest.fixture
@@ -51,8 +71,8 @@ def test_gbfs_overview(active_station):
     client = APIClient()
     response = client.get("/gbfs/gbfs.json")
     assert response.status_code == 200
-    assert response.json()["version"] == "2.0"
-    lang = str(translation.get_language())
+    assert response.json()["version"] == "2.1"
+    lang = languageCode()
     feeds = response.json()["data"][lang]["feeds"]
     assert len(feeds) > 0
     sysinfofeed = [x for x in feeds if x["name"] == "system_information"][0]
@@ -64,7 +84,7 @@ def test_gbfs_overview_urls(active_station):
     client = APIClient()
     response = client.get("/gbfs/gbfs.json")
     assert response.status_code == 200
-    lang = str(translation.get_language())
+    lang = languageCode()
     feeds = response.json()["data"][lang]["feeds"]
     assert len(feeds) > 0
     for feed in feeds:
@@ -77,7 +97,11 @@ def test_gbfs_system_information():
     client = APIClient()
     response = client.get("/gbfs/system_information.json")
     assert response.status_code == 200
-    assert response.json()["data"]["language"] == translation.get_language()
+    assert (
+        response.json()["data"]["language"].lower()
+        == translation.get_language().lower()
+    )
+    assert response.json()["data"]["language"] == languageCode()
 
 
 @pytest.mark.django_db
@@ -103,6 +127,42 @@ def test_gbfs_station_information(active_station):
     assert gbfsstation["capacity"] == active_station.max_bikes
     assert gbfsstation["lat"] == active_station.location.y
     assert gbfsstation["lon"] == active_station.location.x
+
+
+@pytest.mark.django_db
+def test_gbfs_vehicle_types(vehicle_type_tandem):
+    client = APIClient()
+    response = client.get("/gbfs/vehicle_types.json")
+    assert response.status_code == 200
+    assert len(response.json()["data"]["vehicle_types"]) == 2
+    vtype = next(
+        vtype
+        for vtype in response.json()["data"]["vehicle_types"]
+        if vtype["name"] == vehicle_type_tandem.name
+    )
+    assert vtype["vehicle_type_id"] == str(vehicle_type_tandem.id)
+    assert vtype["form_factor"] == "bicycle"
+    assert vtype["propulsion_type"] == "human"
+    assert vtype["name"] == vehicle_type_tandem.name
+    assert "max_range_meters" not in vtype
+
+
+@pytest.mark.django_db
+def test_gbfs_vehicle_types_non_human(vehicle_type_ebike):
+    client = APIClient()
+    response = client.get("/gbfs/vehicle_types.json")
+    assert response.status_code == 200
+    assert len(response.json()["data"]["vehicle_types"]) == 2
+    vtype = next(
+        vtype
+        for vtype in response.json()["data"]["vehicle_types"]
+        if vtype["name"] == vehicle_type_ebike.name
+    )
+    assert vtype["vehicle_type_id"] == str(vehicle_type_ebike.id)
+    assert vtype["form_factor"] == "bicycle"
+    assert vtype["propulsion_type"] == "electric_assist"
+    assert vtype["name"] == vehicle_type_ebike.name
+    assert vtype["max_range_meters"] == 2000
 
 
 @pytest.mark.django_db

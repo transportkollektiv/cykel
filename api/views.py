@@ -3,7 +3,11 @@ from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import D
 from django.contrib.sites.shortcuts import get_current_site
-from django.utils.timezone import now
+from django.contrib.syndication.views import Feed
+from django.core.paginator import Paginator
+from django.urls import reverse
+from django.utils.feedgenerator import Rss201rev2Feed
+from django.utils.timezone import now, timedelta
 from preferences import preferences
 from rest_framework import exceptions, generics, mixins, status, viewsets
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
@@ -24,7 +28,9 @@ from rest_framework.views import exception_handler
 from rest_framework_api_key.permissions import HasAPIKey
 
 from bikesharing.models import Bike, Location, LocationTracker, Rent, Station
+from cykel.models import CykelLogEntry
 
+from .authentication import BasicTokenAuthentication
 from .serializers import (
     BikeSerializer,
     CreateRentSerializer,
@@ -121,16 +127,16 @@ class RentViewSet(
                 {"error": "rent was already finished"}, status=status.HTTP_410_GONE
             )
 
-        end_position = None
+        end_location = None
         if lat and lng:
-            loc = Location.objects.create(
-                bike=rent.bike, source=Location.Source.USER, reported_at=now()
+            end_location = Location.objects.create(
+                bike=rent.bike,
+                source=Location.Source.USER,
+                reported_at=now(),
+                geo=Point(float(lng), float(lat), srid=4326),
             )
-            loc.geo = Point(float(lng), float(lat), srid=4326)
-            loc.save()
-            end_position = loc.geo
 
-        rent.end(end_position)
+        rent.end(end_location)
 
         return Response({"success": True})
 
@@ -181,11 +187,14 @@ def updatebikelocation(request):
     loc = None
 
     if lat and lng:
-        loc = Location.objects.create(source=Location.Source.TRACKER, reported_at=now())
+        loc = Location(
+            source=Location.Source.TRACKER,
+            reported_at=now(),
+            tracker=tracker,
+            geo=Point(float(lng), float(lat), srid=4326),
+        )
         if tracker.bike:
             loc.bike = tracker.bike
-        loc.geo = Point(float(lng), float(lat), srid=4326)
-        loc.tracker = tracker
         if accuracy:
             loc.accuracy = accuracy
         loc.save()
@@ -209,13 +218,35 @@ def updatebikelocation(request):
 
         bike.save()
 
+    someminutesago = now() - timedelta(minutes=15)
+    data = {}
+    if loc:
+        data = {"location_id": loc.id}
+
+    if tracker.tracker_status == LocationTracker.Status.MISSING:
+        action_type = "cykel.tracker.missing_reporting"
+        CykelLogEntry.create_unless_time(
+            someminutesago, content_object=tracker, action_type=action_type, data=data
+        )
+
+    if tracker.bike and tracker.bike.state == Bike.State.MISSING:
+        action_type = "cykel.bike.missing_reporting"
+        CykelLogEntry.create_unless_time(
+            someminutesago,
+            content_object=tracker.bike,
+            action_type=action_type,
+            data=data,
+        )
+
     if not loc:
         return Response({"success": True, "warning": "lat/lng missing"})
 
     return Response({"success": True})
 
 
-@authentication_classes([SessionAuthentication, TokenAuthentication])
+@authentication_classes(
+    [SessionAuthentication, TokenAuthentication, BasicTokenAuthentication]
+)
 @permission_classes([IsAuthenticated, CanUseMaintenancePermission])
 class MaintenanceViewSet(viewsets.ViewSet):
     @action(detail=False, methods=["GET"])
@@ -223,6 +254,11 @@ class MaintenanceViewSet(viewsets.ViewSet):
         bikes = Bike.objects.filter(location__isnull=False).distinct()
         serializer = MaintenanceBikeSerializer(bikes, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=["GET"])
+    def logentryfeed(self, request):
+        feed = LogEntryFeed()
+        return feed(request)
 
 
 class UserDetailsView(generics.RetrieveAPIView):
@@ -255,6 +291,100 @@ class LoginProviderViewSet(
 
     def get_queryset(self):
         return  SocialApp.objects.filter(sites__id=get_current_site(self.request).id)
+
+
+class RSS20PaginatedFeed(Rss201rev2Feed):
+    def add_root_elements(self, handler):
+        super(Rss201rev2Feed, self).add_root_elements(handler)
+
+        if self.feed["page"] > 1:
+            handler.addQuickElement(
+                "link",
+                "",
+                {
+                    "rel": "first",
+                    "href": self.feed["feed_url"],
+                },
+            )
+
+        if self.feed["page"] < self.feed["last_page"]:
+            handler.addQuickElement(
+                "link",
+                "",
+                {
+                    "rel": "last",
+                    "href": (f"{self.feed['feed_url']}?page={self.feed['last_page']}"),
+                },
+            )
+
+        if self.feed["page"] > 1:
+            handler.addQuickElement(
+                "link",
+                "",
+                {
+                    "rel": "previous",
+                    "href": (f"{self.feed['feed_url']}?page={self.feed['page'] - 1}"),
+                },
+            )
+
+        if self.feed["page"] < self.feed["last_page"]:
+            handler.addQuickElement(
+                "link",
+                "",
+                {
+                    "rel": "next",
+                    "href": (f"{self.feed['feed_url']}?page={self.feed['page'] + 1}"),
+                },
+            )
+
+
+class LogEntryFeed(Feed):
+    feed_type = RSS20PaginatedFeed
+
+    def title(self):
+        return f"Maintenance Events of {preferences.BikeSharePreferences.system_name}"
+
+    def description(self):
+        return self.title()
+
+    def link(self):
+        return reverse(
+            "admin:%s_%s_changelist"
+            % (CykelLogEntry._meta.app_label, CykelLogEntry._meta.model_name)
+        )
+
+    def get_object(self, request):
+        page = int(request.GET.get("page", 1))
+        entries = CykelLogEntry.objects.order_by("-timestamp").all()
+        paginator = Paginator(entries, 25)
+        return {"page": page, "paginator": paginator}
+
+    def items(self, obj):
+        return obj["paginator"].get_page(obj["page"])
+
+    def feed_extra_kwargs(self, obj):
+        context = super().feed_extra_kwargs(obj)
+        context["page"] = obj["page"]
+        context["last_page"] = obj["paginator"].num_pages
+        return context
+
+    def item_title(self, item):
+        return item.display()
+
+    def item_pubdate(self, item):
+        return item.timestamp
+
+    def item_updateddate(self, item):
+        return item.timestamp
+
+    def item_description(self, item):
+        return self.item_title(item)
+
+    def item_link(self, item):
+        return reverse(
+            "admin:%s_%s_change" % (item._meta.app_label, item._meta.model_name),
+            args=[item.id],
+        )
 
 
 def custom_exception_handler(exc, context):

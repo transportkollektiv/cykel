@@ -1,7 +1,7 @@
 from allauth.socialaccount.models import SocialApp
 from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import Point
-from django.utils.timezone import now
+from django.utils.timezone import now, timedelta
 from rest_framework import serializers
 
 from bikesharing.models import (
@@ -13,6 +13,7 @@ from bikesharing.models import (
     Rent,
     Station,
 )
+from cykel.models import CykelLogEntry
 from cykel.serializers import MappedChoiceField
 
 
@@ -70,37 +71,34 @@ class CreateRentSerializer(serializers.HyperlinkedModelSerializer):
         return Rent.objects.create(**data)
 
     def save(self, **kwargs):
-        super().save(**kwargs)
-        # FIXME: This method contains too much self.instance. doesn't feel good.
-        # Should this stuff go into the model?
-        self.instance.bike.availability_status = Bike.Availability.IN_USE
-        self.instance.bike.save()
-
+        bike = self.validated_data["bike"]
         if (
             self.validated_data.get("lat") is not None
             and self.validated_data.get("lng") is not None
         ):
             pos = Point(
-                float(self.validated_data.get("lng")),
-                float(self.validated_data.get("lat")),
+                float(self.validated_data["lng"]),
+                float(self.validated_data["lat"]),
                 srid=4326,
             )
-            self.instance.start_position = pos
 
             loc = Location.objects.create(
-                bike=self.instance.bike, source=Location.Source.USER, reported_at=now()
+                bike=bike,
+                source=Location.Source.USER,
+                reported_at=now(),
+                geo=pos,
             )
-            loc.geo = pos
-            loc.save()
+            self.validated_data["start_location"] = loc
         else:
-            if self.instance.bike.public_geolocation():
-                self.instance.start_position = (
-                    self.instance.bike.public_geolocation().geo
-                )
-            if self.instance.bike.current_station:
-                self.instance.start_station = self.instance.bike.current_station
+            if bike.public_geolocation():
+                self.validated_data["start_location"] = bike.public_geolocation()
+            if bike.current_station:
+                self.validated_data["start_station"] = bike.current_station
 
-        self.instance.save()
+        super().save(**kwargs)
+
+        bike.availability_status = Bike.Availability.IN_USE
+        bike.save()
 
     def validate_bike(self, value):
         # seems there is no way to get the already validated and expanded bike obj
@@ -155,6 +153,42 @@ class LocationTrackerUpdateSerializer(serializers.ModelSerializer):
     def save(self):
         self.instance.last_reported = now()
         super().save()
+
+        if (
+            self.instance.tracker_status == LocationTracker.Status.ACTIVE
+            and self.instance.battery_voltage is not None
+            and self.instance.tracker_type is not None
+        ):
+            data = {"voltage": self.instance.battery_voltage}
+            action_type = None
+            action_type_prefix = "cykel.tracker"
+
+            if self.instance.bike:
+                data["bike_id"] = self.instance.bike.pk
+                action_type_prefix = "cykel.bike.tracker"
+
+            if (
+                self.instance.tracker_type.battery_voltage_critical is not None
+                and self.instance.battery_voltage
+                <= self.instance.tracker_type.battery_voltage_critical
+            ):
+                action_type = "battery.critical"
+            elif (
+                self.instance.tracker_type.battery_voltage_warning is not None
+                and self.instance.battery_voltage
+                <= self.instance.tracker_type.battery_voltage_warning
+            ):
+                action_type = "battery.warning"
+
+            if action_type is not None:
+                action_type = "{}.{}".format(action_type_prefix, action_type)
+                somehoursago = now() - timedelta(hours=48)
+                CykelLogEntry.create_unless_time(
+                    somehoursago,
+                    content_object=self.instance,
+                    action_type=action_type,
+                    data=data,
+                )
 
     def validate(self, data):
         if (data.get("lat") is None and data.get("lng") is not None) or (
