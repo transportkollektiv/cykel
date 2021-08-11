@@ -5,6 +5,7 @@ from django.contrib.gis.measure import D
 from django.contrib.sites.shortcuts import get_current_site
 from django.contrib.syndication.views import Feed
 from django.core.paginator import Paginator
+from django.http import JsonResponse
 from django.urls import reverse
 from django.utils.feedgenerator import Rss201rev2Feed
 from django.utils.timezone import now, timedelta
@@ -41,9 +42,6 @@ from .serializers import (
     StationSerializer,
     UserDetailsSerializer,
 )
-
-from django.http import  JsonResponse
-from bikesharing.models import Station
 
 class BikeViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Bike.objects.all()
@@ -430,8 +428,8 @@ def get_station_locations(request):
     locations = []
     for station in query:
         locations.append({
-            'name': station[0], 
-            'location' : 
+            'name': station[0],
+            'location' :
                 {'lng' : station[1][0], 'lat' : station[1][1]}
         })
 
