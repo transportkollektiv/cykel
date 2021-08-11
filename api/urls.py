@@ -8,7 +8,7 @@ from .views import (
     RentViewSet,
     UserDetailsView,
     get_station_locations,
-    updatebikelocation
+    updatebikelocation,
 )
 
 router = routers.DefaultRouter(trailing_slash=False)
@@ -21,5 +21,5 @@ urlpatterns = [
     path("user", UserDetailsView.as_view()),
     path("config/loginproviders", LoginProviderViewSet.as_view({"get": "list"})),
     path("auth/token", views.obtain_auth_token),
-    path("stations/locations", get_station_locations)
+    path("stations/locations", get_station_locations),
 ]

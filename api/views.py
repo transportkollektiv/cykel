@@ -43,6 +43,7 @@ from .serializers import (
     UserDetailsSerializer,
 )
 
+
 class BikeViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Bike.objects.all()
     serializer_class = BikeSerializer
@@ -288,7 +289,7 @@ class LoginProviderViewSet(
     serializer_class = SocialAppSerializer
 
     def get_queryset(self):
-        return  SocialApp.objects.filter(sites__id=get_current_site(self.request).id)
+        return SocialApp.objects.filter(sites__id=get_current_site(self.request).id)
 
 
 class RSS20PaginatedFeed(Rss201rev2Feed):
@@ -424,14 +425,15 @@ def custom_exception_handler(exc, context):
 @api_view(["GET"])
 @permission_classes([])
 def get_station_locations(request):
-    query = Station.objects.values_list('station_name', 'location')
+    query = Station.objects.values_list("station_name", "location")
     locations = []
     for station in query:
-        locations.append({
-            'name': station[0],
-            'location' :
-                {'lng' : station[1][0], 'lat' : station[1][1]}
-        })
+        locations.append(
+            {
+                "name": station[0],
+                "location": {"lng": station[1][0], "lat": station[1][1]},
+            }
+        )
 
     response = JsonResponse(locations, safe=False)
     return response
