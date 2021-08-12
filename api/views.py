@@ -5,7 +5,6 @@ from django.contrib.gis.measure import D
 from django.contrib.sites.shortcuts import get_current_site
 from django.contrib.syndication.views import Feed
 from django.core.paginator import Paginator
-from django.http import JsonResponse
 from django.urls import reverse
 from django.utils.feedgenerator import Rss201rev2Feed
 from django.utils.timezone import now, timedelta
@@ -420,20 +419,3 @@ def custom_exception_handler(exc, context):
 
     data = {"errors": errors, "message": "\n".join(messages)}
     return Response(data, status=response.status_code, headers=headers)
-
-
-@api_view(["GET"])
-@permission_classes([])
-def get_station_locations(request):
-    query = Station.objects.values_list("station_name", "location")
-    locations = []
-    for station in query:
-        locations.append(
-            {
-                "name": station[0],
-                "location": {"lng": station[1][0], "lat": station[1][1]},
-            }
-        )
-
-    response = JsonResponse(locations, safe=False)
-    return response
