@@ -69,6 +69,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "leaflet",
     "preferences",
+    "schedule",
 ]
 
 try:

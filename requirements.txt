@@ -12,3 +12,4 @@ requests==2.24.0
 sentry-sdk==0.19.1
 psycopg2
 celery[redis]~=5.0.2
+django-scheduler==0.9.5
