@@ -8,11 +8,13 @@ from .views import (
     RentViewSet,
     UserDetailsView,
     updatebikelocation,
+    ReservationViewSet,
 )
 
 router = routers.DefaultRouter(trailing_slash=False)
 router.register(r"rent", RentViewSet, basename="rent")
 router.register(r"maintenance", MaintenanceViewSet, basename="maintenance")
+router.register(r"reservation", ReservationViewSet, basename="reservation")
 
 urlpatterns = [
     re_path(r"^", include(router.urls)),

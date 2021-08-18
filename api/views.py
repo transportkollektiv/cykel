@@ -8,6 +8,7 @@ from django.core.paginator import Paginator
 from django.urls import reverse
 from django.utils.feedgenerator import Rss201rev2Feed
 from django.utils.timezone import now, timedelta
+from django.shortcuts import get_object_or_404
 from preferences import preferences
 from rest_framework import exceptions, generics, mixins, status, viewsets
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
@@ -40,8 +41,10 @@ from .serializers import (
     SocialAppSerializer,
     StationSerializer,
     UserDetailsSerializer,
+    ReservationSerializer,
 )
 
+from schedule.models import Event
 
 class BikeViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Bike.objects.all()
@@ -419,3 +422,44 @@ def custom_exception_handler(exc, context):
 
     data = {"errors": errors, "message": "\n".join(messages)}
     return Response(data, status=response.status_code, headers=headers)
+
+#@permission_classes([IsAuthenticated, CanRentBikePermission])
+class ReservationViewSet(viewsets.ViewSet):
+    def get_queryset(self):
+        user = self.request.user
+        return Event.objects.filter(creator = user)
+
+    def list(self, request):
+        queryset = self.get_queryset()
+        serializer = ReservationSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def retrieve(self, request, pk=None):
+        queryset = self.get_queryset()
+        event = get_object_or_404(queryset, pk=pk)
+        serializer = ReservationSerializer(event)
+        return Response(serializer.data)
+
+    def create(self, request):
+        pass
+
+
+
+# @api_view(["POST"])
+# @permission_classes([HasAPIKey])
+# def createReservation(request):
+#     startDate = request.data.get("startDate")
+#     endDate = request.data.get("endDate")
+#     startStation = request.data.get("startStation")
+#     data = {
+#         'title': 'Reservation',
+#         'start': '',
+#         'end': '',
+#     }
+#     reservation = Event(**data)
+#     reservation.create_relation(user, 'owner')
+
+#     if not loc:
+#         return Response({"success": True, "warning": "lat/lng missing"})
+
+#     return Response({"success": True})
