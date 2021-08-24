@@ -297,3 +297,4 @@ class ReservationSerializer(serializers.ModelSerializer):
         model = Event
         # creator = user id
         fields = ("id", "start", "end", "creator")
+        

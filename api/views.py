@@ -44,7 +44,8 @@ from .serializers import (
     ReservationSerializer,
 )
 
-from schedule.models import Event
+from schedule.models import Event, Calendar
+from datetime import datetime
 
 class BikeViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Bike.objects.all()
@@ -441,25 +442,28 @@ class ReservationViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
     def create(self, request):
-        pass
+        calendar = Calendar.objects.filter(name = "Reservations")
+        if calendar is None:
+            calendar = Calendar(name="Reservations", slug="reservations")
+            calendar.save()
 
+        # TODO parse datetime from frontend
+        startDate = request.data.get("startDate")
+        endDate = request.data.get("endDate")
+        startStation = request.data.get("startStation")
+        data = {
+            'title': 'Reservation',
+            'start': datetime.now(),
+            'end': datetime(2021, 8, 23),
+            'calendar': calendar[0],
+            'creator': self.request.user,
+        }
+        reservation = Event(**data)
+        reservation.save()
+        return Response(status=status.HTTP_201_CREATED)
 
-
-# @api_view(["POST"])
-# @permission_classes([HasAPIKey])
-# def createReservation(request):
-#     startDate = request.data.get("startDate")
-#     endDate = request.data.get("endDate")
-#     startStation = request.data.get("startStation")
-#     data = {
-#         'title': 'Reservation',
-#         'start': '',
-#         'end': '',
-#     }
-#     reservation = Event(**data)
-#     reservation.create_relation(user, 'owner')
-
-#     if not loc:
-#         return Response({"success": True, "warning": "lat/lng missing"})
-
-#     return Response({"success": True})
+    def destroy(self, request, pk=None):
+        queryset = self.get_queryset()
+        event = get_object_or_404(queryset, pk=pk)
+        event.delete()
+        return Response()
