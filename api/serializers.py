@@ -16,6 +16,7 @@ from bikesharing.models import (
 from cykel.models import CykelLogEntry
 from cykel.serializers import MappedChoiceField
 from schedule.models import Event
+from reservation.models import Reservation
 
 
 class LockTypeSerializer(serializers.HyperlinkedModelSerializer):
@@ -292,9 +293,17 @@ class MaintenanceLockSerializer(serializers.ModelSerializer):
         model = Lock
         fields = ("unlock_key", "lock_type", "lock_id")
 
-class ReservationSerializer(serializers.ModelSerializer):
+class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         # creator = user id
         fields = ("id", "start", "end", "creator")
+
+class ReservationSerializer(serializers.ModelSerializer):
+    event = EventSerializer(read_only=True)
+    start_location = StationSerializer(read_only=True)
+    bike = BikeSerializer(read_only=True)
+    class Meta:
+        model = Reservation
+        fields = ("id", "start_location", "event", "bike")
         

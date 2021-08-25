@@ -45,6 +45,7 @@ from .serializers import (
 )
 
 from schedule.models import Event, Calendar
+from reservation.models import Reservation
 from datetime import datetime
 
 class BikeViewSet(viewsets.ReadOnlyModelViewSet):
@@ -428,7 +429,7 @@ def custom_exception_handler(exc, context):
 class ReservationViewSet(viewsets.ViewSet):
     def get_queryset(self):
         user = self.request.user
-        return Event.objects.filter(creator = user)
+        return Reservation.objects.filter(creator = user)
 
     def list(self, request):
         queryset = self.get_queryset()
@@ -437,8 +438,8 @@ class ReservationViewSet(viewsets.ViewSet):
 
     def retrieve(self, request, pk=None):
         queryset = self.get_queryset()
-        event = get_object_or_404(queryset, pk=pk)
-        serializer = ReservationSerializer(event)
+        reservation = get_object_or_404(queryset, pk=pk)
+        serializer = ReservationSerializer(reservation)
         return Response(serializer.data)
 
     def create(self, request):
@@ -451,15 +452,25 @@ class ReservationViewSet(viewsets.ViewSet):
         startDate = request.data.get("startDate")
         endDate = request.data.get("endDate")
         startStation = request.data.get("startStation")
+
         data = {
             'title': 'Reservation',
             'start': datetime.now(),
-            'end': datetime(2021, 8, 23),
+            'end': datetime(2021, 8, 29),
             'calendar': calendar[0],
             'creator': self.request.user,
         }
-        reservation = Event(**data)
+        event = Event(**data)
+        event.save()
+
+        data = {
+            'creator': self.request.user,
+            'start_location': Station.objects.all().first(),
+            'event': event,
+        }
+        reservation = Reservation(**data)
         reservation.save()
+
         return Response(status=status.HTTP_201_CREATED)
 
     def destroy(self, request, pk=None):
