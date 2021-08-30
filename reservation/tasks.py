@@ -8,7 +8,6 @@ from django.utils.timezone import now, timedelta
 def start_rents_for_reservations():
     upcoming_reservations = Reservation.objects.filter(bike__isnull=True, event__start__lt=now()+timedelta(hours=2))
     for reservation in upcoming_reservations:
-        print(reservation.event.start)
         available_bike = Bike.objects.filter(availability_status=Bike.Availability.AVAILABLE, current_station=reservation.start_location).first()
         if available_bike is not None:
             available_bike.availability_status = Bike.Availability.IN_USE
