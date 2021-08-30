@@ -148,6 +148,10 @@ CELERY_BEAT_SCHEDULE = {
         "task": "bikesharing.tasks.log_missing_tracker_updates",
         "schedule": timedelta(minutes=15),
     },
+    "start_rents_for_reservations": {
+        "task": "reservation.tasks.start_rents_for_reservations",
+        "schedule": timedelta(minutes=5),
+    },
 }
 
 # move celery beat last run time storage into temp dir
