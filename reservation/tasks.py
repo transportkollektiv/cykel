@@ -6,7 +6,7 @@ from django.utils.timezone import now, timedelta
 
 @shared_task
 def start_rents_for_reservations():
-    upcoming_reservations = Reservation.objects.filter(bike__isnull=True, event__start__lt=now()+timedelta(hours=2))
+    upcoming_reservations = Reservation.objects.filter(rent__isnull=True, bike__isnull=True, event__start__lt=now()+timedelta(hours=2), event__end__gt=now())
     for reservation in upcoming_reservations:
         available_bike = Bike.objects.filter(availability_status=Bike.Availability.AVAILABLE, current_station=reservation.start_location).first()
         if available_bike is not None:
@@ -20,4 +20,14 @@ def start_rents_for_reservations():
             )
             rent.save()
             reservation.bike = available_bike
+            reservation.rent = rent
             reservation.save()
+
+@shared_task
+def end_reservations_of_finished_rents():
+    end_reservations = Reservation.objects.filter(rent__rent_end__lt=now())
+    for reservation in end_reservations:
+        reservation.bike = None
+        reservation.event.end = reservation.rent.rent_end
+        reservation.event.save()
+        reservation.save()

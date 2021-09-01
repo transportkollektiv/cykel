@@ -475,6 +475,6 @@ class ReservationViewSet(viewsets.ViewSet):
 
     def destroy(self, request, pk=None):
         queryset = self.get_queryset()
-        event = get_object_or_404(queryset, pk=pk)
-        event.delete()
+        reservation = get_object_or_404(queryset, pk=pk)
+        reservation.event.delete()
         return Response()
