@@ -443,21 +443,27 @@ class ReservationViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
     def create(self, request):
-        calendar = Calendar.objects.filter(name = "Reservations")
+        calendar = Calendar.objects.filter(name = "Reservations")[0]
         if calendar is None:
             calendar = Calendar(name="Reservations", slug="reservations")
             calendar.save()
 
-        # TODO parse datetime from frontend
-        startDate = request.data.get("startDate")
-        endDate = request.data.get("endDate")
-        startStation = request.data.get("startStation")
+        startDateString = request.data["startDate"]
+        endDateString = request.data["endDate"]
+        startStationId = request.data["startStationId"]
+        
+        if(startDateString is None or endDateString is None or startStationId is None):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        startStation = get_object_or_404(Station, pk=startStationId)
+        startDate = datetime.strptime(startDateString, '%Y-%m-%dT%H:%M')
+        endDate = datetime.strptime(endDateString, '%Y-%m-%dT%H:%M')
 
         data = {
             'title': 'Reservation',
-            'start': datetime.now(),
-            'end': datetime(2021, 8, 29),
-            'calendar': calendar[0],
+            'start': startDate,
+            'end': endDate,
+            'calendar': calendar,
             'creator': self.request.user,
         }
         event = Event(**data)
@@ -465,7 +471,7 @@ class ReservationViewSet(viewsets.ViewSet):
 
         data = {
             'creator': self.request.user,
-            'start_location': Station.objects.all().first(),
+            'start_location': startStation,
             'event': event,
         }
         reservation = Reservation(**data)

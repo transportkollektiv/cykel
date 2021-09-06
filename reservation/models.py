@@ -8,4 +8,4 @@ class Reservation(models.Model):
     creator = models.ForeignKey(django_settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
     start_location = models.ForeignKey(Station, on_delete=models.CASCADE)
     event = models.OneToOneField(Event, on_delete=models.CASCADE)
-    bike = models.OneToOneField(Bike, on_delete=models.CASCADE, null=True, blank=True)
+    bike = models.OneToOneField(Bike, on_delete=models.SET_NULL, null=True, blank=True)

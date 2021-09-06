@@ -296,7 +296,6 @@ class MaintenanceLockSerializer(serializers.ModelSerializer):
 class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
-        # creator = user id
         fields = ("id", "start", "end", "creator")
 
 class ReservationSerializer(serializers.ModelSerializer):
