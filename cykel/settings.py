@@ -152,6 +152,10 @@ CELERY_BEAT_SCHEDULE = {
         "task": "reservation.tasks.start_rents_for_reservations",
         "schedule": timedelta(minutes=5),
     },
+    "end_reservations_of_finished_rents": {
+        "task": "reservation.tasks.end_reservations_of_finished_rents",
+        "schedule": timedelta(minutes=1),
+    },
 }
 
 # move celery beat last run time storage into temp dir
