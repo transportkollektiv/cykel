@@ -25,6 +25,7 @@ class Migration(migrations.Migration):
                 ('creator', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
                 ('event', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to='schedule.event')),
                 ('start_location', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='bikesharing.station')),
+                ('vehicle_type', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='bikesharing.VehicleType')),
             ],
         ),
     ]

@@ -12,6 +12,7 @@ from bikesharing.models import (
     LockType,
     Rent,
     Station,
+    VehicleType,
 )
 from cykel.models import CykelLogEntry
 from cykel.serializers import MappedChoiceField
@@ -40,6 +41,11 @@ class BikeSerializer(serializers.HyperlinkedModelSerializer):
         model = Bike
         fields = ("bike_number", "lock_type")
 
+class VehicleTypeSerializer(serializers.HyperlinkedModelSerializer):
+
+    class Meta:
+        model = VehicleType
+        fields = ("name")
 
 class StationSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
@@ -107,6 +113,8 @@ class CreateRentSerializer(serializers.HyperlinkedModelSerializer):
         bike = Bike.objects.get(bike_number=value)
         if bike.availability_status != Bike.Availability.AVAILABLE:
             raise serializers.ValidationError("bike is not available")
+        if not bike.vehicle_type.allow_spontaneous_rent:
+            raise serializers.ValidationError("bike is not allowed for spontaneous rents")
         return value
 
     def validate(self, data):
@@ -302,7 +310,7 @@ class ReservationSerializer(serializers.ModelSerializer):
     event = EventSerializer(read_only=True)
     start_location = StationSerializer(read_only=True)
     bike = BikeSerializer(read_only=True)
+    vehicle_type = VehicleTypeSerializer(read_only=True)
     class Meta:
         model = Reservation
-        fields = ("id", "start_location", "event", "bike")
-        
+        fields = ("id", "start_location", "event", "bike", "vehicle_type")

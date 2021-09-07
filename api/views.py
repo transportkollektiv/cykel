@@ -28,7 +28,7 @@ from rest_framework.response import Response
 from rest_framework.views import exception_handler
 from rest_framework_api_key.permissions import HasAPIKey
 
-from bikesharing.models import Bike, Location, LocationTracker, Rent, Station
+from bikesharing.models import Bike, Location, LocationTracker, Rent, Station, VehicleType
 from cykel.models import CykelLogEntry
 
 from .authentication import BasicTokenAuthentication
@@ -443,26 +443,34 @@ class ReservationViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
     def create(self, request):
-        calendar = Calendar.objects.filter(name = "Reservations")[0]
-        if calendar is None:
+        calendar = Calendar.objects.filter(name = "Reservations")
+        if not calendar:
             calendar = Calendar(name="Reservations", slug="reservations")
             calendar.save()
+        else:
+            calendar = calendar[0]
 
-        startDateString = request.data["startDate"]
-        endDateString = request.data["endDate"]
-        startStationId = request.data["startStationId"]
-        
-        if(startDateString is None or endDateString is None or startStationId is None):
+        start_date_string = request.data["startDate"]
+        end_date_string = request.data["endDate"]
+        start_station_id = request.data["startStationId"]
+        vehicle_type_id = request.data["vehicleTypeId"]
+
+        if start_date_string is None or end_date_string is None or start_station_id is None or vehicle_type_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        startStation = get_object_or_404(Station, pk=startStationId)
-        startDate = datetime.strptime(startDateString, '%Y-%m-%dT%H:%M')
-        endDate = datetime.strptime(endDateString, '%Y-%m-%dT%H:%M')
+        start_station = get_object_or_404(Station, pk=start_station_id)
+
+        vehicle_type = get_object_or_404(VehicleType, pk=vehicle_type_id)
+        if not vehicle_type.allow_reservation:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        start_date = datetime.strptime(start_date_string, '%Y-%m-%dT%H:%M')
+        end_date = datetime.strptime(end_date_string, '%Y-%m-%dT%H:%M')
 
         data = {
             'title': 'Reservation',
-            'start': startDate,
-            'end': endDate,
+            'start': start_date,
+            'end': end_date,
             'calendar': calendar,
             'creator': self.request.user,
         }
@@ -471,7 +479,8 @@ class ReservationViewSet(viewsets.ViewSet):
 
         data = {
             'creator': self.request.user,
-            'start_location': startStation,
+            'start_location': start_station,
+            'vehicle_type': vehicle_type,
             'event': event,
         }
         reservation = Reservation(**data)
