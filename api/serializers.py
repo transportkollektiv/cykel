@@ -45,7 +45,7 @@ class VehicleTypeSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = VehicleType
-        fields = ("name")
+        fields = ("name",)
 
 class StationSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
@@ -313,4 +313,4 @@ class ReservationSerializer(serializers.ModelSerializer):
     vehicle_type = VehicleTypeSerializer(read_only=True)
     class Meta:
         model = Reservation
-        fields = ("id", "start_location", "event", "bike", "vehicle_type")
+        fields = ("id", "start_location", "event", "bike", "vehicle_type", "rent")
