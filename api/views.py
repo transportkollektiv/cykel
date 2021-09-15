@@ -45,6 +45,7 @@ from .serializers import (
 )
 
 from schedule.models import Event, Calendar
+from schedule.periods import Period, Month, Week
 from reservation.models import Reservation
 from datetime import datetime
 
@@ -425,7 +426,7 @@ def custom_exception_handler(exc, context):
     data = {"errors": errors, "message": "\n".join(messages)}
     return Response(data, status=response.status_code, headers=headers)
 
-#@permission_classes([IsAuthenticated, CanRentBikePermission])
+@permission_classes([IsAuthenticated, CanRentBikePermission])
 class ReservationViewSet(viewsets.ViewSet):
     def get_queryset(self):
         user = self.request.user
@@ -485,11 +486,41 @@ class ReservationViewSet(viewsets.ViewSet):
         }
         reservation = Reservation(**data)
         reservation.save()
+        serializer = ReservationSerializer(reservation)
 
-        return Response(status=status.HTTP_201_CREATED)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def destroy(self, request, pk=None):
         queryset = self.get_queryset()
         reservation = get_object_or_404(queryset, pk=pk)
         reservation.event.delete()
         return Response()
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def getAllowedDates(request):
+    stationId = request.data["station"]
+    station = get_object_or_404(Station, pk=stationId)
+    # 1. events of all reservations starting at given station that did not end
+    reservations = Reservation.objects.filter(event__end__gte=(datetime.now()), start_location__id=stationId)
+    
+    # 2. total reservations less than the maximum of reservations
+    if (len(reservations) < station.max_bikes):
+        # all dates allowed
+        print('all dates allowed')
+
+    # 3. find ranges where max of reservations is
+    # 3.1 get list of events from reservations
+    events = [x.event for x in reservations]
+
+    today = datetime.now()
+    this_month_period = Month(events, today)
+    print(this_month_period.get_occurrence_partials())
+
+    # check month period 
+    # if more than max check every week period of month
+    # for each week with more than max check every day period
+    
+    
+    serializer = ReservationSerializer(reservations, many=True)
+    return Response(serializer.data)
