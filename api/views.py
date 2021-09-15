@@ -45,7 +45,7 @@ from .serializers import (
 )
 
 from schedule.models import Event, Calendar
-from schedule.periods import Period, Month, Week
+from schedule.periods import Period, Month, Day
 from reservation.models import Reservation
 from datetime import datetime
 
@@ -496,31 +496,36 @@ class ReservationViewSet(viewsets.ViewSet):
         reservation.event.delete()
         return Response()
 
-@api_view(["POST"])
+@api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def getAllowedDates(request):
-    stationId = request.data["station"]
-    station = get_object_or_404(Station, pk=stationId)
-    # 1. events of all reservations starting at given station that did not end
-    reservations = Reservation.objects.filter(event__end__gte=(datetime.now()), start_location__id=stationId)
-    
-    # 2. total reservations less than the maximum of reservations
-    if (len(reservations) < station.max_bikes):
-        # all dates allowed
-        print('all dates allowed')
+    year = int(request.query_params.get('year'))
+    month = int(request.query_params.get('month'))
+    #stationId = request.query_params.get('station')
 
-    # 3. find ranges where max of reservations is
-    # 3.1 get list of events from reservations
+    reservations = Reservation.objects.filter(event__end__gte=(datetime.now()))
+
+    requestedMonth = datetime(year, month, 1)
     events = [x.event for x in reservations]
 
-    today = datetime.now()
-    this_month_period = Month(events, today)
-    print(this_month_period.get_occurrence_partials())
+    this_month_period = Month(events, requestedMonth)
 
-    # check month period 
-    # if more than max check every week period of month
-    # for each week with more than max check every day period
+    allowedDays = []
+    for day in this_month_period.get_days():
+        if len(day.get_occurrences()) == 0:
+            allowedDays.append(day.start.date())
     
-    
-    serializer = ReservationSerializer(reservations, many=True)
-    return Response(serializer.data)
+    return Response({'allowedDays': allowedDays})
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def getAllowedTimes(request):
+    dateString = request.query_params.get('date')
+    requestedDay = datetime.strptime(dateString, '%Y-%m-%d')
+
+    reservations = Reservation.objects.filter(event__end__gte=(datetime.now()))
+    events = [x.event for x in reservations]
+
+    day = Day(events, requestedDay)
+
+    return Response({'minTime': '00:00', 'maxTime': '23:59'})

@@ -10,6 +10,7 @@ from .views import (
     updatebikelocation,
     ReservationViewSet,
     getAllowedDates,
+    getAllowedTimes,
 )
 
 router = routers.DefaultRouter(trailing_slash=False)
@@ -24,4 +25,5 @@ urlpatterns = [
     path("config/loginproviders", LoginProviderViewSet.as_view({"get": "list"})),
     path("auth/token", views.obtain_auth_token),
     path("reservationdates/alloweddates", getAllowedDates),
+    path("reservationdates/allowedtimes", getAllowedTimes),
 ]
