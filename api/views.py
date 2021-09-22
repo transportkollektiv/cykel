@@ -504,15 +504,20 @@ def getAllowedDates(request):
     #stationId = request.query_params.get('station')
 
     reservations = Reservation.objects.filter(event__end__gte=(datetime.now()))
-
-    requestedMonth = datetime(year, month, 1)
     events = [x.event for x in reservations]
 
+    requestedMonth = datetime(year, month, 1)
     this_month_period = Month(events, requestedMonth)
 
     allowedDays = []
     for day in this_month_period.get_days():
-        if len(day.get_occurrences()) == 0:
+        occurrences = day.get_occurrence_partials()
+        number_of_occ = len(occurrences)
+        for occurrence in occurrences:
+            if occurrence['class'] in [0,1,3]:
+                number_of_occ -= 1
+
+        if number_of_occ < 2:
             allowedDays.append(day.start.date())
     
     return Response({'allowedDays': allowedDays})
@@ -521,11 +526,43 @@ def getAllowedDates(request):
 @permission_classes([IsAuthenticated])
 def getAllowedTimes(request):
     dateString = request.query_params.get('date')
-    requestedDay = datetime.strptime(dateString, '%Y-%m-%d')
+    minTime = "00:00"
+    maxTime = "23:59"
 
     reservations = Reservation.objects.filter(event__end__gte=(datetime.now()))
     events = [x.event for x in reservations]
 
+    requestedDay = datetime.strptime(dateString, '%Y-%m-%d')
     day = Day(events, requestedDay)
 
-    return Response({'minTime': '00:00', 'maxTime': '23:59'})
+    times = { 'minTime' : minTime, 'maxTime': maxTime}
+
+    # Dateformat 2021-11-19 22:59:00+00:00
+    #TODO Vorlaufzeit einbauen
+    for occurrence in day.get_occurrence_partials():
+        if occurrence['class'] == 0:
+            maxTime = occurrence['occurrence'].event.start.time()
+            times['maxTime'] = maxTime
+        elif occurrence['class'] == 1:
+            print('occurence started and ended today')
+            startTime = occurrence['occurrence'].event.start.time()
+            endTime = occurrence['occurrence'].event.end.time()
+            times['forbiddenRange'] = { 'start': startTime, 'end': endTime}
+        elif occurrence['class'] == 3:
+            minTime = occurrence['occurrence'].event.end.time()
+            print('occurence ended today')
+            times['minTime'] = minTime
+
+    print('Response:')
+    print(times)
+
+    return Response(times)
+
+    # {
+    #     minTime: x,
+    #     maxTime: y,
+    #     forbiddenRange: {
+    #         start: x
+    #         end: y
+    #     },
+    # }
