@@ -364,9 +364,12 @@ class LogEntryFeed(Feed):
             % (CykelLogEntry._meta.app_label, CykelLogEntry._meta.model_name)
         )
 
+    def get_entries(self, request):
+        return CykelLogEntry.objects.order_by("-timestamp").all()
+
     def get_object(self, request):
         page = int(request.GET.get("page", 1))
-        entries = CykelLogEntry.objects.order_by("-timestamp").all()
+        entries = self.get_entries(request)
         paginator = Paginator(entries, 25)
         return {"page": page, "paginator": paginator}
 
@@ -396,6 +399,11 @@ class LogEntryFeed(Feed):
             "admin:%s_%s_change" % (item._meta.app_label, item._meta.model_name),
             args=[item.id],
         )
+
+
+class FilteredLogEntryFeed(LogEntryFeed):
+    def get_entries(self, request):
+        return CykelLogEntry.objects.order_by("-timestamp").all()
 
 
 def custom_exception_handler(exc, context):
