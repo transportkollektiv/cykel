@@ -50,6 +50,11 @@ class CykelLogEntryAdmin(admin.ModelAdmin):
         "data",
     )
 
+    def has_view_perission(self, request, obj=None):
+        if request.user.has_perm("bikesharing.maintain"):
+            return True
+        return super().has_view_perission(self, request, obj=obj)
+
     def has_add_permission(self, request):
         return False
 
