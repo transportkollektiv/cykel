@@ -3,6 +3,7 @@ version: '3'
 services:
   db:
     image: mdillon/postgis
+    restart: always
     volumes:
       - data:/var/lib/postgresql/data
     environment:
@@ -18,8 +19,6 @@ services:
       - .:/code
     environment:
       - SECRET_KEY=fooooo
-      - ALLOWED_HOSTS=0.0.0.0,localhost
-      - DEBUG=1
       - DATABASE_URL=postgis://postgres:password@db:5432/cykel
       - REDIS_URL=redis://redis:6379/0
     depends_on:
@@ -29,14 +28,10 @@ services:
 
   cykel:
     <<: *default
+    restart: always
     command: python manage.py runserver 0.0.0.0:8000
     ports:
       - "8000:8000"
-
-  voorwiel:
-    image: stadtulm/voorwiel
-    ports:
-      - "8080:80"
 
 volumes:
   data:
