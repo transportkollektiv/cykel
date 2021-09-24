@@ -1,4 +1,5 @@
 import pytest
+from django.contrib.admin.options import get_content_type_for_model
 from django.contrib.auth.models import Permission
 from django.contrib.gis.geos import Point
 from django.utils.timezone import now
@@ -6,6 +7,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
 from bikesharing.models import Bike, Location, Lock, LockType, Rent
+from cykel.models import CykelLogEntry
 
 
 @pytest.fixture
@@ -69,6 +71,16 @@ def another_lock(lock_type_combination):
 
 
 @pytest.fixture
+def some_lock(lock_type_combination):
+    return Lock.objects.create(unlock_key="000000", lock_type=lock_type_combination)
+
+
+@pytest.fixture
+def different_lock(lock_type_combination):
+    return Lock.objects.create(unlock_key="000000", lock_type=lock_type_combination)
+
+
+@pytest.fixture
 def available_bike(lock):
     return Bike.objects.create(
         availability_status=Bike.Availability.AVAILABLE, bike_number="1337", lock=lock
@@ -92,11 +104,40 @@ def inuse_bike(another_lock):
 
 
 @pytest.fixture
+def inuse_missing_bike(different_lock):
+    return Bike.objects.create(
+        availability_status=Bike.Availability.IN_USE,
+        state=Bike.State.MISSING,
+        bike_number="8404",
+        lock=different_lock,
+    )
+
+
+@pytest.fixture
+def missing_bike(some_lock):
+    return Bike.objects.create(
+        availability_status=Bike.Availability.AVAILABLE,
+        state=Bike.State.MISSING,
+        bike_number="404",
+        lock=some_lock,
+    )
+
+
+@pytest.fixture
 def rent_jane_running(testuser_jane_canrent, inuse_bike):
     return Rent.objects.create(
         rent_start=now(),
         user=testuser_jane_canrent,
         bike=inuse_bike,
+    )
+
+
+@pytest.fixture
+def rent_jane_running_missing(testuser_jane_canrent, inuse_missing_bike):
+    return Rent.objects.create(
+        rent_start=now(),
+        user=testuser_jane_canrent,
+        bike=inuse_missing_bike,
     )
 
 
@@ -210,6 +251,59 @@ def test_start_rent_logged_in_with_renting_rights_and_location_from_client(
 
 
 @pytest.mark.django_db
+def test_start_rent_logged_in_with_renting_rights_and_location_from_client_missing_bike(
+    testuser_jane_canrent, user_client_jane_canrent_logged_in, missing_bike
+):
+    data = {"bike": missing_bike.bike_number, "lat": -99.99, "lng": -89.99}
+    response = user_client_jane_canrent_logged_in.post("/api/rent", data)
+    assert response.status_code == 201, response.content
+
+    rent_id = response.json()["id"]
+
+    missing_bike.refresh_from_db()
+    assert missing_bike.availability_status == Bike.Availability.IN_USE
+
+    rent = Rent.objects.get(id=rent_id)
+    assert rent.start_location is not None
+    assert rent.start_location.geo.x == -89.99
+    assert rent.start_location.geo.y == -99.99
+
+    logentry = CykelLogEntry.objects.get(
+        content_type=get_content_type_for_model(missing_bike),
+        object_id=missing_bike.pk,
+        action_type="cykel.bike.missing_reporting",
+    )
+    assert logentry is not None
+    assert logentry.data["location_id"] is not None
+    assert logentry.data["location_id"] == rent.start_location.id
+
+
+@pytest.mark.django_db
+def test_start_rent_logged_in_with_renting_rights_missing_bike(
+    testuser_jane_canrent, user_client_jane_canrent_logged_in, missing_bike
+):
+    data = {"bike": missing_bike.bike_number}
+    response = user_client_jane_canrent_logged_in.post("/api/rent", data)
+    assert response.status_code == 201, response.content
+
+    rent_id = response.json()["id"]
+
+    missing_bike.refresh_from_db()
+    assert missing_bike.availability_status == Bike.Availability.IN_USE
+
+    rent = Rent.objects.get(id=rent_id)
+    assert rent.start_location is None
+
+    logentry = CykelLogEntry.objects.get(
+        content_type=get_content_type_for_model(missing_bike),
+        object_id=missing_bike.pk,
+        action_type="cykel.bike.missing_reporting",
+    )
+    assert logentry is not None
+    assert "location_id" not in logentry.data
+
+
+@pytest.mark.django_db
 def test_end_rent_logged_in_with_renting_rights(
     testuser_jane_canrent,
     user_client_jane_canrent_logged_in,
@@ -287,6 +381,42 @@ def test_end_rent_logged_in_with_renting_rights_and_location_from_client(
     assert inuse_bike.public_geolocation().source == Location.Source.USER
     assert inuse_bike.public_geolocation().geo.x == -89.99
     assert inuse_bike.public_geolocation().geo.y == -99.99
+
+
+@pytest.mark.django_db
+def test_end_rent_logged_in_with_renting_rights_and_location_from_client_missing_bike(
+    testuser_jane_canrent,
+    user_client_jane_canrent_logged_in,
+    rent_jane_running_missing,
+    inuse_missing_bike,
+):
+    data = {"lat": -99.99, "lng": -89.99}
+    response = user_client_jane_canrent_logged_in.post(
+        "/api/rent/{}/finish".format(rent_jane_running_missing.id), data
+    )
+    assert response.status_code == 200, response.content
+    assert response.json()["success"] is True
+
+    rent_jane_running_missing.refresh_from_db()
+    assert rent_jane_running_missing.rent_end is not None
+    assert rent_jane_running_missing.end_location is not None
+    assert rent_jane_running_missing.end_location.geo.x == -89.99
+    assert rent_jane_running_missing.end_location.geo.y == -99.99
+
+    inuse_missing_bike.refresh_from_db()
+    assert inuse_missing_bike.availability_status == Bike.Availability.AVAILABLE
+    assert inuse_missing_bike.public_geolocation().source == Location.Source.USER
+    assert inuse_missing_bike.public_geolocation().geo.x == -89.99
+    assert inuse_missing_bike.public_geolocation().geo.y == -99.99
+
+    logentry = CykelLogEntry.objects.get(
+        content_type=get_content_type_for_model(inuse_missing_bike),
+        object_id=inuse_missing_bike.pk,
+        action_type="cykel.bike.missing_reporting",
+    )
+    assert logentry is not None
+    assert logentry.data["location_id"] is not None
+    assert logentry.data["location_id"] == rent_jane_running_missing.end_location.id
 
 
 @pytest.mark.django_db

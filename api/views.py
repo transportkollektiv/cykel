@@ -100,8 +100,21 @@ class RentViewSet(
         resp = super().create(request)
         if resp.status_code != status.HTTP_201_CREATED:
             return resp
-        # override output with RentSerializer
+
         rent = self.get_queryset().get(id=resp.data["id"])
+
+        if rent.bike.state == Bike.State.MISSING:
+            data = {}
+            if rent.start_location:
+                data = {"location_id": rent.start_location.id}
+
+            CykelLogEntry.objects.create(
+                content_object=rent.bike,
+                action_type="cykel.bike.missing_reporting",
+                data=data,
+            )
+
+        # override output with RentSerializer
         serializer = RentSerializer(rent, context={"request": request})
         headers = self.get_success_headers(serializer.data)
         return Response(

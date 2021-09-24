@@ -125,10 +125,20 @@ class Rent(models.Model):
             self.bike.save()
         except IntegrityError:
             # Congratulations! The 2^64 chance of uuid4 collision has happend.
-            # here coul'd be the place for the famous comment: "should never happen"
-            # So we catch this error here, but don't handle it.
+            # here could be the place for the famous comment: "should never happen"
+            # So we catch this error, but don't handle it,
             # because don't rotating a uuid every 18,446,744,073,709,551,615 rents is ok
             pass
+
+        if self.bike.state == Bike.State.MISSING:
+            data = {}
+            if self.end_location:
+                data = {"location_id": self.end_location.id}
+            CykelLogEntry.objects.create(
+                content_object=self.bike,
+                action_type="cykel.bike.missing_reporting",
+                data=data,
+            )
 
         if self.end_station:
             CykelLogEntry.objects.create(
