@@ -501,7 +501,11 @@ class ReservationViewSet(viewsets.ViewSet):
 def getAllowedDates(request):
     year = int(request.query_params.get('year'))
     month = int(request.query_params.get('month'))
-    #stationId = request.query_params.get('station')
+    start_station_id = request.query_params.get('stationId')
+    vehicle_type_id = request.query_params.get('vehicleTypeId')
+
+    if start_station_id is None or vehicle_type_id is None:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
     reservations = Reservation.objects.filter(event__end__gte=(datetime.now()))
     events = [x.event for x in reservations]
@@ -519,7 +523,7 @@ def getAllowedDates(request):
 
         if number_of_occ < 2:
             allowedDays.append(day.start.date())
-    
+
     return Response({'allowedDays': allowedDays})
 
 @api_view(["GET"])
@@ -528,6 +532,11 @@ def getAllowedTimes(request):
     dateString = request.query_params.get('date')
     minTime = "00:00"
     maxTime = "23:59"
+    start_station_id = request.query_params.get('stationId')
+    vehicle_type_id = request.query_params.get('vehicleTypeId')
+
+    if start_station_id is None or vehicle_type_id is None:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
     reservations = Reservation.objects.filter(event__end__gte=(datetime.now()))
     events = [x.event for x in reservations]
