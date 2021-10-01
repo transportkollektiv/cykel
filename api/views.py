@@ -6,6 +6,7 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.contrib.syndication.views import Feed
 from django.core.paginator import Paginator
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.feedgenerator import Rss201rev2Feed
 from django.shortcuts import get_object_or_404
 from preferences import preferences
@@ -464,8 +465,13 @@ class ReservationViewSet(viewsets.ViewSet):
         if not vehicle_type.allow_reservation:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        start_date = datetime.strptime(start_date_string, '%Y-%m-%dT%H:%M')
-        end_date = datetime.strptime(end_date_string, '%Y-%m-%dT%H:%M')
+        start_date_naive = datetime.strptime(start_date_string, '%Y-%m-%dT%H:%M')
+        start_date = timezone.make_aware(start_date_naive)
+        print('Comprariosan')
+        print(start_date_naive)
+        print(start_date)
+        end_date_naive = datetime.strptime(end_date_string, '%Y-%m-%dT%H:%M')
+        end_date = timezone.make_aware(end_date_naive)
 
         data = {
             'title': 'Reservation',
@@ -509,7 +515,7 @@ def getAllowedDates(request):
 
     number_of_bikes = getNumberOfBikes(vehicle_type)
     events = getRelevantReservationEvents(vehicle_type)
-    requestedMonth = datetime(year, month, 1)
+    requestedMonth = timezone.make_aware(datetime(year, month, 1))
     this_month_period = Month(events, requestedMonth)
 
     # determine allowed days
