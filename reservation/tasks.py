@@ -16,6 +16,7 @@ def start_rents_for_reservations():
                                                        event__end__gt=now())
     for reservation in upcoming_reservations:
         available_bike = Bike.objects.filter(availability_status=Bike.Availability.AVAILABLE,
+                                             state=Bike.State.USABLE,
                                              current_station=reservation.start_location,
                                              vehicle_type=reservation.vehicle_type).first()
         if available_bike is not None:

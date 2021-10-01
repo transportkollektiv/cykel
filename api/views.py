@@ -7,7 +7,6 @@ from django.contrib.syndication.views import Feed
 from django.core.paginator import Paginator
 from django.urls import reverse
 from django.utils.feedgenerator import Rss201rev2Feed
-from django.utils.timezone import now, timedelta
 from django.shortcuts import get_object_or_404
 from preferences import preferences
 from rest_framework import exceptions, generics, mixins, status, viewsets
@@ -45,8 +44,8 @@ from .serializers import (
 )
 
 from schedule.models import Event, Calendar
-from schedule.periods import Period, Month, Day
-from reservation.models import Reservation
+from schedule.periods import Month, Day
+from reservation.util import *
 from datetime import datetime
 
 class BikeViewSet(viewsets.ReadOnlyModelViewSet):
@@ -499,79 +498,61 @@ class ReservationViewSet(viewsets.ViewSet):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def getAllowedDates(request):
+    # get and check input parameters
     year = int(request.query_params.get('year'))
     month = int(request.query_params.get('month'))
     start_station_id = request.query_params.get('stationId')
     vehicle_type_id = request.query_params.get('vehicleTypeId')
-
     if start_station_id is None or vehicle_type_id is None:
         return Response(status=status.HTTP_400_BAD_REQUEST)
+    vehicle_type = get_object_or_404(VehicleType, pk=vehicle_type_id)
 
-    reservations = Reservation.objects.filter(event__end__gte=(datetime.now()))
-    events = [x.event for x in reservations]
-
+    number_of_bikes = getNumberOfBikes(vehicle_type)
+    events = getRelevantReservationEvents(vehicle_type)
     requestedMonth = datetime(year, month, 1)
     this_month_period = Month(events, requestedMonth)
 
+    # determine allowed days
     allowedDays = []
     for day in this_month_period.get_days():
         occurrences = day.get_occurrence_partials()
         number_of_occ = len(occurrences)
         for occurrence in occurrences:
+            # see https://django-scheduler.readthedocs.io/en/latest/periods.html#classify-occurrence-occurrence
             if occurrence['class'] in [0,1,3]:
                 number_of_occ -= 1
 
-        if number_of_occ < 2:
+        if number_of_bikes - number_of_occ - vehicle_type.min_spontaneous_rent_vehicles > 0:
             allowedDays.append(day.start.date())
 
     return Response({'allowedDays': allowedDays})
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def getAllowedTimes(request):
+def getForbiddenTimes(request):
+    # check input parameters
     dateString = request.query_params.get('date')
-    minTime = "00:00"
-    maxTime = "23:59"
     start_station_id = request.query_params.get('stationId')
     vehicle_type_id = request.query_params.get('vehicleTypeId')
-
     if start_station_id is None or vehicle_type_id is None:
         return Response(status=status.HTTP_400_BAD_REQUEST)
+    vehicle_type = get_object_or_404(VehicleType, pk=vehicle_type_id)
 
-    reservations = Reservation.objects.filter(event__end__gte=(datetime.now()))
-    events = [x.event for x in reservations]
-
+    number_of_bikes = getNumberOfBikes(vehicle_type)
+    events = getRelevantReservationEvents(vehicle_type)
     requestedDay = datetime.strptime(dateString, '%Y-%m-%d')
-    day = Day(events, requestedDay)
+    this_day_period = Day(events, requestedDay)
 
-    times = { 'minTime' : minTime, 'maxTime': maxTime}
+    occurrences = this_day_period.get_occurrence_partials()
+    number_of_occ = len(occurrences)
 
-    # Dateformat 2021-11-19 22:59:00+00:00
-    #TODO Vorlaufzeit einbauen
-    for occurrence in day.get_occurrence_partials():
-        if occurrence['class'] == 0:
-            maxTime = occurrence['occurrence'].event.start.time()
-            times['maxTime'] = maxTime
-        elif occurrence['class'] == 1:
-            print('occurence started and ended today')
-            startTime = occurrence['occurrence'].event.start.time()
-            endTime = occurrence['occurrence'].event.end.time()
-            times['forbiddenRange'] = { 'start': startTime, 'end': endTime}
-        elif occurrence['class'] == 3:
-            minTime = occurrence['occurrence'].event.end.time()
-            print('occurence ended today')
-            times['minTime'] = minTime
+    # enough available bikes --> allow the whole day
+    if number_of_bikes - number_of_occ - vehicle_type.min_spontaneous_rent_vehicles > 0:
+        return Response([])
+
+    forbidden_ranges = getForbiddenReservationTimeRanges(this_day_period, vehicle_type)
 
     print('Response:')
-    print(times)
+    print(forbidden_ranges)
 
-    return Response(times)
-
-    # {
-    #     minTime: x,
-    #     maxTime: y,
-    #     forbiddenRange: {
-    #         start: x
-    #         end: y
-    #     },
-    # }
+    return Response(forbidden_ranges)
