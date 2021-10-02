@@ -535,6 +535,28 @@ def getAllowedDates(request):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
+def getMaxReservationDate(request):
+    start_station_id = request.query_params.get('stationId')
+    vehicle_type_id = request.query_params.get('vehicleTypeId')
+    start_date_time_string = request.query_params.get('startDateTime')
+    if start_station_id is None or vehicle_type_id is None:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+    vehicle_type = get_object_or_404(VehicleType, pk=vehicle_type_id)
+    start_date_time = datetime.strptime(start_date_time_string, '%Y-%m-%dT%M:%S')
+
+    events = getRelevantReservationEvents(vehicle_type)
+    max_reservation_date = start_date_time
+    while True:
+        max_reservation_date = max_reservation_date + timedelta(days=1)
+        day_period = Day(events, max_reservation_date)
+        forbidden_ranges = getForbiddenReservationTimeRanges(day_period, vehicle_type)
+        if forbidden_ranges:
+            break
+
+    return Response(max_reservation_date)
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def getForbiddenTimes(request):
     # check input parameters
     dateString = request.query_params.get('date')

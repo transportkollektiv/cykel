@@ -11,6 +11,7 @@ from .views import (
     ReservationViewSet,
     getAllowedDates,
     getForbiddenTimes,
+    getMaxReservationDate,
 )
 
 router = routers.DefaultRouter(trailing_slash=False)
@@ -26,4 +27,5 @@ urlpatterns = [
     path("auth/token", views.obtain_auth_token),
     path("reservationdates/alloweddates", getAllowedDates),
     path("reservationdates/forbiddentimes", getForbiddenTimes),
+    path("reservationdates/maxreservationdate", getMaxReservationDate),
 ]
