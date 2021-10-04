@@ -21,9 +21,6 @@ def getForbiddenReservationTimeRanges(day:Day, vehicle_type:VehicleType):
     forbidden_ranges = []
 
     for occurrence_to_check in occurrences:
-        print('Datetime gepsiechert bei occurence')
-        print(make_naive(occurrence_to_check['occurrence'].event.start))
-        print(occurrence_to_check['occurrence'].event.end)
         # see https://django-scheduler.readthedocs.io/en/latest/periods.html#classify-occurrence-occurrence
         if occurrence_to_check['class'] == 2:
             continue
@@ -42,7 +39,6 @@ def getForbiddenReservationTimeRanges(day:Day, vehicle_type:VehicleType):
                         if (occurrence['class'] == 1 or occurrence['class'] == 3) and (occurrence['occurrence'].event.end < forbidden_range_end):
                             forbidden_range_end = occurrence['occurrence'].event.end
         if number_of_start_in_other_reservations + 1 >= number_of_bikes - vehicle_type.min_spontaneous_rent_vehicles:
-            # Forbidden Range Start hat keine Vorlauf Zeit?
             forbidden_range_start_time = make_naive(occurrence_to_check['occurrence'].event.start).time()
             tomorrow = forbidden_range_end + timedelta(days=1)
             forbidden_range_ends_in_next_day = tomorrow.day <= (forbidden_range_end + lead_time_delta).day

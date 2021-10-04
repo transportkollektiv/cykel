@@ -467,9 +467,6 @@ class ReservationViewSet(viewsets.ViewSet):
 
         start_date_naive = datetime.strptime(start_date_string, '%Y-%m-%dT%H:%M')
         start_date = timezone.make_aware(start_date_naive)
-        print('Comprariosan')
-        print(start_date_naive)
-        print(start_date)
         end_date_naive = datetime.strptime(end_date_string, '%Y-%m-%dT%H:%M')
         end_date = timezone.make_aware(end_date_naive)
 
@@ -543,15 +540,30 @@ def getMaxReservationDate(request):
         return Response(status=status.HTTP_400_BAD_REQUEST)
     vehicle_type = get_object_or_404(VehicleType, pk=vehicle_type_id)
     start_date_time = datetime.strptime(start_date_time_string, '%Y-%m-%dT%M:%S')
+    lead_time_delta = timedelta(minutes=vehicle_type.reservation_lead_time_minutes)
 
     events = getRelevantReservationEvents(vehicle_type)
     max_reservation_date = start_date_time
-    while True:
-        max_reservation_date = max_reservation_date + timedelta(days=1)
+    start_time = "23:59"
+    i = 0
+    #TODO woher maximale Reservierungsdauer?
+    maximum_reservation_time = 14
+    while i < maximum_reservation_time + 1:
         day_period = Day(events, max_reservation_date)
         forbidden_ranges = getForbiddenReservationTimeRanges(day_period, vehicle_type)
         if forbidden_ranges:
+            # Vermute, dass die frueheste Reservierung immer als erstes in der Liste steht
+            # Wuerde den for-loop ueberfluessig machen
+            start_time = forbidden_ranges[0]['start']
+            for i in range(len(forbidden_ranges)):
+                if start_time > forbidden_ranges[i]['start']:
+                    start_time = forbidden_ranges[i]['start']
+            max_reservation_date = max_reservation_date.replace(hour = start_time.hour, minute = start_time.minute) - lead_time_delta
+
             break
+        
+        max_reservation_date = max_reservation_date + timedelta(days=1)
+        i += 1
 
     return Response(max_reservation_date)
 
