@@ -47,7 +47,7 @@ from .serializers import (
 from schedule.models import Event, Calendar
 from schedule.periods import Month, Day
 from reservation.util import *
-from datetime import datetime
+from datetime import datetime, time
 
 class BikeViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Bike.objects.all()
@@ -539,17 +539,18 @@ def getMaxReservationDate(request):
     if start_station_id is None or vehicle_type_id is None:
         return Response(status=status.HTTP_400_BAD_REQUEST)
     vehicle_type = get_object_or_404(VehicleType, pk=vehicle_type_id)
-    start_date_time = datetime.strptime(start_date_time_string, '%Y-%m-%dT%M:%S')
+    start_date_time = datetime.strptime(start_date_time_string, '%Y-%m-%dT%H:%M')
     lead_time_delta = timedelta(minutes=vehicle_type.reservation_lead_time_minutes)
 
     events = getRelevantReservationEvents(vehicle_type)
     max_reservation_date = start_date_time
-    start_time = "23:59"
-    i = 0
+    start_time = time(23, 59)
     #TODO woher maximale Reservierungsdauer?
     maximum_reservation_time = 14
-    while i < maximum_reservation_time + 1:
-        day_period = Day(events, max_reservation_date)
+
+    for i in range(maximum_reservation_time + 1):
+        day_to_check = start_date_time + timedelta(days=i) # 0 - max reservation time
+        day_period = Day(events, day_to_check)
         forbidden_ranges = getForbiddenReservationTimeRanges(day_period, vehicle_type)
         if forbidden_ranges:
             # Vermute, dass die frueheste Reservierung immer als erstes in der Liste steht
@@ -558,13 +559,12 @@ def getMaxReservationDate(request):
             for i in range(len(forbidden_ranges)):
                 if start_time > forbidden_ranges[i]['start']:
                     start_time = forbidden_ranges[i]['start']
-            max_reservation_date = max_reservation_date.replace(hour = start_time.hour, minute = start_time.minute) - lead_time_delta
-
+            max_reservation_date = day_to_check
             break
-        
-        max_reservation_date = max_reservation_date + timedelta(days=1)
-        i += 1
-
+        if (i == maximum_reservation_time):
+            max_reservation_date = day_to_check
+    
+    max_reservation_date = (max_reservation_date.replace(hour = start_time.hour, minute = start_time.minute)) - lead_time_delta
     return Response(max_reservation_date)
 
 @api_view(["GET"])
@@ -592,7 +592,5 @@ def getForbiddenTimes(request):
 
     forbidden_ranges = getForbiddenReservationTimeRanges(this_day_period, vehicle_type)
 
-    print('Response:')
-    print(forbidden_ranges)
-
     return Response(forbidden_ranges)
+ 
