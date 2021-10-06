@@ -541,10 +541,10 @@ def getMaxReservationDate(request):
     vehicle_type = get_object_or_404(VehicleType, pk=vehicle_type_id)
     start_date_time = datetime.strptime(start_date_time_string, '%Y-%m-%dT%H:%M')
     lead_time_delta = timedelta(minutes=vehicle_type.reservation_lead_time_minutes)
-
-    events = getRelevantReservationEvents(vehicle_type)
     max_reservation_date = start_date_time
     start_time = time(23, 59)
+
+    events = getRelevantReservationEvents(vehicle_type)
     #TODO woher maximale Reservierungsdauer?
     maximum_reservation_time = 14
 
@@ -553,12 +553,13 @@ def getMaxReservationDate(request):
         day_period = Day(events, day_to_check)
         forbidden_ranges = getForbiddenReservationTimeRanges(day_period, vehicle_type)
         if forbidden_ranges:
-            # Vermute, dass die frueheste Reservierung immer als erstes in der Liste steht
-            # Wuerde den for-loop ueberfluessig machen
-            start_time = forbidden_ranges[0]['start']
-            for i in range(len(forbidden_ranges)):
-                if start_time > forbidden_ranges[i]['start']:
-                    start_time = forbidden_ranges[i]['start']
+            for j in range(len(forbidden_ranges)):
+                # ignore forbidden range if it ends before reserveration starts, can only happen on first day
+                if(i == 0):
+                    if(day_to_check.time() > forbidden_ranges[j]['end']):
+                        continue
+                if start_time > forbidden_ranges[j]['start']:
+                    start_time = forbidden_ranges[j]['start']
             max_reservation_date = day_to_check
             break
         if (i == maximum_reservation_time):
