@@ -522,8 +522,21 @@ def getAllowedDates(request):
         number_of_occ = len(occurrences)
         for occurrence in occurrences:
             # see https://django-scheduler.readthedocs.io/en/latest/periods.html#classify-occurrence-occurrence
-            if occurrence['class'] in [0,1,3]:
+            start_time = make_naive(occurrence['occurrence'].start)
+            start_time_with_delta = (start_time - timedelta(minutes=vehicle_type.reservation_lead_time_minutes)).date()
+            end_time = make_naive(occurrence['occurrence'].end)
+            end_time_with_delta = (end_time + timedelta(minutes=vehicle_type.reservation_lead_time_minutes)).date()
+            if day.start.date() < start_time.date():
                 number_of_occ -= 1
+            elif occurrence['class'] == 0:
+                if not (start_time.date() > start_time_with_delta):
+                    number_of_occ -= 1
+            elif occurrence['class'] == 1:
+                if not ((start_time.date() > start_time_with_delta) and (end_time.date() < end_time_with_delta)):
+                    number_of_occ -= 1
+            elif occurrence['class'] == 3:
+                if not (end_time.date() < end_time_with_delta):
+                    number_of_occ -= 1
 
         if number_of_bikes - number_of_occ - vehicle_type.min_spontaneous_rent_vehicles > 0:
             allowedDays.append(day.start.date())
@@ -552,20 +565,23 @@ def getMaxReservationDate(request):
         day_to_check = start_date_time + timedelta(days=i) # 0 - max reservation time
         day_period = Day(events, day_to_check)
         forbidden_ranges = getForbiddenReservationTimeRanges(day_period, vehicle_type)
+        forbidden_ranges_relevant = False
         if forbidden_ranges:
             for j in range(len(forbidden_ranges)):
                 # ignore forbidden range if it ends before reserveration starts, can only happen on first day
                 if(i == 0):
+                    tmp = forbidden_ranges[j]['end']  
                     if(day_to_check.time() > forbidden_ranges[j]['end']):
                         continue
+                forbidden_ranges_relevant = True
                 if start_time > forbidden_ranges[j]['start']:
                     start_time = forbidden_ranges[j]['start']
-            max_reservation_date = day_to_check
-            break
+            if forbidden_ranges_relevant:
+                max_reservation_date = (day_to_check.replace(hour = start_time.hour, minute = start_time.minute))
+                break
         if (i == maximum_reservation_time):
-            max_reservation_date = day_to_check
+            max_reservation_date = day_to_check.replace(hour = start_time.hour, minute = start_time.minute)
     
-    max_reservation_date = (max_reservation_date.replace(hour = start_time.hour, minute = start_time.minute)) - lead_time_delta
     return Response(max_reservation_date)
 
 @api_view(["GET"])
@@ -590,7 +606,6 @@ def getForbiddenTimes(request):
     # enough available bikes --> allow the whole day
     if number_of_bikes - number_of_occ - vehicle_type.min_spontaneous_rent_vehicles > 0:
         return Response([])
-
     forbidden_ranges = getForbiddenReservationTimeRanges(this_day_period, vehicle_type)
 
     return Response(forbidden_ranges)
