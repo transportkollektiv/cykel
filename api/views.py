@@ -570,7 +570,6 @@ def getMaxReservationDate(request):
             for j in range(len(forbidden_ranges)):
                 # ignore forbidden range if it ends before reserveration starts, can only happen on first day
                 if(i == 0):
-                    tmp = forbidden_ranges[j]['end']  
                     if(day_to_check.time() > forbidden_ranges[j]['end']):
                         continue
                 forbidden_ranges_relevant = True
