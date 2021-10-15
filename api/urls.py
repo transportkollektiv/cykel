@@ -9,9 +9,9 @@ from .views import (
     UserDetailsView,
     updatebikelocation,
     ReservationViewSet,
-    getAllowedDates,
-    getForbiddenTimes,
-    getMaxReservationDate,
+    get_allowed_dates,
+    get_forbidden_times,
+    get_max_reservation_date,
 )
 
 router = routers.DefaultRouter(trailing_slash=False)
@@ -25,7 +25,7 @@ urlpatterns = [
     path("user", UserDetailsView.as_view()),
     path("config/loginproviders", LoginProviderViewSet.as_view({"get": "list"})),
     path("auth/token", views.obtain_auth_token),
-    path("reservationdates/alloweddates", getAllowedDates),
-    path("reservationdates/forbiddentimes", getForbiddenTimes),
-    path("reservationdates/maxreservationdate", getMaxReservationDate),
+    path("reservationdates/alloweddates", get_allowed_dates),
+    path("reservationdates/forbiddentimes", get_forbidden_times),
+    path("reservationdates/maxreservationdate", get_max_reservation_date),
 ]

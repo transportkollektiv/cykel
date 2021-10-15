@@ -465,10 +465,23 @@ class ReservationViewSet(viewsets.ViewSet):
         if not vehicle_type.allow_reservation:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
+        # get start date and check if it is allowed
         start_date_naive = datetime.strptime(start_date_string, '%Y-%m-%dT%H:%M')
         start_date = timezone.make_aware(start_date_naive)
+        events = get_relevant_reservation_events(vehicle_type)
+        day_period = Day(events, start_date)
+        if not is_allowed_reservation_day(day_period, vehicle_type):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        forbidden_ranges = get_forbidden_reservation_time_ranges(day_period, vehicle_type)
+        for forbidden_range in forbidden_ranges:
+            if forbidden_range['start'] <= start_date.time() <= forbidden_range['end']:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        # get end date and check if it is allowed
         end_date_naive = datetime.strptime(end_date_string, '%Y-%m-%dT%H:%M')
         end_date = timezone.make_aware(end_date_naive)
+        if get_maximum_reservation_date(start_date, vehicle_type) < end_date:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
         data = {
             'title': 'Reservation',
@@ -495,109 +508,63 @@ class ReservationViewSet(viewsets.ViewSet):
     def destroy(self, request, pk=None):
         queryset = self.get_queryset()
         reservation = get_object_or_404(queryset, pk=pk)
+        if not reservation.bike is None:
+            reservation.bike.availability_status = Bike.Availability.AVAILABLE
+            reservation.bike.save()
         reservation.event.delete()
         return Response()
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def getAllowedDates(request):
+def get_allowed_dates(request):
     # get and check input parameters
     year = int(request.query_params.get('year'))
     month = int(request.query_params.get('month'))
-    start_station_id = request.query_params.get('stationId')
     vehicle_type_id = request.query_params.get('vehicleTypeId')
-    if start_station_id is None or vehicle_type_id is None:
+    if vehicle_type_id is None:
         return Response(status=status.HTTP_400_BAD_REQUEST)
     vehicle_type = get_object_or_404(VehicleType, pk=vehicle_type_id)
 
-    number_of_bikes = getNumberOfBikes(vehicle_type)
-    events = getRelevantReservationEvents(vehicle_type)
-    requestedMonth = timezone.make_aware(datetime(year, month, 1))
-    this_month_period = Month(events, requestedMonth)
+    events = get_relevant_reservation_events(vehicle_type)
+    requested_month = timezone.make_aware(datetime(year, month, 1))
+    this_month_period = Month(events, requested_month)
 
     # determine allowed days
-    allowedDays = []
+    allowed_days = []
     for day in this_month_period.get_days():
-        occurrences = day.get_occurrence_partials()
-        number_of_occ = len(occurrences)
-        for occurrence in occurrences:
-            # see https://django-scheduler.readthedocs.io/en/latest/periods.html#classify-occurrence-occurrence
-            start_time = make_naive(occurrence['occurrence'].start)
-            start_time_with_delta = (start_time - timedelta(minutes=vehicle_type.reservation_lead_time_minutes)).date()
-            end_time = make_naive(occurrence['occurrence'].end)
-            end_time_with_delta = (end_time + timedelta(minutes=vehicle_type.reservation_lead_time_minutes)).date()
-            if day.start.date() < start_time.date():
-                number_of_occ -= 1
-            elif occurrence['class'] == 0:
-                if not (start_time.date() > start_time_with_delta):
-                    number_of_occ -= 1
-            elif occurrence['class'] == 1:
-                if not ((start_time.date() > start_time_with_delta) and (end_time.date() < end_time_with_delta)):
-                    number_of_occ -= 1
-            elif occurrence['class'] == 3:
-                if not (end_time.date() < end_time_with_delta):
-                    number_of_occ -= 1
+        if is_allowed_reservation_day(day, vehicle_type):
+            allowed_days.append(day.start.date())
 
-        if number_of_bikes - number_of_occ - vehicle_type.min_spontaneous_rent_vehicles > 0:
-            allowedDays.append(day.start.date())
-
-    return Response({'allowedDays': allowedDays})
+    return Response({'allowedDays': allowed_days})
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def getMaxReservationDate(request):
-    start_station_id = request.query_params.get('stationId')
+def get_max_reservation_date(request):
     vehicle_type_id = request.query_params.get('vehicleTypeId')
     start_date_time_string = request.query_params.get('startDateTime')
-    if start_station_id is None or vehicle_type_id is None:
+    if vehicle_type_id is None:
         return Response(status=status.HTTP_400_BAD_REQUEST)
     vehicle_type = get_object_or_404(VehicleType, pk=vehicle_type_id)
     start_date_time = datetime.strptime(start_date_time_string, '%Y-%m-%dT%H:%M')
-    lead_time_delta = timedelta(minutes=vehicle_type.reservation_lead_time_minutes)
-    max_reservation_date = start_date_time
-    start_time = time(23, 59)
 
-    events = getRelevantReservationEvents(vehicle_type)
-    #TODO woher maximale Reservierungsdauer?
-    maximum_reservation_time = 14
+    max_reservation_date = get_maximum_reservation_date(start_date_time, vehicle_type)
 
-    for i in range(maximum_reservation_time + 1):
-        day_to_check = start_date_time + timedelta(days=i) # 0 - max reservation time
-        day_period = Day(events, day_to_check)
-        forbidden_ranges = getForbiddenReservationTimeRanges(day_period, vehicle_type)
-        forbidden_ranges_relevant = False
-        if forbidden_ranges:
-            for j in range(len(forbidden_ranges)):
-                # ignore forbidden range if it ends before reserveration starts, can only happen on first day
-                if(i == 0):
-                    if(day_to_check.time() > forbidden_ranges[j]['end']):
-                        continue
-                forbidden_ranges_relevant = True
-                if start_time > forbidden_ranges[j]['start']:
-                    start_time = forbidden_ranges[j]['start']
-            if forbidden_ranges_relevant:
-                max_reservation_date = (day_to_check.replace(hour = start_time.hour, minute = start_time.minute))
-                break
-        if (i == maximum_reservation_time):
-            max_reservation_date = day_to_check.replace(hour = start_time.hour, minute = start_time.minute)
-    
     return Response(max_reservation_date)
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def getForbiddenTimes(request):
+def get_forbidden_times(request):
     # check input parameters
-    dateString = request.query_params.get('date')
-    start_station_id = request.query_params.get('stationId')
+    date_string = request.query_params.get('date')
     vehicle_type_id = request.query_params.get('vehicleTypeId')
-    if start_station_id is None or vehicle_type_id is None:
+    if vehicle_type_id is None:
         return Response(status=status.HTTP_400_BAD_REQUEST)
     vehicle_type = get_object_or_404(VehicleType, pk=vehicle_type_id)
 
-    number_of_bikes = getNumberOfBikes(vehicle_type)
-    events = getRelevantReservationEvents(vehicle_type)
-    requestedDay = datetime.strptime(dateString, '%Y-%m-%d')
-    this_day_period = Day(events, requestedDay)
+    number_of_bikes = get_number_of_bikes(vehicle_type)
+    events = get_relevant_reservation_events(vehicle_type)
+    requested_day = datetime.strptime(date_string, '%Y-%m-%d')
+    this_day_period = Day(events, requested_day)
 
     occurrences = this_day_period.get_occurrence_partials()
     number_of_occ = len(occurrences)
@@ -605,7 +572,6 @@ def getForbiddenTimes(request):
     # enough available bikes --> allow the whole day
     if number_of_bikes - number_of_occ - vehicle_type.min_spontaneous_rent_vehicles > 0:
         return Response([])
-    forbidden_ranges = getForbiddenReservationTimeRanges(this_day_period, vehicle_type)
+    forbidden_ranges = get_forbidden_reservation_time_ranges(this_day_period, vehicle_type)
 
     return Response(forbidden_ranges)
- 

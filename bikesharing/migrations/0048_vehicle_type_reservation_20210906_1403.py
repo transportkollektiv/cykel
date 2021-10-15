@@ -44,4 +44,11 @@ class Migration(migrations.Migration):
                 default=120,
             ),
         ),
+        migrations.AddField(
+            model_name="vehicletype",
+            name="max_reservation_days",
+            field=models.IntegerField(
+                default=7,
+            ),
+        ),
     ]

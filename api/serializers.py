@@ -18,7 +18,7 @@ from cykel.models import CykelLogEntry
 from cykel.serializers import MappedChoiceField
 from schedule.models import Event
 from reservation.models import Reservation
-
+from reservation.util import *
 
 class LockTypeSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
@@ -115,6 +115,10 @@ class CreateRentSerializer(serializers.HyperlinkedModelSerializer):
             raise serializers.ValidationError("bike is not available")
         if not bike.vehicle_type.allow_spontaneous_rent:
             raise serializers.ValidationError("bike is not allowed for spontaneous rents")
+        if bike.vehicle_type.allow_reservation:
+            available_bikes = Bike.objects.filter(vehicle_type=bike.vehicle_type, state=Bike.Availability.AVAILABLE)
+            if len(available_bikes) - bike.vehicle_type.min_reservation_vehicles < 1:
+                raise serializers.ValidationError("bike is reserved")
         return value
 
     def validate(self, data):

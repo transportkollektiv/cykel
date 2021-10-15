@@ -71,6 +71,13 @@ class VehicleType(models.Model):
             reservation starts."""
         ),
     )
+    max_reservation_days = models.IntegerField(
+        default=7,
+        help_text=dedent(
+            """\
+            Only used when reservations are allowed. Maximum number of days for a reservation."""
+        ),
+    )
 
     def __str__(self):
         return str(self.name)
