@@ -5,7 +5,7 @@ from django.utils.timezone import now
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
-from bikesharing.models import Bike, Location, Lock, LockType, Rent
+from bikesharing.models import Bike, Location, Lock, LockType, Rent, VehicleType
 
 
 @pytest.fixture
@@ -70,8 +70,11 @@ def another_lock(lock_type_combination):
 
 @pytest.fixture
 def available_bike(lock):
+    vehicle_type = VehicleType.objects.create(
+        allow_spontaneous_rent=True
+    )
     return Bike.objects.create(
-        availability_status=Bike.Availability.AVAILABLE, bike_number="1337", lock=lock
+        availability_status=Bike.Availability.AVAILABLE, bike_number="1337", lock=lock, vehicle_type=vehicle_type
     )
 
 
@@ -89,7 +92,6 @@ def inuse_bike(another_lock):
         bike_number="8080",
         lock=another_lock,
     )
-
 
 @pytest.fixture
 def rent_jane_running(testuser_jane_canrent, inuse_bike):
