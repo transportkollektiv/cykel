@@ -1,7 +1,9 @@
 import pytest
 from django.contrib.auth.models import Permission
+from django.utils.timezone import now
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
+from schedule.models import Calendar, Event
 
 from bikesharing.models import Bike, Lock, LockType, VehicleType
 from reservation.models import Reservation
@@ -115,9 +117,23 @@ def inuse_bike(another_lock):
 
 @pytest.fixture
 def reservation_jane_running(testuser_jane_canrent, vehicle_type_allow_reservation):
+    calendar = Calendar.objects.create(
+        name="Reservations",
+        slug="reservations",
+    )
+
+    event = Event.objects.create(
+        title="Reservation",
+        start=now(),
+        end=now(),
+        calendar=calendar,
+        creator=testuser_jane_canrent,
+    )
+
     return Reservation.objects.create(
         creator=testuser_jane_canrent,
         vehicle_type=vehicle_type_allow_reservation,
+        event=event,
     )
 
 
