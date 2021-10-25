@@ -6,12 +6,12 @@ from .views import (
     LoginProviderViewSet,
     MaintenanceViewSet,
     RentViewSet,
-    UserDetailsView,
-    updatebikelocation,
     ReservationViewSet,
+    UserDetailsView,
     get_allowed_dates,
     get_forbidden_times,
     get_max_reservation_date,
+    updatebikelocation,
 )
 
 router = routers.DefaultRouter(trailing_slash=False)

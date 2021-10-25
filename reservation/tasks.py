@@ -1,24 +1,29 @@
 from celery import shared_task
-
-from .models import Reservation
-from bikesharing.models import Rent, Bike
 from django.db.models import F
 from django.utils.timezone import now, timedelta
+
+from bikesharing.models import Bike, Rent
+
+from .models import Reservation
 
 
 @shared_task
 def start_rents_for_reservations():
-    upcoming_reservations = Reservation.objects.filter(rent__isnull=True, bike__isnull=True,
-                                                       vehicle_type__allow_reservation__exact=True,
-                                                       event__start__lt=now() + timedelta(minutes=1)
-                                                                        * F(
-                                                           'vehicle_type__reservation_lead_time_minutes'),
-                                                       event__end__gt=now())
+    upcoming_reservations = Reservation.objects.filter(
+        rent__isnull=True,
+        bike__isnull=True,
+        vehicle_type__allow_reservation__exact=True,
+        event__start__lt=now()
+        + timedelta(minutes=1) * F("vehicle_type__reservation_lead_time_minutes"),
+        event__end__gt=now(),
+    )
     for reservation in upcoming_reservations:
-        available_bike = Bike.objects.filter(availability_status=Bike.Availability.AVAILABLE,
-                                             state=Bike.State.USABLE,
-                                             current_station=reservation.start_location,
-                                             vehicle_type=reservation.vehicle_type).first()
+        available_bike = Bike.objects.filter(
+            availability_status=Bike.Availability.AVAILABLE,
+            state=Bike.State.USABLE,
+            current_station=reservation.start_location,
+            vehicle_type=reservation.vehicle_type,
+        ).first()
         if available_bike is not None:
             available_bike.availability_status = Bike.Availability.IN_USE
             available_bike.save()

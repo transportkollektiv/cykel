@@ -70,11 +70,23 @@ def another_lock(lock_type_combination):
 
 @pytest.fixture
 def available_bike(lock):
-    vehicle_type = VehicleType.objects.create(
-        allow_spontaneous_rent=True
-    )
+    vehicle_type = VehicleType.objects.create(allow_spontaneous_rent=True)
     return Bike.objects.create(
-        availability_status=Bike.Availability.AVAILABLE, bike_number="1337", lock=lock, vehicle_type=vehicle_type
+        availability_status=Bike.Availability.AVAILABLE,
+        bike_number="1337",
+        lock=lock,
+        vehicle_type=vehicle_type,
+    )
+
+
+@pytest.fixture
+def bike_not_allowed_for_spontaneous_rents(lock):
+    vehicle_type = VehicleType.objects.create(allow_spontaneous_rent=False)
+    return Bike.objects.create(
+        availability_status=Bike.Availability.AVAILABLE,
+        bike_number="1337",
+        lock=lock,
+        vehicle_type=vehicle_type,
     )
 
 
@@ -92,6 +104,7 @@ def inuse_bike(another_lock):
         bike_number="8080",
         lock=another_lock,
     )
+
 
 @pytest.fixture
 def rent_jane_running(testuser_jane_canrent, inuse_bike):
@@ -190,6 +203,23 @@ def test_start_rent_unknown_bike_logged_in_with_renting_rights(
     data = {"bike": 404}
     response = user_client_jane_canrent_logged_in.post("/api/rent", data)
     assert response.status_code == 400, response.content
+
+
+@pytest.mark.django_db
+def test_start_rent_no_spontaneous_rents_logged_in_with_renting_rights(
+    testuser_jane_canrent,
+    user_client_jane_canrent_logged_in,
+    bike_not_allowed_for_spontaneous_rents,
+):
+    data = {"bike": bike_not_allowed_for_spontaneous_rents.bike_number}
+    response = user_client_jane_canrent_logged_in.post("/api/rent", data)
+    assert response.status_code == 400, response.content
+
+    bike_not_allowed_for_spontaneous_rents.refresh_from_db()
+    assert (
+        bike_not_allowed_for_spontaneous_rents.availability_status
+        == Bike.Availability.AVAILABLE
+    )
 
 
 @pytest.mark.django_db

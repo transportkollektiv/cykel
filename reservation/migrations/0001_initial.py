@@ -11,21 +11,70 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('bikesharing', '0047_auto_20210824_1559'),
-        ('schedule', '0014_use_autofields_for_pk'),
+        ("bikesharing", "0047_vehicle_type_reservation_20210906_1403"),
+        ("schedule", "0014_use_autofields_for_pk"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Reservation',
+            name="Reservation",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('bike', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='bikesharing.bike')),
-                ('rent', models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='bikesharing.rent')),
-                ('creator', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
-                ('event', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to='schedule.event')),
-                ('start_location', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='bikesharing.station')),
-                ('vehicle_type', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='bikesharing.VehicleType')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "bike",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="bikesharing.bike",
+                    ),
+                ),
+                (
+                    "rent",
+                    models.OneToOneField(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="bikesharing.rent",
+                    ),
+                ),
+                (
+                    "creator",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "event",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE, to="schedule.event"
+                    ),
+                ),
+                (
+                    "start_location",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="bikesharing.station",
+                    ),
+                ),
+                (
+                    "vehicle_type",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="bikesharing.VehicleType",
+                    ),
+                ),
             ],
         ),
     ]

@@ -3,6 +3,7 @@ from django.http import HttpResponse
 from django.shortcuts import redirect
 from rest_framework.authtoken.models import Token
 
+
 def index(request):
     return HttpResponse("Share all the bikes \\o/")
 

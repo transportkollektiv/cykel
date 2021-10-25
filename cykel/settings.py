@@ -70,7 +70,7 @@ INSTALLED_APPS = [
     "leaflet",
     "preferences",
     "schedule",
-    "reservation.apps.ReservationConfig"
+    "reservation.apps.ReservationConfig",
 ]
 
 try:

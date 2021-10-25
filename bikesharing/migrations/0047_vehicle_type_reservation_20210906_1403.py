@@ -1,11 +1,10 @@
-from textwrap import dedent
-
 from django.db import migrations, models
+
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('bikesharing', '0047_auto_20210824_1559'),
+        ("bikesharing", "0046_rent_remove_position_20201204_2059"),
     ]
 
     operations = [
