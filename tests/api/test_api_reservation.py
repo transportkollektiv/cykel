@@ -5,7 +5,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 from schedule.models import Calendar, Event
 
-from bikesharing.models import Bike, Lock, LockType, VehicleType
+from bikesharing.models import Bike, Lock, LockType, Station, VehicleType
 from reservation.models import Reservation
 
 
@@ -130,10 +130,16 @@ def reservation_jane_running(testuser_jane_canrent, vehicle_type_allow_reservati
         creator=testuser_jane_canrent,
     )
 
+    station = Station.objects.create(
+        station_name="Teststation",
+        status=Station.Status.ACTIVE,
+    )
+
     return Reservation.objects.create(
         creator=testuser_jane_canrent,
         vehicle_type=vehicle_type_allow_reservation,
         event=event,
+        start_location=station,
     )
 
 
