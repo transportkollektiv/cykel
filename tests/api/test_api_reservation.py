@@ -114,7 +114,7 @@ def inuse_bike(another_lock):
 
 
 @pytest.fixture
-def reservation_jane_running(testuser_jane_canrent):
+def reservation_jane_running(testuser_jane_canrent, vehicle_type_allow_reservation):
     return Reservation.objects.create(
         creator=testuser_jane_canrent,
         vehicle_type=vehicle_type_allow_reservation,
