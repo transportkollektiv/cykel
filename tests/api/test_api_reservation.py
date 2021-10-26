@@ -1,6 +1,6 @@
 import pytest
 from django.contrib.auth.models import Permission
-from django.utils.timezone import now
+from django.utils.timezone import now, timedelta
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 from schedule.models import Calendar, Event
@@ -65,17 +65,12 @@ def lock(lock_type_combination):
 
 
 @pytest.fixture
-def another_lock(lock_type_combination):
-    return Lock.objects.create(unlock_key="000000", lock_type=lock_type_combination)
-
-
-@pytest.fixture
-def vehicle_type_allow_reservation():
+def vehicle_type_reservation_allowed():
     return VehicleType.objects.create(allow_reservation=True)
 
 
 @pytest.fixture
-def vehicle_type_forbid_reservation():
+def vehicle_type_reservation_forbidden():
     return VehicleType.objects.create(allow_reservation=False)
 
 
@@ -85,7 +80,7 @@ def available_bike(lock):
         availability_status=Bike.Availability.AVAILABLE,
         bike_number="1337",
         lock=lock,
-        vehicle_type=vehicle_type_allow_reservation,
+        vehicle_type=vehicle_type_reservation_allowed,
     )
 
 
@@ -95,7 +90,7 @@ def bike_not_allowed_for_reservations(lock):
         availability_status=Bike.Availability.AVAILABLE,
         bike_number="1337",
         lock=lock,
-        vehicle_type=vehicle_type_forbid_reservation,
+        vehicle_type=vehicle_type_reservation_forbidden,
     )
 
 
@@ -107,16 +102,17 @@ def disabled_bike():
 
 
 @pytest.fixture
-def inuse_bike(another_lock):
-    return Bike.objects.create(
-        availability_status=Bike.Availability.IN_USE,
-        bike_number="8080",
-        lock=another_lock,
+def start_station():
+    return Station.objects.create(
+        station_name="Teststation",
+        status=Station.Status.ACTIVE,
     )
 
 
 @pytest.fixture
-def reservation_jane_running(testuser_jane_canrent, vehicle_type_allow_reservation):
+def reservation_jane_running(testuser_jane_canrent,
+                             vehicle_type_reservation_allowed,
+                             start_station):
     calendar = Calendar.objects.create(
         name="Reservations",
         slug="reservations",
@@ -130,16 +126,11 @@ def reservation_jane_running(testuser_jane_canrent, vehicle_type_allow_reservati
         creator=testuser_jane_canrent,
     )
 
-    station = Station.objects.create(
-        station_name="Teststation",
-        status=Station.Status.ACTIVE,
-    )
-
     return Reservation.objects.create(
         creator=testuser_jane_canrent,
-        vehicle_type=vehicle_type_allow_reservation,
+        vehicle_type=vehicle_type_reservation_allowed,
         event=event,
-        start_location=station,
+        start_location=start_station,
     )
 
 
@@ -147,7 +138,7 @@ def reservation_jane_running(testuser_jane_canrent, vehicle_type_allow_reservati
 def test_get_reservations_logged_in_with_reservation_rights(
     user_client_jane_canrent_logged_in, reservation_jane_running
 ):
-    response = testuser_jane_canrent.get("/api/reservation")
+    response = user_client_jane_canrent_logged_in.get("/api/reservation")
     assert response.status_code == 200, response.content
     assert len(response.json()) == 1
     assert response.json()[0]["id"] == reservation_jane_running.id
@@ -172,3 +163,23 @@ def test_start_reservation_logged_out():
     client = APIClient()
     response = client.post("/api/reservation", data)
     assert response.status_code == 401, response.content
+
+
+@pytest.mark.django_db
+def test_start_reservation_logged_in_with_reservation_rights(
+    user_client_jane_canrent_logged_in,
+    vehicle_type_reservation_allowed,
+    start_station,
+    available_bike
+):
+    start_date = now()
+    end_date = start_date + timedelta(days=2)
+    data = {
+        "startDate": start_date.strftime("%Y-%m-%dT%H:%M"),
+        "endDate": end_date.strftime("%Y-%m-%dT%H:%M"),
+        "startStationId": start_station.id,
+        "vehicleTypeId": vehicle_type_reservation_allowed.id
+    }
+    response = user_client_jane_canrent_logged_in.post("/api/reservation", data)
+    assert response.status_code == 201, response.content
+    assert response.json()["data"]["vehicle_type"] == vehicle_type_reservation_allowed
