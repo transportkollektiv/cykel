@@ -185,3 +185,44 @@ def test_start_reservation_logged_in_with_reservation_rights(
     assert (
         response.json()["vehicle_type"]["name"] == vehicle_type_reservation_allowed.name
     )
+
+
+@pytest.mark.django_db
+def test_start_reservation_no_bike_available_logged_in_with_reservation_rights(
+    user_client_jane_canrent_logged_in,
+    vehicle_type_reservation_allowed,
+    start_station,
+    available_bike,
+):
+    start_date = now()
+    end_date = start_date + timedelta(days=2)
+    data = {
+        "startDate": start_date.strftime("%Y-%m-%dT%H:%M"),
+        "endDate": end_date.strftime("%Y-%m-%dT%H:%M"),
+        "startStationId": start_station.id,
+        "vehicleTypeId": vehicle_type_reservation_allowed.id,
+    }
+    response = user_client_jane_canrent_logged_in.post("/api/reservation", data)
+    assert response.status_code == 201, response.content
+
+    response = user_client_jane_canrent_logged_in.post("/api/reservation", data)
+    assert response.status_code == 400, response.content
+
+
+@pytest.mark.django_db
+def test_start_reservation_forbidden_reservation_logged_in_with_reservation_rights(
+    user_client_jane_canrent_logged_in,
+    vehicle_type_reservation_forbidden,
+    start_station,
+    available_bike,
+):
+    start_date = now()
+    end_date = start_date + timedelta(days=2)
+    data = {
+        "startDate": start_date.strftime("%Y-%m-%dT%H:%M"),
+        "endDate": end_date.strftime("%Y-%m-%dT%H:%M"),
+        "startStationId": start_station.id,
+        "vehicleTypeId": vehicle_type_reservation_forbidden.id,
+    }
+    response = user_client_jane_canrent_logged_in.post("/api/reservation", data)
+    assert response.status_code == 400, response.content
