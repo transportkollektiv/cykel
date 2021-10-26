@@ -110,9 +110,9 @@ def start_station():
 
 
 @pytest.fixture
-def reservation_jane_running(testuser_jane_canrent,
-                             vehicle_type_reservation_allowed,
-                             start_station):
+def reservation_jane_running(
+    testuser_jane_canrent, vehicle_type_reservation_allowed, start_station
+):
     calendar = Calendar.objects.create(
         name="Reservations",
         slug="reservations",
@@ -170,7 +170,7 @@ def test_start_reservation_logged_in_with_reservation_rights(
     user_client_jane_canrent_logged_in,
     vehicle_type_reservation_allowed,
     start_station,
-    available_bike
+    available_bike,
 ):
     start_date = now()
     end_date = start_date + timedelta(days=2)
@@ -178,8 +178,10 @@ def test_start_reservation_logged_in_with_reservation_rights(
         "startDate": start_date.strftime("%Y-%m-%dT%H:%M"),
         "endDate": end_date.strftime("%Y-%m-%dT%H:%M"),
         "startStationId": start_station.id,
-        "vehicleTypeId": vehicle_type_reservation_allowed.id
+        "vehicleTypeId": vehicle_type_reservation_allowed.id,
     }
     response = user_client_jane_canrent_logged_in.post("/api/reservation", data)
     assert response.status_code == 201, response.content
-    assert response.json()["data"]["vehicle_type"] == vehicle_type_reservation_allowed
+    assert (
+        response.json()["vehicle_type"]["name"] == vehicle_type_reservation_allowed.name
+    )
