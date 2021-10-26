@@ -75,7 +75,7 @@ def vehicle_type_reservation_forbidden():
 
 
 @pytest.fixture
-def available_bike(lock):
+def available_bike(lock, vehicle_type_reservation_allowed):
     return Bike.objects.create(
         availability_status=Bike.Availability.AVAILABLE,
         bike_number="1337",
@@ -85,7 +85,7 @@ def available_bike(lock):
 
 
 @pytest.fixture
-def bike_not_allowed_for_reservations(lock):
+def bike_not_allowed_for_reservations(lock, vehicle_type_reservation_forbidden):
     return Bike.objects.create(
         availability_status=Bike.Availability.AVAILABLE,
         bike_number="1337",
