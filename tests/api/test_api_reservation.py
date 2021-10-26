@@ -66,12 +66,24 @@ def lock(lock_type_combination):
 
 @pytest.fixture
 def vehicle_type_reservation_allowed():
-    return VehicleType.objects.create(allow_reservation=True)
+    return VehicleType.objects.create(
+        allow_reservation=True,
+        reservation_lead_time_minutes=10
+    )
 
 
 @pytest.fixture
 def vehicle_type_reservation_forbidden():
     return VehicleType.objects.create(allow_reservation=False)
+
+
+@pytest.fixture
+def vehicle_type_min_spontaneous_rent_vehicle():
+    return VehicleType.objects.create(
+        allow_reservation=True,
+        reservation_lead_time_minutes=10,
+        min_spontaneous_rent_vehicles=1
+    )
 
 
 @pytest.fixture
@@ -81,16 +93,6 @@ def available_bike(lock, vehicle_type_reservation_allowed):
         bike_number="1337",
         lock=lock,
         vehicle_type=vehicle_type_reservation_allowed,
-    )
-
-
-@pytest.fixture
-def bike_not_allowed_for_reservations(lock, vehicle_type_reservation_forbidden):
-    return Bike.objects.create(
-        availability_status=Bike.Availability.AVAILABLE,
-        bike_number="1337",
-        lock=lock,
-        vehicle_type=vehicle_type_reservation_forbidden,
     )
 
 
@@ -167,6 +169,7 @@ def test_start_reservation_logged_out():
 
 @pytest.mark.django_db
 def test_start_reservation_logged_in_with_reservation_rights(
+    testuser_jane_canrent,
     user_client_jane_canrent_logged_in,
     vehicle_type_reservation_allowed,
     start_station,
@@ -183,12 +186,15 @@ def test_start_reservation_logged_in_with_reservation_rights(
     response = user_client_jane_canrent_logged_in.post("/api/reservation", data)
     assert response.status_code == 201, response.content
     assert (
-        response.json()["vehicle_type"]["name"] == vehicle_type_reservation_allowed.name
+        response.json()["vehicle_type"]["name"] == vehicle_type_reservation_allowed.name,
+        response.json()["event"]["start"] == start_date,
+        response.json()["event"]["end"] == end_date,
+        response.json()["event"]["creator"] == testuser_jane_canrent
     )
 
 
 @pytest.mark.django_db
-def test_start_reservation_no_bike_available_logged_in_with_reservation_rights(
+def test_start_multiple_reservations_logged_in_with_reservation_rights(
     user_client_jane_canrent_logged_in,
     vehicle_type_reservation_allowed,
     start_station,
@@ -205,12 +211,52 @@ def test_start_reservation_no_bike_available_logged_in_with_reservation_rights(
     response = user_client_jane_canrent_logged_in.post("/api/reservation", data)
     assert response.status_code == 201, response.content
 
+    # overlapping reservation (including lead time) can not be created (only one bike can be reserved)
+    start_date_overlapping = end_date
+    end_date_overlapping = start_date_overlapping + timedelta(days=1)
+    data_overlapping = {
+        "startDate": start_date_overlapping.strftime("%Y-%m-%dT%H:%M"),
+        "endDate": end_date_overlapping.strftime("%Y-%m-%dT%H:%M"),
+        "startStationId": start_station.id,
+        "vehicleTypeId": vehicle_type_reservation_allowed.id,
+    }
+    response = user_client_jane_canrent_logged_in.post("/api/reservation", data)
+    assert response.status_code == 400, response.content
+
+    # not overlapping reservation can be created
+    start_date_new = end_date + timedelta(minutes=vehicle_type_reservation_allowed.reservation_lead_time_minutes + 1)
+    end_date_new = start_date_new + timedelta(days=1)
+    data_new = {
+        "startDate": start_date_new.strftime("%Y-%m-%dT%H:%M"),
+        "endDate": end_date_new.strftime("%Y-%m-%dT%H:%M"),
+        "startStationId": start_station.id,
+        "vehicleTypeId": vehicle_type_reservation_allowed.id,
+    }
+    response = user_client_jane_canrent_logged_in.post("/api/reservation", data)
+    assert response.status_code == 201, response.content
+
+
+@pytest.mark.django_db
+def test_start_reservation_min_spontaneous_rent_vehicles_logged_in_with_reservation_rights(
+    user_client_jane_canrent_logged_in,
+    min_spontaneous_rent_vehicles,
+    start_station,
+    available_bike,
+):
+    start_date = now()
+    end_date = start_date + timedelta(days=2)
+    data = {
+        "startDate": start_date.strftime("%Y-%m-%dT%H:%M"),
+        "endDate": end_date.strftime("%Y-%m-%dT%H:%M"),
+        "startStationId": start_station.id,
+        "vehicleTypeId": min_spontaneous_rent_vehicles.id,
+    }
     response = user_client_jane_canrent_logged_in.post("/api/reservation", data)
     assert response.status_code == 400, response.content
 
 
 @pytest.mark.django_db
-def test_start_reservation_forbidden_reservation_logged_in_with_reservation_rights(
+def test_start_reservation_forbidden_logged_in_with_reservation_rights(
     user_client_jane_canrent_logged_in,
     vehicle_type_reservation_forbidden,
     start_station,
@@ -223,6 +269,25 @@ def test_start_reservation_forbidden_reservation_logged_in_with_reservation_righ
         "endDate": end_date.strftime("%Y-%m-%dT%H:%M"),
         "startStationId": start_station.id,
         "vehicleTypeId": vehicle_type_reservation_forbidden.id,
+    }
+    response = user_client_jane_canrent_logged_in.post("/api/reservation", data)
+    assert response.status_code == 400, response.content
+
+
+@pytest.mark.django_db
+def test_start_reservation_disabled_bike_logged_in_with_reservation_rights(
+    user_client_jane_canrent_logged_in,
+    vehicle_type_reservation_allowed,
+    start_station,
+    disabled_bike,
+):
+    start_date = now()
+    end_date = start_date + timedelta(days=2)
+    data = {
+        "startDate": start_date.strftime("%Y-%m-%dT%H:%M"),
+        "endDate": end_date.strftime("%Y-%m-%dT%H:%M"),
+        "startStationId": start_station.id,
+        "vehicleTypeId": vehicle_type_reservation_allowed.id,
     }
     response = user_client_jane_canrent_logged_in.post("/api/reservation", data)
     assert response.status_code == 400, response.content
