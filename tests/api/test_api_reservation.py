@@ -67,8 +67,7 @@ def lock(lock_type_combination):
 @pytest.fixture
 def vehicle_type_reservation_allowed():
     return VehicleType.objects.create(
-        allow_reservation=True,
-        reservation_lead_time_minutes=10
+        allow_reservation=True, reservation_lead_time_minutes=10
     )
 
 
@@ -82,7 +81,7 @@ def vehicle_type_min_spontaneous_rent_vehicle():
     return VehicleType.objects.create(
         allow_reservation=True,
         reservation_lead_time_minutes=10,
-        min_spontaneous_rent_vehicles=1
+        min_spontaneous_rent_vehicles=1,
     )
 
 
@@ -186,11 +185,11 @@ def test_start_reservation_logged_in_with_reservation_rights(
     response = user_client_jane_canrent_logged_in.post("/api/reservation", data)
     assert response.status_code == 201, response.content
     assert (
-        response.json()["vehicle_type"]["name"] == vehicle_type_reservation_allowed.name,
-        response.json()["event"]["start"] == start_date,
-        response.json()["event"]["end"] == end_date,
-        response.json()["event"]["creator"] == testuser_jane_canrent
+        response.json()["vehicle_type"]["name"] == vehicle_type_reservation_allowed.name
     )
+    assert response.json()["event"]["start"] == start_date
+    assert response.json()["event"]["end"] == end_date
+    assert response.json()["event"]["creator"] == testuser_jane_canrent
 
 
 @pytest.mark.django_db
@@ -211,7 +210,8 @@ def test_start_multiple_reservations_logged_in_with_reservation_rights(
     response = user_client_jane_canrent_logged_in.post("/api/reservation", data)
     assert response.status_code == 201, response.content
 
-    # overlapping reservation (including lead time) can not be created (only one bike can be reserved)
+    # overlapping reservation (including lead time) can not be created
+    # (only one bike can be reserved)
     start_date_overlapping = end_date
     end_date_overlapping = start_date_overlapping + timedelta(days=1)
     data_overlapping = {
@@ -220,11 +220,15 @@ def test_start_multiple_reservations_logged_in_with_reservation_rights(
         "startStationId": start_station.id,
         "vehicleTypeId": vehicle_type_reservation_allowed.id,
     }
-    response = user_client_jane_canrent_logged_in.post("/api/reservation", data)
+    response = user_client_jane_canrent_logged_in.post(
+        "/api/reservation", data_overlapping
+    )
     assert response.status_code == 400, response.content
 
     # not overlapping reservation can be created
-    start_date_new = end_date + timedelta(minutes=vehicle_type_reservation_allowed.reservation_lead_time_minutes + 1)
+    start_date_new = end_date + timedelta(
+        minutes=vehicle_type_reservation_allowed.reservation_lead_time_minutes + 1
+    )
     end_date_new = start_date_new + timedelta(days=1)
     data_new = {
         "startDate": start_date_new.strftime("%Y-%m-%dT%H:%M"),
@@ -232,14 +236,14 @@ def test_start_multiple_reservations_logged_in_with_reservation_rights(
         "startStationId": start_station.id,
         "vehicleTypeId": vehicle_type_reservation_allowed.id,
     }
-    response = user_client_jane_canrent_logged_in.post("/api/reservation", data)
+    response = user_client_jane_canrent_logged_in.post("/api/reservation", data_new)
     assert response.status_code == 201, response.content
 
 
 @pytest.mark.django_db
-def test_start_reservation_min_spontaneous_rent_vehicles_logged_in_with_reservation_rights(
+def test_start_reservation_min_rent_vehicles_logged_in_with_reservation_rights(
     user_client_jane_canrent_logged_in,
-    min_spontaneous_rent_vehicles,
+    vehicle_type_min_spontaneous_rent_vehicle,
     start_station,
     available_bike,
 ):
@@ -249,7 +253,7 @@ def test_start_reservation_min_spontaneous_rent_vehicles_logged_in_with_reservat
         "startDate": start_date.strftime("%Y-%m-%dT%H:%M"),
         "endDate": end_date.strftime("%Y-%m-%dT%H:%M"),
         "startStationId": start_station.id,
-        "vehicleTypeId": min_spontaneous_rent_vehicles.id,
+        "vehicleTypeId": vehicle_type_min_spontaneous_rent_vehicle.id,
     }
     response = user_client_jane_canrent_logged_in.post("/api/reservation", data)
     assert response.status_code == 400, response.content
