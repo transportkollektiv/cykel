@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import pytest
 from django.contrib.auth.models import Permission
 from django.utils.timezone import now, timedelta
@@ -187,8 +189,8 @@ def test_start_reservation_logged_in_with_reservation_rights(
     assert (
         response.json()["vehicle_type"]["name"] == vehicle_type_reservation_allowed.name
     )
-    assert response.json()["event"]["start"] == start_date
-    assert response.json()["event"]["end"] == end_date
+    assert response.json()["event"]["start"] == datetime.strptime(start_date)
+    assert response.json()["event"]["end"] == datetime.strptime(end_date)
     assert response.json()["event"]["creator"] == testuser_jane_canrent
 
 
