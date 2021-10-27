@@ -9,6 +9,7 @@ from bikesharing.models import (
     Bike,
     Location,
     LocationTracker,
+    LocationTrackerType,
     Lock,
     LockType,
     Rent,
@@ -268,9 +269,15 @@ class MaintenanceBikeSerializer(serializers.ModelSerializer):
         return representation  # only return bikes with public geolocation
 
 
+class MaintenanceTrackerTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LocationTrackerType
+        fields = ("name", "battery_voltage_warning", "battery_voltage_critical")
+
+
 class MaintenanceTrackerSerializer(serializers.ModelSerializer):
     tracker_status = MappedChoiceField(choices=LocationTracker.Status)
-    tracker_type = serializers.StringRelatedField()
+    tracker_type = MaintenanceTrackerTypeSerializer()
 
     class Meta:
         model = LocationTracker

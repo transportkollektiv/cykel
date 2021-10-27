@@ -122,8 +122,21 @@ class RentViewSet(
         resp = super().create(request)
         if resp.status_code != status.HTTP_201_CREATED:
             return resp
-        # override output with RentSerializer
+
         rent = self.get_queryset().get(id=resp.data["id"])
+
+        if rent.bike.state == Bike.State.MISSING:
+            data = {}
+            if rent.start_location:
+                data = {"location_id": rent.start_location.id}
+
+            CykelLogEntry.objects.create(
+                content_object=rent.bike,
+                action_type="cykel.bike.missing_reporting",
+                data=data,
+            )
+
+        # override output with RentSerializer
         serializer = RentSerializer(rent, context={"request": request})
         headers = self.get_success_headers(serializer.data)
         return Response(
@@ -373,9 +386,12 @@ class LogEntryFeed(Feed):
             % (CykelLogEntry._meta.app_label, CykelLogEntry._meta.model_name)
         )
 
+    def get_entries(self, request):
+        return CykelLogEntry.objects.order_by("-timestamp").all()
+
     def get_object(self, request):
         page = int(request.GET.get("page", 1))
-        entries = CykelLogEntry.objects.order_by("-timestamp").all()
+        entries = self.get_entries(request)
         paginator = Paginator(entries, 25)
         return {"page": page, "paginator": paginator}
 
@@ -405,6 +421,11 @@ class LogEntryFeed(Feed):
             "admin:%s_%s_change" % (item._meta.app_label, item._meta.model_name),
             args=[item.id],
         )
+
+
+class FilteredLogEntryFeed(LogEntryFeed):
+    def get_entries(self, request):
+        return CykelLogEntry.objects.order_by("-timestamp").all()
 
 
 def custom_exception_handler(exc, context):
