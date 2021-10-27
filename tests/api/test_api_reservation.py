@@ -189,10 +189,6 @@ def test_start_reservation_logged_in_with_reservation_rights(
     assert (
         response.json()["vehicle_type"]["name"] == vehicle_type_reservation_allowed.name
     )
-    assert (
-        response.json()["event"]["start"] == start_date.isoformat()
-    )
-    assert response.json()["event"]["end"] == end_date.isoformat()
     assert response.json()["event"]["creator"] == testuser_jane_canrent
 
 
