@@ -95,7 +95,10 @@ def available_bike(lock):
 def bike_not_allowed_for_spontaneous_rents(lock):
     vehicle_type = VehicleType.objects.create(allow_spontaneous_rent=False)
     return Bike.objects.create(
-        availability_status=Bike.Availability.AVAILABLE, bike_number="1337", lock=lock
+        availability_status=Bike.Availability.AVAILABLE,
+        bike_number="1337",
+        lock=lock,
+        vehicle_type=vehicle_type,
     )
 
 
@@ -127,11 +130,13 @@ def inuse_missing_bike(different_lock):
 
 @pytest.fixture
 def missing_bike(some_lock):
+    vehicle_type = VehicleType.objects.create(allow_spontaneous_rent=True)
     return Bike.objects.create(
         availability_status=Bike.Availability.AVAILABLE,
         state=Bike.State.MISSING,
         bike_number="404",
         lock=some_lock,
+        vehicle_type=vehicle_type,
     )
 
 
