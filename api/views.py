@@ -535,6 +535,8 @@ class ReservationViewSet(viewsets.ViewSet):
         if reservation.bike is not None:
             reservation.bike.availability_status = Bike.Availability.AVAILABLE
             reservation.bike.save()
+        if reservation.rent is not None:
+            reservation.rent.end()
         reservation.event.delete()
         return Response()
 

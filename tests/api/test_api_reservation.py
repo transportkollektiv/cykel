@@ -1,5 +1,6 @@
 import pytest
 from django.contrib.auth.models import Permission
+from django.utils import timezone
 from django.utils.timezone import now, timedelta
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
@@ -189,8 +190,10 @@ def test_start_reservation_logged_in_with_reservation_rights(
     assert (
         response.json()["vehicle_type"]["name"] == vehicle_type_reservation_allowed.name
     )
-    assert response.json()["event"]["start"] == start_date_string
-    assert response.json()["event"]["end"] == end_date_string
+    assert (
+        response.json()["event"]["start"] == timezone.make_aware(start_date).isoformat()
+    )
+    assert response.json()["event"]["end"] == timezone.make_aware(end_date).isoformat()
     assert response.json()["event"]["creator"] == testuser_jane_canrent
 
 
