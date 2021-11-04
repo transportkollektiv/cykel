@@ -1,6 +1,6 @@
 # Cykel
 
-Basic backend for a mobility sharing service. First steps made at [CCCamp 2019](https://events.ccc.de/camp/2019/wiki/Main_Page), now developed, daily used and tested in [the City of Ulm](https://ulm.dev/projects/openbike/).
+Basic backend for a mobility sharing service. First steps made at [CCCamp 2019](https://events.ccc.de/camp/2019/wiki/Main_Page), further developed, daily used and tested in [the City of Ulm](https://ulm.dev/projects/openbike/) and now maintained by the [transportkollektiv](https://github.com/transportkollektiv).
 
 OpenBike consists of more parts than just cykel - you might want to have a look into the whole [OpenBike Project Documentation](https://docs.openbike.ulm.dev), which also contains installation guidelines for the other parts and operator documentation for running an OpenBike based sharing system.
 
@@ -70,7 +70,7 @@ When you create an OAuth2-Application at a provider, you need to enter a callbac
 
 For updating the current bike location we provide the `/api/bike/updatelocation` endpoint.
 
-One project which can use this together with TheThingsNetwork is the [`cykel-ttn`](https://github.com/stadtulm/cykel-ttn) adapter. Read the readme in the repository on how to use it - for authentication you need to add a new api key at `/admin/rest_framework_api_key/apikey/`.
+One project which can use this together with TheThingsNetwork is the [`cykel-ttn`](https://github.com/transportkollektiv/cykel-ttn) adapter. Read the readme in the repository on how to use it - for authentication you need to add a new api key at `/admin/rest_framework_api_key/apikey/`.
 
 
 ## Alternative: using Docker Compose
@@ -89,12 +89,12 @@ docker-compose exec cykel python manage.py createsuperuser
 
 To use other settings (like `ALLOWED_HOSTS`) from above, add them to the `environment` in `docker-compose.yml`.
 
-Docker Compose runs cykel and [voorwiel](https://github.com/stadtulm/voorwiel) (one frontend implementation), so you can develop and test with a client right away.
+Docker Compose runs cykel and [voorwiel](https://github.com/transportkollektiv/voorwiel) (one frontend implementation), so you can develop and test with a client right away.
 
 
 ## Contributing
 
-We welcome [issues](https://github.com/stadtulm/cykel/issues) and pull requests for new features, bugs or problems you encountered when setting it up. More [Documentation](https://docs.openbike.ulm.dev) or simply small typo fixes are also very appreciated. If you found a vulnerability or other security relevant issue, notify us at `openbike @ ulm.dev`
+We welcome [issues](https://github.com/transportkollektiv/cykel/issues) and pull requests for new features, bugs or problems you encountered when setting it up. More [Documentation](https://docs.openbike.ulm.dev) or simply small typo fixes are also very appreciated. If you found a vulnerability or other security relevant issue, notify us at `openbike @ ulm.dev`
 
 For general discussion, feel free to hop into the [public matrix channel](https://matrix.to/#/!ghOLficeAycydtkZtA:matrix.org?via=matrix.org) for openbike and related projects.
 
