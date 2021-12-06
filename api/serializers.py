@@ -121,7 +121,8 @@ class CreateRentSerializer(serializers.HyperlinkedModelSerializer):
             )
         if bike.vehicle_type.allow_reservation:
             available_bikes = Bike.objects.filter(
-                vehicle_type=bike.vehicle_type, availability_status=Bike.Availability.AVAILABLE
+                vehicle_type=bike.vehicle_type,
+                availability_status=Bike.Availability.AVAILABLE,
             )
             if len(available_bikes) - bike.vehicle_type.min_reservation_vehicles < 1:
                 raise serializers.ValidationError("bike is reserved")
