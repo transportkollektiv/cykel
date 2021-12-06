@@ -26,5 +26,6 @@ urlpatterns = [
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
     path("bikesharing/", include("bikesharing.urls")),
     path("gbfs/", include("gbfs.urls")),
+    path("reservation/", include("reservation.urls")),
     re_path(r"^auth/", include("allauth.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

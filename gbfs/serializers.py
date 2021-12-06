@@ -153,6 +153,8 @@ class GbfsStationStatusSerializer(serializers.HyperlinkedModelSerializer):
 
 class GbfsVehicleTypeSerializer(serializers.HyperlinkedModelSerializer):
     vehicle_type_id = serializers.CharField(source="id", read_only=True)
+    allow_reservation = serializers.BooleanField(read_only=True)
+    allow_spontaneous_rent = serializers.BooleanField(read_only=True)
     form_factor = EnumFieldSerializer(
         read_only=True,
         mapping={
@@ -184,6 +186,8 @@ class GbfsVehicleTypeSerializer(serializers.HyperlinkedModelSerializer):
         model = VehicleType
         fields = (
             "vehicle_type_id",
+            "allow_reservation",
+            "allow_spontaneous_rent",
             "form_factor",
             "propulsion_type",
             "max_range_meters",

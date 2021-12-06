@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from allauth.socialaccount.models import SocialApp
 from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import Point
@@ -5,7 +7,9 @@ from django.contrib.gis.measure import D
 from django.contrib.sites.shortcuts import get_current_site
 from django.contrib.syndication.views import Feed
 from django.core.paginator import Paginator
+from django.shortcuts import get_object_or_404
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.feedgenerator import Rss201rev2Feed
 from django.utils.timezone import now, timedelta
 from preferences import preferences
@@ -26,9 +30,26 @@ from rest_framework.permissions import (
 from rest_framework.response import Response
 from rest_framework.views import exception_handler
 from rest_framework_api_key.permissions import HasAPIKey
+from schedule.models import Calendar, Event
+from schedule.periods import Day, Month
 
-from bikesharing.models import Bike, Location, LocationTracker, Rent, Station
+from bikesharing.models import (
+    Bike,
+    Location,
+    LocationTracker,
+    Rent,
+    Station,
+    VehicleType,
+)
 from cykel.models import CykelLogEntry
+from reservation.models import Reservation
+from reservation.util import (
+    get_forbidden_reservation_time_ranges,
+    get_maximum_reservation_date,
+    get_number_of_bikes,
+    get_relevant_reservation_events,
+    is_allowed_reservation_day,
+)
 
 from .authentication import BasicTokenAuthentication
 from .serializers import (
@@ -37,6 +58,7 @@ from .serializers import (
     LocationTrackerUpdateSerializer,
     MaintenanceBikeSerializer,
     RentSerializer,
+    ReservationSerializer,
     SocialAppSerializer,
     StationSerializer,
     UserDetailsSerializer,
@@ -440,3 +462,168 @@ def custom_exception_handler(exc, context):
 
     data = {"errors": errors, "message": "\n".join(messages)}
     return Response(data, status=response.status_code, headers=headers)
+
+
+@permission_classes([IsAuthenticated, CanRentBikePermission])
+class ReservationViewSet(viewsets.ViewSet):
+    def get_queryset(self):
+        user = self.request.user
+        return Reservation.objects.filter(creator=user)
+
+    def list(self, request):
+        queryset = self.get_queryset()
+        serializer = ReservationSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def retrieve(self, request, pk=None):
+        queryset = self.get_queryset()
+        reservation = get_object_or_404(queryset, pk=pk)
+        serializer = ReservationSerializer(reservation)
+        return Response(serializer.data)
+
+    def create(self, request):
+        calendar = Calendar.objects.filter(name="Reservations")
+        if not calendar:
+            calendar = Calendar(name="Reservations", slug="reservations")
+            calendar.save()
+        else:
+            calendar = calendar[0]
+
+        start_date_string = request.data["startDate"]
+        end_date_string = request.data["endDate"]
+        start_station_id = request.data["startStationId"]
+        vehicle_type_id = request.data["vehicleTypeId"]
+
+        if (
+            start_date_string is None
+            or end_date_string is None
+            or start_station_id is None
+            or vehicle_type_id is None
+        ):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        start_station = get_object_or_404(Station, pk=start_station_id)
+
+        vehicle_type = get_object_or_404(VehicleType, pk=vehicle_type_id)
+        if not vehicle_type.allow_reservation:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        # get start date and check if it is allowed
+        start_date_naive = datetime.strptime(start_date_string, "%Y-%m-%dT%H:%M")
+        start_date = timezone.make_aware(start_date_naive)
+        events = get_relevant_reservation_events(vehicle_type)
+        day_period = Day(events, start_date)
+        if not is_allowed_reservation_day(day_period, vehicle_type):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        forbidden_ranges = get_forbidden_reservation_time_ranges(
+            day_period, vehicle_type
+        )
+        for forbidden_range in forbidden_ranges:
+            if forbidden_range["start"] <= start_date.time() <= forbidden_range["end"]:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        # get end date and check if it is allowed
+        end_date_naive = datetime.strptime(end_date_string, "%Y-%m-%dT%H:%M")
+        end_date = timezone.make_aware(end_date_naive)
+        if get_maximum_reservation_date(start_date, vehicle_type) < end_date:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        data = {
+            "title": "Reservation",
+            "start": start_date,
+            "end": end_date,
+            "calendar": calendar,
+            "creator": self.request.user,
+        }
+        event = Event(**data)
+        event.save()
+
+        data = {
+            "creator": self.request.user,
+            "start_location": start_station,
+            "vehicle_type": vehicle_type,
+            "event": event,
+        }
+        reservation = Reservation(**data)
+        reservation.save()
+        serializer = ReservationSerializer(reservation)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def destroy(self, request, pk=None):
+        queryset = self.get_queryset()
+        reservation = get_object_or_404(queryset, pk=pk)
+        if reservation.bike is not None:
+            reservation.bike.availability_status = Bike.Availability.AVAILABLE
+            reservation.bike.save()
+        if reservation.rent is not None:
+            reservation.rent.end()
+        reservation.event.delete()
+        return Response()
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_allowed_dates(request):
+    # get and check input parameters
+    year = int(request.query_params.get("year"))
+    month = int(request.query_params.get("month"))
+    vehicle_type_id = request.query_params.get("vehicleTypeId")
+    if vehicle_type_id is None:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+    vehicle_type = get_object_or_404(VehicleType, pk=vehicle_type_id)
+
+    events = get_relevant_reservation_events(vehicle_type)
+    requested_month = timezone.make_aware(datetime(year, month, 1))
+    this_month_period = Month(events, requested_month)
+
+    # determine allowed days
+    allowed_days = []
+    for day in this_month_period.get_days():
+        if is_allowed_reservation_day(day, vehicle_type):
+            allowed_days.append(day.start.date())
+
+    return Response({"allowedDays": allowed_days})
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_max_reservation_date(request):
+    vehicle_type_id = request.query_params.get("vehicleTypeId")
+    start_date_time_string = request.query_params.get("startDateTime")
+    if vehicle_type_id is None:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+    vehicle_type = get_object_or_404(VehicleType, pk=vehicle_type_id)
+    start_date_time = datetime.strptime(start_date_time_string, "%Y-%m-%dT%H:%M")
+
+    max_reservation_date = get_maximum_reservation_date(start_date_time, vehicle_type)
+
+    return Response(max_reservation_date)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_forbidden_times(request):
+    # check input parameters
+    date_string = request.query_params.get("date")
+    vehicle_type_id = request.query_params.get("vehicleTypeId")
+    if vehicle_type_id is None:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+    vehicle_type = get_object_or_404(VehicleType, pk=vehicle_type_id)
+
+    number_of_bikes = get_number_of_bikes(vehicle_type)
+    events = get_relevant_reservation_events(vehicle_type)
+    requested_day = datetime.strptime(date_string, "%Y-%m-%d")
+    this_day_period = Day(events, requested_day)
+
+    occurrences = this_day_period.get_occurrence_partials()
+    number_of_occ = len(occurrences)
+
+    # enough available bikes --> allow the whole day
+    if number_of_bikes - number_of_occ - vehicle_type.min_spontaneous_rent_vehicles > 0:
+        return Response([])
+    forbidden_ranges = get_forbidden_reservation_time_ranges(
+        this_day_period, vehicle_type
+    )
+
+    return Response(forbidden_ranges)

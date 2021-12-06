@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import Point
 from django.utils.timezone import now, timedelta
 from rest_framework import serializers
+from schedule.models import Event
 
 from bikesharing.models import (
     Bike,
@@ -13,9 +14,11 @@ from bikesharing.models import (
     LockType,
     Rent,
     Station,
+    VehicleType,
 )
 from cykel.models import CykelLogEntry
 from cykel.serializers import MappedChoiceField
+from reservation.models import Reservation
 
 
 class LockTypeSerializer(serializers.HyperlinkedModelSerializer):
@@ -38,6 +41,12 @@ class BikeSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Bike
         fields = ("bike_number", "lock_type")
+
+
+class VehicleTypeSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = VehicleType
+        fields = ("name",)
 
 
 class StationSerializer(serializers.HyperlinkedModelSerializer):
@@ -106,6 +115,17 @@ class CreateRentSerializer(serializers.HyperlinkedModelSerializer):
         bike = Bike.objects.get(bike_number=value)
         if bike.availability_status != Bike.Availability.AVAILABLE:
             raise serializers.ValidationError("bike is not available")
+        if not bike.vehicle_type.allow_spontaneous_rent:
+            raise serializers.ValidationError(
+                "bike is not allowed for spontaneous rents"
+            )
+        if bike.vehicle_type.allow_reservation:
+            available_bikes = Bike.objects.filter(
+                vehicle_type=bike.vehicle_type,
+                availability_status=Bike.Availability.AVAILABLE,
+            )
+            if len(available_bikes) - bike.vehicle_type.min_reservation_vehicles < 1:
+                raise serializers.ValidationError("bike is reserved")
         return value
 
     def validate(self, data):
@@ -297,3 +317,20 @@ class MaintenanceLockSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lock
         fields = ("unlock_key", "lock_type", "lock_id")
+
+
+class EventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Event
+        fields = ("id", "start", "end", "creator")
+
+
+class ReservationSerializer(serializers.ModelSerializer):
+    event = EventSerializer(read_only=True)
+    start_location = StationSerializer(read_only=True)
+    bike = BikeSerializer(read_only=True)
+    vehicle_type = VehicleTypeSerializer(read_only=True)
+
+    class Meta:
+        model = Reservation
+        fields = ("id", "start_location", "event", "bike", "vehicle_type", "rent")

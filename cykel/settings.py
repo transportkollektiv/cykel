@@ -69,6 +69,8 @@ INSTALLED_APPS = [
     "corsheaders",
     "leaflet",
     "preferences",
+    "schedule",
+    "reservation.apps.ReservationConfig",
 ]
 
 try:
@@ -145,6 +147,14 @@ CELERY_BEAT_SCHEDULE = {
     "log_missing_tracker_updates": {
         "task": "bikesharing.tasks.log_missing_tracker_updates",
         "schedule": timedelta(minutes=15),
+    },
+    "start_rents_for_reservations": {
+        "task": "reservation.tasks.start_rents_for_reservations",
+        "schedule": timedelta(minutes=5),
+    },
+    "end_reservations_of_finished_rents": {
+        "task": "reservation.tasks.end_reservations_of_finished_rents",
+        "schedule": timedelta(minutes=1),
     },
 }
 

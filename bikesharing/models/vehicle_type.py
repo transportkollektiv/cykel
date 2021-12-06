@@ -43,5 +43,46 @@ class VehicleType(models.Model):
     )  # TODO: validation only positive values
     internal_note = models.TextField(default=None, null=True, blank=True)
 
+    # fields used to handle reservations
+    allow_spontaneous_rent = models.BooleanField(default=True)
+    allow_reservation = models.BooleanField(default=False)
+    min_spontaneous_rent_vehicles = models.IntegerField(
+        default=0,
+        help_text=dedent(
+            """\
+            Only used when reservations are allowed.
+            Minimum number of vehicles that should be kept available
+            for spontaneous rents."""
+        ),
+    )
+    min_reservation_vehicles = models.IntegerField(
+        default=0,
+        help_text=dedent(
+            """\
+            Only used when reservations are allowed.
+            Minimum number of vehicles that should be kept available
+            for reservations."""
+        ),
+    )
+    reservation_lead_time_minutes = models.IntegerField(
+        default=120,
+        help_text=dedent(
+            """\
+            Only used when reservations are allowed.
+            Lead time in minutes to start the rent before
+            the beginning of a reservation.
+            This is to make sure that a vehicle is rented when the
+            reservation starts."""
+        ),
+    )
+    max_reservation_days = models.IntegerField(
+        default=7,
+        help_text=dedent(
+            """\
+            Only used when reservations are allowed.
+            Maximum number of days for a reservation."""
+        ),
+    )
+
     def __str__(self):
         return str(self.name)
