@@ -9,6 +9,6 @@ django-allauth-fragdenstaat
 djangorestframework-api-key==2.0.0
 django-preferences==1.0.0
 requests==2.24.0
-sentry-sdk==0.19.1
+sentry-sdk==1.14.0
 psycopg2
 celery[redis]~=5.0.2
