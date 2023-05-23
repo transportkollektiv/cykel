@@ -8,7 +8,7 @@ django-leaflet==0.27.1
 django-allauth-fragdenstaat
 djangorestframework-api-key==2.0.0
 django-preferences==1.0.0
-requests==2.24.0
+requests==2.31.0
 sentry-sdk==0.19.1
 psycopg2
 celery[redis]~=5.0.2
